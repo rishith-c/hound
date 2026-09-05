@@ -1,26 +1,26 @@
 {
- "design_mass_kg": 5.107,
- "subtotal_kg": 4.441,
+ "design_mass_kg": 5.119,
+ "subtotal_kg": 4.451,
  "margin_required": 1.25,
  "cases": {
   "A  level cruise, a=0.1": {
-   "force_N": 6.52,
-   "torque_design_Nm": 0.1085,
+   "force_N": 6.54,
+   "torque_design_Nm": 0.1088,
    "torque_6kg_Nm": 0.1275
   },
   "B  level responsive, a=0.3": {
-   "force_N": 7.54,
-   "torque_design_Nm": 0.1255,
+   "force_N": 7.56,
+   "torque_design_Nm": 0.1258,
    "torque_6kg_Nm": 0.1475
   },
   "C  5\u00b0 ramp, a=0.3": {
-   "force_N": 11.89,
-   "torque_design_Nm": 0.1978,
+   "force_N": 11.91,
+   "torque_design_Nm": 0.1982,
    "torque_6kg_Nm": 0.2324
   },
   "D  strafe on carpet, a=0.3": {
-   "force_N": 9.05,
-   "torque_design_Nm": 0.1505,
+   "force_N": 9.07,
+   "torque_design_Nm": 0.1509,
    "torque_6kg_Nm": 0.1768
   }
  },
@@ -32,7 +32,7 @@
     1.56,
     1.35,
     0.86,
-    1.13
+    1.12
    ],
    "margins_6kg": [
     1.33,
@@ -46,7 +46,7 @@
    "i_set_A": 1.2,
    "t_avail_Nm": 0.2035,
    "margins_design": [
-    1.88,
+    1.87,
     1.62,
     1.03,
     1.35
@@ -64,8 +64,8 @@
    "t_avail_Nm": 0.2544,
    "margins_design": [
     2.34,
-    2.03,
-    1.29,
+    2.02,
+    1.28,
     1.69
    ],
    "margins_6kg": [
@@ -80,10 +80,10 @@
    "i_set_A": 1.7,
    "t_avail_Nm": 0.2883,
    "margins_design": [
-    2.66,
-    2.3,
-    1.46,
-    1.92
+    2.65,
+    2.29,
+    1.45,
+    1.91
    ],
    "margins_6kg": [
     2.26,
