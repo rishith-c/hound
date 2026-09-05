@@ -117,14 +117,14 @@ for inst, sx, sy in (("FL", 1, 1), ("FR", 1, -1), ("RL", -1, 1), ("RR", -1, -1))
 # ── Deck ────────────────────────────────────────────────────────────────────
 for inst, x in (("front tile", 85.0), ("rear tile", -85.0)):
     add("PETG", inst, "PETG deck tile 170×350×5", x, 0, DECK_Z0 + DECK_T / 2, 170, 350, DECK_T,
-        "flat on rail tops", "all four rails", "6× M5×10 hex + 6× M5 T-nut (top slots: 3 per side-rail edge)",
+        "flat on rail tops", "all four rails", "6× M5×8 hex (corner kit) + 6× M5 T-nut in the top slots, 3 per side-rail edge; holes counterbored so 3 mm of tile is under the head",
         "3.0 N·m", M["deck"] / 2, note="Tiles meet at X = 0. Print flat, 5 perimeters, 30% infill.")
 
 # ── Battery, slung under the deck ───────────────────────────────────────────
 cradle_z = DECK_Z0 - (LIPO[2] + 2 * CRADLE_T) / 2
 add("PETG", "battery cradle", f"PETG cradle {LIPO[0]+8:.0f}×{LIPO[1]+6:.0f}×{LIPO[2]+6:.0f}", 0, 0, cradle_z,
     LIPO[0] + 8, LIPO[1] + 6, LIPO[2] + 2 * CRADLE_T, "hangs from deck underside, open at both ends for the strap",
-    "deck underside", "4× M4×16 through deck + 4× M4 nyloc, at X ±46, Y ±14", "2.0 N·m", M["cradle"],
+    "deck underside", "4× M3×12 through deck + 4× M3 nut (M3 kit), at X ±46, Y ±14 — 179 g hangs on them", "1.0 N·m", M["cradle"],
     note=f"Cradle bottom at Z = {cradle_z - (LIPO[2]+2*CRADLE_T)/2:.0f}: 61 mm ground clearance, above the 18.9 mm motor bottoms.")
 add("LIPO", "—", "OVONIC 3S 2200 mAh 105×33×20", 0, 0, cradle_z, *LIPO, "long axis X, T-plug lead exits −X (rear)",
     "battery cradle", "printed retaining bar + 2 cable ties", "hand-tight", M["lipo"],
@@ -142,7 +142,7 @@ on_deck("UNO", "—", "UNO R4 WiFi + DRV8825 CNC Shield stack", (UNO[0], UNO[1],
         M["uno_stack"], verify="stack height with heatsinks",
         note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces −X. Jumpers: D12 + D13 on the A header, MS3 under each driver (1/16), EN/GND open. Drivers in with EN on EN.")
 on_deck("FAN", "—", "40×40×10 5 V fan over the drivers", FAN, -115.7, 86.7, "printed PETG bridge over the shield",
-        "2× M3×8 into deck + 4× M3×30 through fan into bridge", "hand-tight", M["fan"],
+        "printed bridge on 2× M3×8 into deck bosses; fan held to the bridge by 2 cable ties", "hand-tight", M["fan"],
         note=f"Blows down onto the four DRV8825 heatsinks. Fan face at Z ≈ {DECK_TOP + 10 + SHIELD_STACK_H + 8:.0f}.")
 on_deck("PI", "—", "Raspberry Pi", PI, -107.5, -88.0, "deck top, rear-right",
         "printed 10 mm bosses on the deck tile (58×49 pattern) + 2× M2 + nut from the M2 kit (Pi holes are 2.7 mm)", "hand-tight", M["pi"],
@@ -162,7 +162,7 @@ on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "d
 TX = 110.0
 add("PT", "base", "Ceres pan/tilt turret base plate 100×60×6", TX, 0, DECK_TOP + TURRET_BASE[2] / 2, *TURRET_BASE,
     "flat on deck, pan axis vertical, servo collar toward +X", "front deck tile",
-    "4× M3×12 through base + deck + 4× M3 nyloc", "1.0 N·m", M["turret"],
+    "4× M3×16 through base (6 mm) + deck (5 mm) + 4× M3 nut (M3 kit)", "1.0 N·m", M["turret"],
     verify="hole positions on the actual Ceres base", note="Spans X +60..+160, Y −30..+30. Pan servo cable and tilt servo cable to PCA9685 ch 2 / ch 0.")
 CAM_Z = DECK_TOP + TURRET_BASE[2] + TURRET_H
 add("CAM", "on tilt bracket", "Owned USB webcam (C920-class)", TX, 0, CAM_Z, *CAM,
@@ -176,7 +176,7 @@ add("THERM", "above the camera", "MLX90640-D55 thermal array, 55° FoV", TX + 4,
 PX = -CROSS_X
 add("PETG", "radar post", "PETG post 40×40×200 with 60×60×6 flange", PX, 0, DECK_TOP + POST[2] / 2, *POST,
     "vertical, on the rear cross rail through the deck", "rear tile → rear cross rail top slot",
-    "2× M5×20 hex through flange + deck + 2× M5 T-nut, at Y ±20", "3.0 N·m", M["post"],
+    "2× M4×12 (T-nut kit) through flange + deck into 2× M4 T-nuts in the rear rail top slot, at Y ±20; flange and tile counterbored to 3 mm each", "2.0 N·m", M["post"],
     note="Hollow 3 mm walls, print upright. Cable channel down the +X face for the two radar leads.")
 add("PETG", "radar bar", "PETG radar bar 120×20×8 on the post top", PX, 0, DECK_TOP + POST[2] + 4, 120, 20, 8,
     "horizontal, antenna faces toward +X", "radar post top", "2× M3×10 + heat-set inserts", "hand-tight", 0.02)
@@ -212,7 +212,7 @@ add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → LM2596 IN (6 V
     note="~250 mm each run; 22 AWG is rated 7 A against a 4 A burst. Single common ground at the shield GND terminal. No fuse — by your call; the connector is the disconnect, so keep the pack leads short, sleeved and never resting on a rail edge.")
 add("WIRE22", "signals", "22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 2× ToF + PCA9685 + SCD41; UART radar → ESP32", -80, 0, DECK_TOP, 0, 0, 0,
     "—", "—", "cable mounts on deck underside for motor leads", "—", M["strapwire"] / 3,
-    verify="motor lead length reaches the shield (~300 mm stock)", note="Motor order at the shield: X=FL, Y=FR, Z=RL, A=RR (D12/D13 jumpers fitted). Shared ENABLE on D8.")
+    verify="motor lead length — never documented; the FR motor needs ~400 mm to the shield, so expect to extend with 22 AWG and crimp 4-pin Dupont housings", note="Motor order at the shield: X=FL, Y=FR, Z=RL, A=RR (D12/D13 jumpers fitted). Shared ENABLE on D8.")
 
 # ── Checks ──────────────────────────────────────────────────────────────────
 def box(p):
@@ -241,8 +241,8 @@ L, B = 2 * AXLE_X, 2 * abs(next(p["y"] for p in parts if p["id"] == "WHL"))
 tip_pitch = math.degrees(math.atan((L / 2) / cg[2]))
 tip_roll = math.degrees(math.atan((B / 2) / cg[2]))
 
-fast = {"M5 T-nut": 16 + 12 + 2 + 2, "M5 screw": 16 + 12 + 2 + 2, "M4 T-nut": 8, "M4×10": 8, "M4×16 + nyloc": 4,
-        "M3×6 (motor, supplied with brackets)": 16, "M3 misc": 4 + 2 + 4 + 2 + 2, "M2 + nut": 4 + 4 + 2 + 2 + 4 + 1 + 2, "cable ties": 2 + 2 + 2 + 2 + 2 + 20}
+fast = {"M5 T-nut": 16 + 12 + 2, "M5×8 (corner kit)": 16 + 12 + 2, "M4 T-nut": 8 + 2, "M4×10 / ×12 (T-nut kit)": 8 + 2,
+        "M3×6 (motor, supplied with brackets)": 16, "M3 ×12/×16 + nut (M3 kit)": 4 + 4 + 2 + 2, "M2 + nut": 4 + 4 + 2 + 2 + 4 + 1 + 2, "cable ties": 2 + 2 + 2 + 2 + 2 + 2 + 20}
 kits = {"M5 T-nut": "corner kit 40 + T-nut kit", "M4 T-nut": "T-nut kit 40", "M4×10": "T-nut kit 20", "M3": "750-pc M3 kit", "M2.5": "COMRUN standoff kit"}
 
 # ── Output ──────────────────────────────────────────────────────────────────
@@ -259,7 +259,7 @@ print(f"  track / wheelbase            {B:.0f} / {L:.0f} mm")
 print(f"  CG                           x {cg[0]:+.1f}  y {cg[1]:+.1f}  z {cg[2]:.1f} mm   (placed mass {mass:.2f} kg)")
 print(f"  static tip angles            pitch {tip_pitch:.0f}°   roll {tip_roll:.0f}°   PASS")
 print(f"  fasteners                    " + ", ".join(f"{k} {v}" for k, v in fast.items()))
-print(f"  kit coverage                 M5 {fast['M5 T-nut']} of 40+; M4 {fast['M4 T-nut']} of 40; M3 misc {fast['M3 misc']} of 750; M2 {fast['M2 + nut']} of 645; ties {fast['cable ties']} of 100  PASS")
+print(f"  kit coverage                 M5×8 {fast['M5×8 (corner kit)']} of 40; M5 T-nut {fast['M5 T-nut']} of 40+; M4 T-nut {fast['M4 T-nut']} of 40; M3 {fast['M3 ×12/×16 + nut (M3 kit)']} of 750; M2 {fast['M2 + nut']} of 645; ties {fast['cable ties']} of 100  PASS")
 print(f"\nVERIFY ON RECEIPT (caliper, before drilling): " + "; ".join(sorted({p['verify'] for p in parts if p['verify']})))
 print(f"\nNOT CHECKED: fastener pull-out in PETG, deck deflection under the turret, cable strain relief, servo torque with the ELP camera,")
 print(f"  radar detection at Z = {RADAR_Z:.0f} mm (Walleye measured floor-level radar as blind — test before trusting), wheel roller clearance to the bracket foot.\n")

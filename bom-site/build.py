@@ -135,9 +135,12 @@ def paras(lines):
 def bullets(lines):
     return "<ul>\n" + "\n".join(f"<li>{esc(p)}</li>" for p in lines) + "\n</ul>"
 
+def numbered(lines):
+    return "<ol>\n" + "\n".join(f"<li>{esc(p)}</li>" for p in lines) + "\n</ol>"
+
 page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rover Amazon BOM</title><style>
-*{{box-sizing:border-box}}body{{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}main{{max-width:1180px;margin:48px auto;padding:0 24px 60px}}h1{{font-size:30px;line-height:1.25}}h2{{font-size:22px;margin-top:36px}}a{{color:#165bc4;text-underline-offset:3px}}table{{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}}th,td{{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}}th{{background:#f5f6f7}}code{{background:#f3f4f5;padding:2px 4px;border-radius:3px}}.table-wrap{{overflow-x:auto}}p{{margin:16px 0}}.note{{font-size:13px;color:#555;margin-top:4px}}.where{{font-size:13px;white-space:nowrap}}td.where{{white-space:normal;min-width:180px}}tr.group th{{background:#e9ecef;font-weight:600}}.tag{{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}}.grp{{font-size:12px;color:#777;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}}table.totals{{font-size:16px}}table.totals tr.big td{{font-size:20px;padding:14px 12px;background:#f5f6f7}}em{{color:#8a4b00;font-style:normal;font-size:13px}}@media(max-width:600px){{main{{margin:28px auto;padding:0 16px 36px}}h1{{font-size:26px}}table{{min-width:620px}}}}@media print{{main{{max-width:none;margin:0;padding:0}}a{{color:inherit}}}}
+*{{box-sizing:border-box}}body{{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}main{{max-width:1180px;margin:48px auto;padding:0 24px 60px}}h1{{font-size:30px;line-height:1.25}}h2{{font-size:22px;margin-top:36px}}a{{color:#165bc4;text-underline-offset:3px}}table{{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}}th,td{{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}}th{{background:#f5f6f7}}code{{background:#f3f4f5;padding:2px 4px;border-radius:3px}}.table-wrap{{overflow-x:auto}}p{{margin:16px 0}}ol li,ul li{{margin:6px 0}}.note{{font-size:13px;color:#555;margin-top:4px}}.where{{font-size:13px;white-space:nowrap}}td.where{{white-space:normal;min-width:180px}}tr.group th{{background:#e9ecef;font-weight:600}}.tag{{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}}.grp{{font-size:12px;color:#777;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}}table.totals{{font-size:16px}}table.totals tr.big td{{font-size:20px;padding:14px 12px;background:#f5f6f7}}em{{color:#8a4b00;font-style:normal;font-size:13px}}@media(max-width:600px){{main{{margin:28px auto;padding:0 16px 36px}}h1{{font-size:26px}}table{{min-width:620px}}}}@media print{{main{{max-width:none;margin:0;padding:0}}a{{color:inherit}}}}
 input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}}.have-cell{{text-align:center;white-space:nowrap}}tr.owned td{{background:#eff8f0}}#checklist-note{{font-size:14px;color:#555}}
 </style></head><body><main><h1>{esc(meta["title"])}</h1>
 <p><strong>Buy: {money(buy_total)} USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): {money(opt_total)}. Already owned: {owned_n} items.</strong> {esc(meta["intro"])}</p>
@@ -181,6 +184,13 @@ input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:point
 {paras(prose["fit"])}
 <h2>Compute before claiming it works</h2>
 {paras(prose["compute"])}
+<h2>Pin map</h2>
+{bullets(prose["pins"])}
+<h2>Build order</h2>
+{numbered(prose["build"])}
+<h2>Caught in review</h2>
+<p>Mistakes found and fixed while checking this design, kept here so the reasoning survives.</p>
+{bullets(prose["review"])}
 <h2>Total cost</h2>
 <div class="table-wrap"><table class="totals">
 <thead>
