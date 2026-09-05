@@ -52,6 +52,12 @@ def fastening(it):
 buy_total = sum(line_total(i) for i in items if i["status"] == "buy")
 opt_total = sum(line_total(i) for i in items if i["status"] == "optional")
 owned_n = sum(1 for i in items if i["status"] == "owned")
+buy_n = sum(1 for i in items if i["status"] == "buy")
+opt_groups = OrderedDict()
+for i in items:
+    if i["status"] == "optional":
+        g = opt_groups.setdefault(i["group"], [0, 0.0]); g[0] += 1; g[1] += line_total(i)
+grand_total = buy_total + opt_total
 
 # ── CSV ─────────────────────────────────────────────────────────────────────
 with open("bom.csv", "w", newline="") as f:
@@ -65,17 +71,15 @@ with open("bom.csv", "w", newline="") as f:
                     where(it), fastening(it), it.get("note", "")])
 
 # ── The one big list ────────────────────────────────────────────────────────
-rows, last_group = [], None
+rows = []
 for it in items:
-    if it["group"] != last_group:
-        rows.append(f'<tr class="group"><th colspan="7">{esc(it["group"])}</th></tr>')
-        last_group = it["group"]
     owned = it["status"] == "owned"
     name = (f'<a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/{esc(it["asin"])}">{esc(it["item"])}</a>'
             if it.get("asin") and it["asin"] != "TBD" else esc(it["item"]))
     if it.get("asin") == "TBD":
         name += ' <em>(listing to confirm)</em>'
     note = f'<div class="note">{esc(it["note"])}</div>' if it.get("note") else ""
+    grp = f'<div class="grp">{esc(it["group"])}</div>'
     each = "owned" if owned else money(it["price"])
     line = "owned" if owned else money(line_total(it))
     tag = ' <span class="tag">optional</span>' if it["status"] == "optional" else ""
@@ -83,7 +87,7 @@ for it in items:
         f'<tr{" class=owned" if owned else ""}>\n'
         f'<td class="have-cell"><input type="checkbox" data-item="{esc(it["id"])}" data-owned="{int(owned)}" '
         f'aria-label="I have all required quantities of {esc(it["item"])}"></td>'
-        f'<td>{name}{tag}{note}</td>\n'
+        f'<td>{name}{tag}{grp}{note}</td>\n'
         f'<td align="right">{esc(it["qty"])}</td>\n<td align="right">{each}</td>\n<td align="right">{line}</td>\n'
         f'<td class="where">{esc(where(it))}</td>\n<td class="where">{esc(fastening(it))}</td>\n</tr>')
 
@@ -133,7 +137,7 @@ def bullets(lines):
 
 page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rover Amazon BOM</title><style>
-*{{box-sizing:border-box}}body{{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}main{{max-width:1180px;margin:48px auto;padding:0 24px 60px}}h1{{font-size:30px;line-height:1.25}}h2{{font-size:22px;margin-top:36px}}a{{color:#165bc4;text-underline-offset:3px}}table{{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}}th,td{{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}}th{{background:#f5f6f7}}code{{background:#f3f4f5;padding:2px 4px;border-radius:3px}}.table-wrap{{overflow-x:auto}}p{{margin:16px 0}}.note{{font-size:13px;color:#555;margin-top:4px}}.where{{font-size:13px;white-space:nowrap}}td.where{{white-space:normal;min-width:180px}}tr.group th{{background:#e9ecef;font-weight:600}}.tag{{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}}em{{color:#8a4b00;font-style:normal;font-size:13px}}@media(max-width:600px){{main{{margin:28px auto;padding:0 16px 36px}}h1{{font-size:26px}}table{{min-width:620px}}}}@media print{{main{{max-width:none;margin:0;padding:0}}a{{color:inherit}}}}
+*{{box-sizing:border-box}}body{{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}main{{max-width:1180px;margin:48px auto;padding:0 24px 60px}}h1{{font-size:30px;line-height:1.25}}h2{{font-size:22px;margin-top:36px}}a{{color:#165bc4;text-underline-offset:3px}}table{{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}}th,td{{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}}th{{background:#f5f6f7}}code{{background:#f3f4f5;padding:2px 4px;border-radius:3px}}.table-wrap{{overflow-x:auto}}p{{margin:16px 0}}.note{{font-size:13px;color:#555;margin-top:4px}}.where{{font-size:13px;white-space:nowrap}}td.where{{white-space:normal;min-width:180px}}tr.group th{{background:#e9ecef;font-weight:600}}.tag{{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}}.grp{{font-size:12px;color:#777;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}}table.totals{{font-size:16px}}table.totals tr.big td{{font-size:20px;padding:14px 12px;background:#f5f6f7}}em{{color:#8a4b00;font-style:normal;font-size:13px}}@media(max-width:600px){{main{{margin:28px auto;padding:0 16px 36px}}h1{{font-size:26px}}table{{min-width:620px}}}}@media print{{main{{max-width:none;margin:0;padding:0}}a{{color:inherit}}}}
 input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}}.have-cell{{text-align:center;white-space:nowrap}}tr.owned td{{background:#eff8f0}}#checklist-note{{font-size:14px;color:#555}}
 </style></head><body><main><h1>{esc(meta["title"])}</h1>
 <p><strong>Buy: {money(buy_total)} USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): {money(opt_total)}. Already owned: {owned_n} items.</strong> {esc(meta["intro"])}</p>
@@ -156,7 +160,7 @@ input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:point
 <tbody>
 {m_rows}</tbody></table></div>
 <p>{esc(meta["margin_note"])}</p>
-<h2>Everything on the rover — one list</h2>
+<h2>Buy list — everything on the rover</h2>
 <p id="checklist-note" role="status">Selections are saved in this browser only.</p>
 <p>Owned items start ticked. Tick a bought item when you have the full listed quantity. Positions are part centres in millimetres from the chassis centre on the floor (+X forward, +Y left, +Z up); the full table with orientation and torque is below.</p>
 {big_table}
@@ -177,6 +181,19 @@ input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:point
 {paras(prose["fit"])}
 <h2>Compute before claiming it works</h2>
 {paras(prose["compute"])}
+<h2>Total cost</h2>
+<div class="table-wrap"><table class="totals">
+<thead>
+<tr><th>What</th><th align="right">Lines</th><th align="right">Cost</th></tr>
+</thead>
+<tbody>
+<tr class="big"><td><strong>Required — the rover does not work without these</strong></td><td align="right">{buy_n}</td><td align="right"><strong>{money(buy_total)}</strong></td></tr>
+{"".join(f'<tr><td>Optional: {esc(g)}</td><td align="right">{n}</td><td align="right">{money(t)}</td></tr>' for g, (n, t) in opt_groups.items())}
+<tr><td>All optional together</td><td align="right">{sum(n for n, _ in opt_groups.values())}</td><td align="right">{money(opt_total)}</td></tr>
+<tr><td>Already owned</td><td align="right">{owned_n}</td><td align="right">$0.00</td></tr>
+<tr class="big"><td><strong>Everything, if you buy it all</strong></td><td align="right">{buy_n + sum(n for n, _ in opt_groups.values())}</td><td align="right"><strong>{money(grand_total)}</strong></td></tr>
+</tbody></table></div>
+<p>Before tax and shipping, Amazon US prices observed {esc(meta["price_date"])}. The required figure assumes your gel-blaster pack, its charger, your webcam, the UNO R4, the Ceres turret and the 22 AWG wire all check out. If the pack is the first thing that fails, add the battery group: {money(buy_total + opt_groups.get("Only if the gel-blaster pack falls short", [0, 0.0])[1])}.</p>
 <h2>What I did NOT analyze</h2>
 <p>{esc(meta["not_analysed"])}</p>
 <p>Sources: <a target="_blank" rel="noopener noreferrer" href="https://static.jkongmotor.com/JK42HS40-1704-13A-aidlnBprKrkloSRilikkrllkn.pdf">motor drawing</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/2133">DRV8825 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/1182">A4988 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.hlktech.com/en/Goods-239.html">LD2410C manufacturer</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.skyrc.com/download/100200%20B6ACneo%20Instruction%20Manual%20V1.3.pdf">SKYRC B6AC Neo manual</a>, <a href="drivetrain.txt">drivetrain.txt</a> and <a href="assembly.csv">assembly.csv</a> (all arithmetic and positions).</p>
