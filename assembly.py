@@ -210,7 +210,7 @@ for inst, x, y, face, dims in (("front", 175 + 2 + TOF[2] / 2, 0, "+X", (TOF[2],
 add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → 5 V buck IN, → 6 V buck IN", -60, 40, DECK_TOP, 0, 0, 0,
     "—", "pack connector at the battery (rear)", "cable ties every 60 mm to the deck; tape or heat-shrink every joint", "—", M["strapwire"] / 3,
     note="~250 mm each run; 22 AWG is rated 7 A against a 4 A burst. Single common ground at the shield GND terminal. No fuse — by your call; the connector is the disconnect, so keep the pack leads short, sleeved and never resting on a rail edge.")
-add("WIRE22", "signals", "22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 4× ToF + PCA9685; UART radar → ESP32", -80, 0, DECK_TOP, 0, 0, 0,
+add("WIRE22", "signals", "22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 2× ToF + PCA9685 + SCD41; UART radar → ESP32", -80, 0, DECK_TOP, 0, 0, 0,
     "—", "—", "cable mounts on deck underside for motor leads", "—", M["strapwire"] / 3,
     verify="motor lead length reaches the shield (~300 mm stock)", note="Motor order at the shield: X=FL, Y=FR, Z=RL, A=RR (D12/D13 jumpers fitted). Shared ENABLE on D8.")
 
