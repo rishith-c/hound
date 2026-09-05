@@ -149,10 +149,10 @@ on_deck("PI", "—", "Raspberry Pi", PI, -107.5, -88.0, "deck top, rear-right",
         note="Spans X −150..−65, Y −116..−60. USB ports face −X (rear). Powered from the 5 V buck on GPIO 2/4 (+) and 6 (−).")
 on_deck("PCA", "—", "PCA9685 servo driver (Ceres)", PCA9685, -29.0, -97.5, "deck top, beside the Pi",
         "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the 6 V buck. I2C from Pi. Servo cables run forward to the turret.")
-on_deck("LM2596", "#1 → Pi 5.1 V", "LM2596 buck (owned)", BUCK, -44.5, 80.5, "deck top, ahead of the R4",
-        "printed bosses + 2 cable ties (or 2× M3×8 into deck)", "hand-tight", M["buck"], verify="module footprint",
-        note="IN from the pack branch. Trim to 5.10 V unloaded with a multimeter BEFORE the Pi is connected — ships at a random voltage.")
-on_deck("LM2596", "#2 → servos 6.0 V", "LM2596 buck (owned)", BUCK, -44.5, 110.5, "deck top, beside #1",
+on_deck("BANK", "→ Pi", "USB power bank, compact (owned)", (100.0, 60.0, 15.0), 0.0, 0.0, "deck top, centre, over the LiPo cradle",
+        "printed lip on the deck tile + 2 cable ties through printed slots", "hand-tight", 0.130, verify="WEIGH IT: ≤ 130 g, footprint",
+        note="USB-C to the Pi. Must deliver 5 V at 3 A. Centred to keep the CG on the axis.")
+on_deck("LM2596", "→ servos 6.0 V", "LM2596 buck (owned)", BUCK, -44.5, 110.5, "deck top, ahead of the R4",
         "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 6.0 V before connecting the PCA9685. Own return to the shield GND.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
@@ -207,7 +207,7 @@ for inst, x, y, face, dims in (("front", 175 + 2 + TOF[2] / 2, 0, "+X", (TOF[2],
         verify="module hole spacing", note=f"XSHUT → Pi GPIO {dict(front=5, rear=6)[inst]}. Both share I2C 0x29 until re-addressed at boot.")
 
 # ── Wiring ──────────────────────────────────────────────────────────────────
-add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → 5 V buck IN, → 6 V buck IN", -60, 40, DECK_TOP, 0, 0, 0,
+add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → LM2596 IN (6 V servo rail)", -60, 40, DECK_TOP, 0, 0, 0,
     "—", "pack connector at the battery (rear)", "cable ties every 60 mm to the deck; tape or heat-shrink every joint", "—", M["strapwire"] / 3,
     note="~250 mm each run; 22 AWG is rated 7 A against a 4 A burst. Single common ground at the shield GND terminal. No fuse — by your call; the connector is the disconnect, so keep the pack leads short, sleeved and never resting on a rail edge.")
 add("WIRE22", "signals", "22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 2× ToF + PCA9685 + SCD41; UART radar → ESP32", -80, 0, DECK_TOP, 0, 0, 0,
