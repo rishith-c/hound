@@ -1,44 +1,47 @@
-section,status,item,qty,unit_usd,line_usd,asin,url,note
-Owned,owned,JK42HS40-1704-13A NEMA 17 stepper,5,,,,,"Four drive wheels; fifth spare. 0.41 N·m holding, 1.7 A, 0.24 kg each"
-Owned,owned,Raspberry Pi,1,,,,,"Camera, interface, sensor processing. Model still unknown"
-Owned,owned,USB power bank,1,,,,,Logic power for the Pi. Verify combined output current
-Owned,owned,HLK-LD2410C 24 GHz radar,2,,,,,"Primary presence sensor, sees a motionless person; one spare"
-Owned,owned,HLK-LD2450 24 GHz radar,1,,,,,x/y of moving targets only. Not a heartbeat sensor — neither is
-Owned,owned,ESP32-S3 (N16R8),3,,,,,One as radar UART bridge; two free for WiFi CSI experiments
-Owned,owned,CP2102 USB-UART,1,,,,,Bench setup. Check it is 3.3 V logic before touching a radar
-Owned,owned,TB6600 driver,1,,,,,Spare. No fifth axis in this design
-Owned,owned,"Dupont leads, 22 AWG wire",stock,,,,,Signal wiring
-Owned,owned,3-pin switch,1,,,,,Motor power switch candidate. DC rating unverified
-Drivetrain,buy,SmaringRobot 4× 80 mm mecanum wheels with 5 mm couplings,1,29.99,29.99,B0DWSWQV4T,https://www.amazon.com/dp/B0DWSWQV4T,"Two left-hand, two right-hand. Same handedness on each diagonal."
-Drivetrain,buy,Anndason 6× steel NEMA 17 L-brackets with screws,1,16.99,16.99,B073QW9RPZ,https://www.amazon.com/dp/B073QW9RPZ,"Four used, two spare. 31 mm bolt pattern. Base slots are 4.3 mm — use M4 T-nuts, not M5. Mount inverted under the rail."
-Frame,buy,VICHSAMWY 4× 350 mm 2020 V-slot aluminium extrusion,1,16.59,16.59,B099M9DMSL,https://www.amazon.com/dp/B099M9DMSL,
-Frame,buy,TOCLUX 20× 2020 corner brackets with M5 screws and T-nuts,1,14.99,14.99,B0F1B85397,https://www.amazon.com/dp/B0F1B85397,"Eight for the frame corners, rest for deck and mount attachment."
-Frame,buy,"Bemaka 2020 T-nut kit, M3/M4/M5, with M4×10 and M4×12 screws",1,13.99,13.99,B0FQ55VFDK,https://www.amazon.com/dp/B0FQ55VFDK,The M4 T-nuts and screws here are what hold the motor brackets to the rails.
-Motion control,buy,ELEGOO Uno R3 with USB cable,1,16.99,16.99,B01EWOE0UU,https://www.amazon.com/dp/B01EWOE0UU,
-Motion control,buy,CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks,1,15.99,15.99,B0B24YS695,https://www.amazon.com/dp/B0B24YS695,Replaces the A4988 kit ($9.99) — +$6 buys the ramp margin. Set Vref = 5 × Rsense × I; with 0.100 Ω sense resistors 1.5 A is 0.75 V. Identify the sense resistor first.
-Motion control,buy,SIXQJZML 2× 40 × 40 × 10 mm 5 V fans,1,5.99,5.99,B0DY6GQMJX,https://www.amazon.com/dp/B0DY6GQMJX,"One over the drivers, one spare. Needed for the 1.7 A setting; good practice at 1.5 A."
-Power,buy,"Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60",1,34.99,34.99,B0972RKJDS,https://www.amazon.com/dp/B0972RKJDS,"343 g, 132 × 43 × 25 mm. Strap it low and centred — it is the heaviest single part."
-Power,buy,"SKYRC B6AC Neo balance charger, 60 W AC",1,53.00,53.00,B0CV64ZB2L,https://www.amazon.com/dp/B0CV64ZB2L,Start at 2.6 A = 0.5 C. Follow the pack's instructions.
-Power,buy,LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions,1,7.99,7.99,B09CT5VGPW,https://www.amazon.com/dp/B09CT5VGPW,
-Power,buy,Padarsey 2 pairs XT60 14 AWG pigtails,1,6.99,6.99,B07BF8154S,https://www.amazon.com/dp/B07BF8154S,
-Power,buy,AOICRIE 2× 1S–8S cell voltage alarms,1,6.59,6.59,B07VR4SV8C,https://www.amazon.com/dp/B07VR4SV8C,Plugs into the balance lead. Screams before the pack is damaged.
-Power,buy,Tenergy LiPo charging bag,1,8.99,8.99,B08QCMMGJT,https://www.amazon.com/dp/B08QCMMGJT,
-Power,buy,"XINWANG 18 AWG silicone wire, 6 colours × 5 m",1,17.89,17.89,B0B15CH937,https://www.amazon.com/dp/B0B15CH937,Motor and VMOT runs. 22 AWG would carry it; 18 AWG is comfortable.
-Power,buy,Bicmice US IEC C7 mains cord 6 ft,1,6.99,6.99,B08N42RQF6,https://www.amazon.com/dp/B08N42RQF6,Omit if the charger ships with the right cord.
-Sensing and compute,buy,DWEII 2× VL53L1X time-of-flight distance modules,2,14.99,29.98,B09V4DS888,https://www.amazon.com/dp/B09V4DS888,"Four total: forward, reverse, both sides. Share I²C only after XSHUT assigns unique addresses at boot."
-Sensing and compute,buy,"ELP USBFHD01M-L28 USB camera, 2.8 mm lens",1,22.49,22.49,B00KA80N9U,https://www.amazon.com/dp/B00KA80N9U,
-Sensing and compute,buy,"Kingston Canvas Select Plus 64 GB microSD, A1",1,17.99,17.99,B07YGZQ4H8,https://www.amazon.com/dp/B07YGZQ4H8,
-Sensing and compute,buy,etguuds 2× USB-A to USB-C 6 ft cables,1,7.99,7.99,B07Z1TQYDN,https://www.amazon.com/dp/B07Z1TQYDN,
-Fasteners and assembly,buy,"Fgruh 750-piece M3 screw, nut and washer assortment",1,9.99,9.99,B0FGV5FCBN,https://www.amazon.com/dp/B0FGV5FCBN,
-Fasteners and assembly,buy,COMRUN M2.5 nylon standoff kit,1,9.99,9.99,B0CKBWQSNY,https://www.amazon.com/dp/B0CKBWQSNY,"Pi, Uno and ESP32 mounting."
-Fasteners and assembly,buy,MEIVIFPV 5× 20 × 250 mm battery straps,1,9.99,9.99,B0GH8CGW2T,https://www.amazon.com/dp/B0GH8CGW2T,
-Fasteners and assembly,buy,Ginsco 580-piece heat-shrink assortment,1,7.99,7.99,B01MFA3OFA,https://www.amazon.com/dp/B01MFA3OFA,
-Fasteners and assembly,buy,ALLWIN 100 cable mounts + 100 cable ties,1,6.99,6.99,B0F9T5G2J5,https://www.amazon.com/dp/B0F9T5G2J5,
-Fabrication,buy,OVERTURE black PETG 1 kg 1.75 mm,1,14.69,14.69,B07PGYHYV8,https://www.amazon.com/dp/B07PGYHYV8,
-Tools,optional,MEIYA hanging scale,1,7.99,7.99,B0GGHDNZWJ,https://www.amazon.com/dp/B0GGHDNZWJ,"Lever arm on the motor shaft, scale on the lever, read the force. T = F × arm."
-Tools,optional,Westinghouse MM600V15 multimeter,1,34.89,34.89,B0DYJ465TC,https://www.amazon.com/dp/B0DYJ465TC,Vref setting needs this.
-Tools,optional,Jiavarry 150 mm digital caliper,1,21.98,21.98,B08Y8M54M9,https://www.amazon.com/dp/B08Y8M54M9,
-Tools,optional,Q-MING soldering iron kit,1,12.59,12.59,B087767KNW,https://www.amazon.com/dp/B087767KNW,
-Tools,optional,WORKPRO 12 inch hacksaw,1,18.73,18.73,B09WYHPHTC,https://www.amazon.com/dp/B09WYHPHTC,
-Tools,optional,AMTOVL metric hex key set,1,9.99,9.99,B0CJBRYQF3,https://www.amazon.com/dp/B0CJBRYQF3,
-Tools,optional,DOWELL wire strippers,1,9.99,9.99,B08Y6GDS61,https://www.amazon.com/dp/B08Y6GDS61,
+group,status,id,item,qty,each_usd,line_usd,asin,url,where_xyz_mm,fastening,note
+Drivetrain,owned,MOT,JK42HS40-1704-13A NEMA 17 stepper,5,,,,,"FL (motor 1) (+125, +172, 40); FR (motor 2) (+125, -172, 40); RL (motor 3) (-125, +172, 40); RR (motor 4) (-125, -172, 40)",4× M3×6 socket head through leg into flange,"Four drive wheels, fifth spare. 0.41 N·m holding, 1.7 A, 240 g each, 5 mm flatted shaft."
+Drivetrain,buy,WHL,SmaringRobot 4× 80 mm mecanum wheels with 5 mm couplings,1,29.99,29.99,B0DWSWQV4T,https://www.amazon.com/dp/B0DWSWQV4T,"FL (left-hand) (+125, +220, 40); FR (right-hand) (+125, -220, 40); RL (right-hand) (-125, +220, 40); RR (left-hand) (-125, -220, 40)",coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware,"Two left-hand, two right-hand. Coupler fits the motor's 5 mm flatted shaft; do not print a hub."
+Drivetrain,buy,BRK,Anndason 6× steel NEMA 17 L-brackets with screws,1,16.99,16.99,B073QW9RPZ,https://www.amazon.com/dp/B073QW9RPZ,"FL (+125, +178, 70); FR (+125, -178, 70); RL (-125, +178, 70); RR (-125, -178, 70)",2× M4×10 hex + 2× M4 T-nut (bottom slot),"Four used, two spare. 3 mm steel, 113 g each. Base slots are 4.3 mm: M4 T-nuts, not M5."
+Frame,buy,RAIL,VICHSAMWY 4× 350 mm 2020 V-slot aluminium extrusion,1,16.59,16.59,B099M9DMSL,https://www.amazon.com/dp/B099M9DMSL,"side left (+0, +185, 81); side right (+0, -185, 81); cross front (+165, +0, 81); cross rear (-165, +0, 81)",—,All four used at full length. Nothing to cut.
+Frame,buy,CNR,TOCLUX 20× 2020 corner brackets with M5 screws and T-nuts,1,14.99,14.99,B0F1B85397,https://www.amazon.com/dp/B0F1B85397,"front-left top (+146, +166, 82); front-left bottom (+146, +166, 80); front-right top (+146, -166, 82); front-right bottom (+146, -166, 80) +4 more",2× M5×8 hex + 2× M5 T-nut,Eight for the frame corners; the rest and the 40 M5 T-nuts cover deck and post attachment.
+Frame,buy,TNUT,"Bemaka 2020 T-nut kit, M3/M4/M5, with M4×10 and M4×12 screws",1,13.99,13.99,B0FQ55VFDK,https://www.amazon.com/dp/B0FQ55VFDK,—,—,The M4 T-nuts and M4×10 screws hold the motor brackets to the rails.
+Deck and body,buy,PETG,OVERTURE black PETG 1 kg 1.75 mm,1,14.69,14.69,B07PGYHYV8,https://www.amazon.com/dp/B07PGYHYV8,"front tile (+85, +0, 94); rear tile (-85, +0, 94); battery cradle (+0, +0, 76); radar post (-165, +0, 196) +1 more","6× M5×10 hex + 6× M5 T-nut (top slots: 3 per side-rail edge); 4× M4×16 through deck + 4× M4 nyloc, at X ±60, Y ±18","Two deck tiles, battery cradle, radar post + bar, fan bridge, four ToF clips. ~0.5 kg of the spool."
+Motion control,buy,UNO,ELEGOO Uno R3 with USB cable,1,16.99,16.99,B01EWOE0UU,https://www.amazon.com/dp/B01EWOE0UU,"(-116, +87, 128)",4× M2.5×10 nylon standoff + M2.5 screw + M2.5 nut under deck (Uno holes 3.2 mm),Generates the step pulses on a timer interrupt. The included USB cable runs to the Pi.
+Motion control,buy,SHIELD,CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks,1,15.99,15.99,B0B24YS695,https://www.amazon.com/dp/B0B24YS695,—,—,"Required, not optional: A4988 fails the ramp case. Fit the D12/D13 jumpers for the fourth axis. Vref = 5 × Rsense × I."
+Motion control,buy,FAN,SIXQJZML 2× 40 × 40 × 10 mm 5 V fans,1,5.99,5.99,B0DY6GQMJX,https://www.amazon.com/dp/B0DY6GQMJX,"(-116, +87, 111)",2× M3×8 into deck + 4× M3×30 through fan into bridge,"One over the drivers on a printed bridge, one spare. Powered from the 5 V buck."
+Motion control,owned,TB6600,TB6600 stepper driver,1,,,,,—,—,Spare. No fifth axis in this design.
+Power,buy,LIPO,"Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60",1,34.99,34.99,B0972RKJDS,https://www.amazon.com/dp/B0972RKJDS,"(+0, +0, 76)",1× 20×250 mm strap through cradle slots,"343 g, 132 × 43 × 25 mm. Slung under the deck centre — the lowest heavy part on the rover."
+Power,buy,BUCK5,DROK 8–35 V to 5 V 3 A buck converter,1,9.99,9.99,B07P663XJV,https://www.amazon.com/dp/B07P663XJV,"(-44, +80, 113)",2× M3×8 into deck (or VHB + zip tie),Replaces the power bank (−310 g). Feeds the Pi on GPIO 5 V. Set 5.10 V before connecting.
+Power,owned,BUCK6,6 V servo buck converter (Ceres),1,,,,,"(-44, +110, 113)",2× M3×8 into deck,From the Ceres turret rail. Confirm it is still in the box; feeds PCA9685 V+.
+Power,buy,CHG,"SKYRC B6AC Neo balance charger, 60 W AC",1,53.00,53.00,B0CV64ZB2L,https://www.amazon.com/dp/B0CV64ZB2L,—,—,Start at 2.6 A = 0.5 C. Follow the pack's instructions.
+Power,buy,XT60EXT,LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions,1,7.99,7.99,B09CT5VGPW,https://www.amazon.com/dp/B09CT5VGPW,—,—,Charger lead.
+Power,buy,XT60PIG,Padarsey 2 pairs XT60 14 AWG pigtails,1,6.99,6.99,B07BF8154S,https://www.amazon.com/dp/B07BF8154S,—,—,The rover-side pigtail splits into the three 18 AWG branches.
+Power,buy,ALARM,AOICRIE 2× 1S–8S cell voltage alarms,1,6.59,6.59,B07VR4SV8C,https://www.amazon.com/dp/B07VR4SV8C,—,—,"On the balance lead, velcroed to the cradle side."
+Power,buy,BAG,Tenergy LiPo charging bag,1,8.99,8.99,B08QCMMGJT,https://www.amazon.com/dp/B08QCMMGJT,—,—,
+Power,buy,WIRE18,"XINWANG 18 AWG silicone wire, 6 colours × 5 m",1,17.89,17.89,B0B15CH937,https://www.amazon.com/dp/B0B15CH937,"power (-60, +40, 96)",cable ties every 60 mm to the deck; heat-shrink every joint,Power branches. 22 AWG would carry it; 18 AWG is comfortable.
+Power,buy,CORD,Bicmice US IEC C7 mains cord 6 ft,1,6.99,6.99,B08N42RQF6,https://www.amazon.com/dp/B08N42RQF6,—,—,Omit if the charger ships with the right cord.
+Power,owned,SW,Three-pin switch,1,,,,,—,—,Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch.
+Sensing and compute,owned,PI,Raspberry Pi,1,,,,,"(-108, -88, 116)","4× M2.5×10 nylon standoff + M2.5 screw + nut, 58×49 hole pattern","Camera, radar processing, servo control, interface. Model still unknown — affects the 5 V budget."
+Sensing and compute,buy,SD,"Kingston Canvas Select Plus 64 GB microSD, A1",1,17.99,17.99,B07YGZQ4H8,https://www.amazon.com/dp/B07YGZQ4H8,—,—,
+Sensing and compute,buy,CAM,"ELP USBFHD01M-L28 USB camera, 2.8 mm lens",1,22.49,22.49,B00KA80N9U,https://www.amazon.com/dp/B00KA80N9U,"on tilt bracket (+110, +0, 212)",4× M2×6 (or VHB if hole pattern differs),"Rides on the Ceres tilt bracket. 38 × 38 board, ~50 g — lighter than the C920 the turret carried before."
+Sensing and compute,owned,LD2410C,HLK-LD2410C 24 GHz radar,2,,,,,"#1 (primary) (-159, +50, 300); #2 (spare) (+0, +0, 0)",2× M2 or a printed clip; nothing metal within 10 mm of the antenna face,"Primary presence sensor; sees a motionless person. One on the post, one spare."
+Sensing and compute,owned,LD2450,HLK-LD2450 24 GHz radar,1,,,,,"(-159, -50, 300)",2× M2 or printed clip,x/y of moving targets only. On the post 100 mm from the LD2410C.
+Sensing and compute,owned,ESP32,ESP32-S3 DevKitC (N16R8),3,,,,,"#1 radar bridge (-100, -17, 112)",4× M2.5 nylon standoff + screw (holes ≈3 mm),One bridges both radar UARTs to the Pi over USB. Two free for WiFi CSI experiments.
+Sensing and compute,owned,CP2102,CP2102 USB-UART,1,,,,,—,—,Bench setup only. Check it is 3.3 V logic before touching a radar.
+Sensing and compute,buy,TOF,DWEII 2× VL53L1X time-of-flight distance modules,2,14.99,29.98,B09V4DS888,https://www.amazon.com/dp/B09V4DS888,"front (+179, +0, 81); rear (-179, +0, 81); left (+0, +199, 81); right (+0, -199, 81)",1× M5×8 + M5 T-nut (clip) + 2× M2 (module),"Four total: front, rear, left, right, each in a printed clip on the rail's outer slot."
+Sensing and compute,buy,USBC,etguuds 2× USB-A to USB-C 6 ft cables,1,7.99,7.99,B07Z1TQYDN,https://www.amazon.com/dp/B07Z1TQYDN,—,—,Pi to ESP32. Trim to length or coil and tie.
+Turret (Ceres),owned,PT,Ceres pan/tilt turret: 2× MG996R-class servos + bracket + 100 × 60 base,1,,,,,"base (+110, +0, 99)",4× M3×12 through base + deck + 4× M3 nyloc,From the farm rover. Bolts to the front deck tile at X +110. Camera on the tilt bracket.
+Turret (Ceres),owned,PCA,PCA9685 16-channel servo driver (Ceres),1,,,,,"(-29, -98, 112)",4× M2.5×10 nylon standoff + screw,"I2C 0x40 from the Pi. Tilt ch 0, pan ch 2, as in turret_duet.ino."
+Fasteners and assembly,buy,M3KIT,"Fgruh 750-piece M3 screw, nut and washer assortment",1,9.99,9.99,B0FGV5FCBN,https://www.amazon.com/dp/B0FGV5FCBN,—,—,"16× M3×6 motor screws, turret base bolts, buck and fan-bridge screws."
+Fasteners and assembly,buy,STANDOFF,COMRUN M2.5 nylon standoff kit,1,9.99,9.99,B0CKBWQSNY,https://www.amazon.com/dp/B0CKBWQSNY,—,—,"Uno, Pi, PCA9685, ESP32 — 16 standoffs."
+Fasteners and assembly,buy,M2KIT,"645-piece M2 stainless screw, nut and washer set, button head",1,6.99,6.99,B0DFWWFY4Q,https://www.amazon.com/dp/B0DFWWFY4Q,—,—,"Radar, ToF and camera boards have ~2 mm holes that no other kit covers. 16 screws used."
+Fasteners and assembly,buy,STRAP,MEIVIFPV 5× 20 × 250 mm battery straps,1,9.99,9.99,B0GH8CGW2T,https://www.amazon.com/dp/B0GH8CGW2T,"battery (+0, +0, 76)",—,One through the cradle; spares.
+Fasteners and assembly,buy,SHRINK,Ginsco 580-piece heat-shrink assortment,1,7.99,7.99,B01MFA3OFA,https://www.amazon.com/dp/B01MFA3OFA,—,—,Every power joint.
+Fasteners and assembly,buy,TIES,ALLWIN 100 cable mounts + 100 cable ties,1,6.99,6.99,B0F9T5G2J5,https://www.amazon.com/dp/B0F9T5G2J5,—,—,Motor leads under the deck; power branches on top.
+Fasteners and assembly,owned,WIRE22,"Dupont leads, 22 AWG wire",stock,,,,,"signals (-80, +0, 96)",cable mounts on deck underside for motor leads,"I2C, UART, XSHUT lines, motor lead extensions if the 300 mm stock leads fall short."
+Tools,optional,SCALE,MEIYA hanging scale,1,7.99,7.99,B0GGHDNZWJ,https://www.amazon.com/dp/B0GGHDNZWJ,—,—,"The torque measurement: lever on the shaft, scale on the lever, T = F × arm."
+Tools,optional,CALIPER,Jiavarry 150 mm digital caliper,1,21.98,21.98,B08Y8M54M9,https://www.amazon.com/dp/B08Y8M54M9,—,—,Needed for every VERIFY dimension before drilling the deck. Skip only if you own one.
+Tools,optional,DMM,Westinghouse MM600V15 multimeter,1,34.89,34.89,B0DYJ465TC,https://www.amazon.com/dp/B0DYJ465TC,—,—,Vref and buck voltages.
+Tools,optional,IRON,Q-MING soldering iron kit,1,12.59,12.59,B087767KNW,https://www.amazon.com/dp/B087767KNW,—,—,
+Tools,optional,HEX,AMTOVL metric hex key set,1,9.99,9.99,B0CJBRYQF3,https://www.amazon.com/dp/B0CJBRYQF3,—,—,2.5 / 3 / 4 mm for M3 / M4 / M5.
+Tools,optional,STRIP,DOWELL wire strippers,1,9.99,9.99,B08Y6GDS61,https://www.amazon.com/dp/B08Y6GDS61,—,—,

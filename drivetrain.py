@@ -66,16 +66,18 @@ MASS_ITEMS = [
     ("4x JK42HS40 motors",                     4 * MOTOR_MASS_KG, "MEASURED"),
     ("4x 350 mm 2020 V-slot @ 0.50 kg/m",      4 * 0.350 * 0.50,  "ALLOCATED"),
     ("4x 80 mm mecanum wheel + 5 mm coupling", 4 * 0.150,         "ALLOCATED"),
-    ("4x steel NEMA 17 bracket",               4 * 0.060,         "ALLOCATED"),
+    ("4x steel NEMA 17 bracket",               4 * 0.113,         "MEASURED"),   # listing: 1.5 lb per 6 = 113 g each
+    ("Pan/tilt turret: 2x MG996R-class servo + bracket + PCA9685", 0.250, "ALLOCATED"),  # field-triage-rover hardware
+    ("6 V servo buck converter",               0.040,             "ALLOCATED"),
     ("8x 2020 corner bracket + T-nuts",        8 * 0.012,         "ALLOCATED"),
     ("Uno + CNC Shield + 4 drivers + fan",     0.117,             "ALLOCATED"),
     ("Raspberry Pi + case",                    0.070,             "ALLOCATED"),
     ("Zeee 3S 5200 mAh LiPo",                  0.343,             "MEASURED"),
-    ("Power bank (model unknown)",             0.350,             "ALLOCATED"),
+    ("5 V 3 A buck for Pi logic (replaces power bank)", 0.040,    "ALLOCATED"),  # −0.31 kg vs bank
     ("2x LD2410C + LD2450 + 2x ESP32-S3",      0.060,             "ALLOCATED"),
     ("USB camera",                             0.050,             "ALLOCATED"),
     ("4x VL53L1X",                             0.020,             "ALLOCATED"),
-    ("PETG deck, mounts, battery cradle",      0.450,             "ALLOCATED"),
+    ("PETG deck, cradle, radar post, clips",   0.500,             "ALLOCATED"),
     ("Straps, ties, heat shrink",              0.050,             "ALLOCATED"),
     ("18 AWG wiring + XT60",                   0.100,             "ALLOCATED"),
 ]

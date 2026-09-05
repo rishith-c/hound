@@ -6,35 +6,37 @@ MASS BUDGET
   4x JK42HS40 motors                            0.960 kg  MEASURED
   4x 350 mm 2020 V-slot @ 0.50 kg/m             0.700 kg  ALLOCATED
   4x 80 mm mecanum wheel + 5 mm coupling        0.600 kg  ALLOCATED
-  4x steel NEMA 17 bracket                      0.240 kg  ALLOCATED
+  4x steel NEMA 17 bracket                      0.452 kg  MEASURED
+  Pan/tilt turret: 2x MG996R-class servo + bracket + PCA9685  0.250 kg  ALLOCATED
+  6 V servo buck converter                      0.040 kg  ALLOCATED
   8x 2020 corner bracket + T-nuts               0.096 kg  ALLOCATED
   Uno + CNC Shield + 4 drivers + fan            0.117 kg  ALLOCATED
   Raspberry Pi + case                           0.070 kg  ALLOCATED
   Zeee 3S 5200 mAh LiPo                         0.343 kg  MEASURED
-  Power bank (model unknown)                    0.350 kg  ALLOCATED
+  5 V 3 A buck for Pi logic (replaces power bank)  0.040 kg  ALLOCATED
   2x LD2410C + LD2450 + 2x ESP32-S3             0.060 kg  ALLOCATED
   USB camera                                    0.050 kg  ALLOCATED
   4x VL53L1X                                    0.020 kg  ALLOCATED
-  PETG deck, mounts, battery cradle             0.450 kg  ALLOCATED
+  PETG deck, cradle, radar post, clips          0.500 kg  ALLOCATED
   Straps, ties, heat shrink                     0.050 kg  ALLOCATED
   18 AWG wiring + XT60                          0.100 kg  ALLOCATED
-  fasteners + wiring allowance 15%              0.631 kg  ALLOCATED
-  DESIGN MASS                                   4.837 kg
+  fasteners + wiring allowance 15%              0.667 kg  ALLOCATED
+  DESIGN MASS                                   5.115 kg
   ceiling for sensitivity                       6.000 kg
 
 REQUIRED TORQUE PER WHEEL   (T = F · r · √2 / (4 · η),  η = 0.85)
   load case                         F total N  T @ design   T @ 6 kg
-  A  level cruise, a=0.1                 6.18      0.1028     0.1275
-  B  level responsive, a=0.3             7.15      0.1189     0.1475
-  C  5° ramp, a=0.3                     11.26      0.1873     0.2324
-  D  strafe on carpet, a=0.3             8.57      0.1426     0.1768
+  A  level cruise, a=0.1                 6.53      0.1087     0.1275
+  B  level responsive, a=0.3             7.56      0.1257     0.1475
+  C  5° ramp, a=0.3                     11.91      0.1981     0.2324
+  D  strafe on carpet, a=0.3             9.06      0.1508     0.1768
 
 AVAILABLE TORQUE   (T_hold 0.4119 N·m × I/1.7 × k_dyn 0.7)
   driver / current setting           I A  T avail  margins A / B / C / D at design mass   verdict
-  A4988, no cooling                 1.00   0.1696  1.65 / 1.43 / 0.91 / 1.19   FAIL   (6 kg worst 0.73)
-  A4988, heatsink + fan             1.20   0.2035  1.98 / 1.71 / 1.09 / 1.43   FAIL   (6 kg worst 0.88)
-  DRV8825, no cooling               1.50   0.2544  2.48 / 2.14 / 1.36 / 1.78   PASS   (6 kg worst 1.09)
-  DRV8825, heatsink + fan           1.70   0.2883  2.81 / 2.43 / 1.54 / 2.02   PASS   (6 kg worst 1.24)
+  A4988, no cooling                 1.00   0.1696  1.56 / 1.35 / 0.86 / 1.12   FAIL   (6 kg worst 0.73)
+  A4988, heatsink + fan             1.20   0.2035  1.87 / 1.62 / 1.03 / 1.35   FAIL   (6 kg worst 0.88)
+  DRV8825, no cooling               1.50   0.2544  2.34 / 2.02 / 1.28 / 1.69   PASS   (6 kg worst 1.09)
+  DRV8825, heatsink + fan           1.70   0.2883  2.65 / 2.29 / 1.46 / 1.91   PASS   (6 kg worst 1.24)
 
 SPEED–TORQUE VALIDITY   (k_dyn assumes operation well below the corner speed)
   I = 1.0 A: full-current corner    342 rpm   vs operating 24–72 rpm   ratio ≥ 4.8
@@ -47,13 +49,13 @@ STEP RATE   (1/8 microstep, four wheels)
   0.3 m/s =  71.6 rpm →   1910 steps/s per wheel,   7639 total   OK vs 5 000/axis ISR budget
 
 POWER AND ENDURANCE   (Zeee 3S 5200 mAh, 80% usable, bus 10.5 V)
-  I = 1.0 A: copper   6.0 W + mech  1.2 W + driver  2.6 W =   9.7 W → 0.93 A →  4.5 h motors only
-  I = 1.5 A: copper  13.5 W + mech  1.2 W + driver  5.8 W =  20.4 W → 1.95 A →  2.1 h motors only
+  I = 1.0 A: copper   6.0 W + mech  1.3 W + driver  2.6 W =   9.8 W → 0.93 A →  4.4 h motors only
+  I = 1.5 A: copper  13.5 W + mech  1.3 W + driver  5.8 W =  20.5 W → 1.95 A →  2.1 h motors only
   Holding at rest draws the copper + driver terms with zero motion. Cut ENABLE (D8)
   when parked; mecanum wheels on a level floor do not roll away.
 
 SHAFT RADIAL LOAD   (NEMA 17 typical rating 28 N at 20 mm from flange — ASSUMED, unverified for this motor)
-  static 11.9 N/wheel; ×2.0 dynamic (kerbs, bumps) = 23.7 N   margin 1.18  PASS   ← thinnest margin in the design
+  static 12.5 N/wheel; ×2.0 dynamic (kerbs, bumps) = 25.1 N   margin 1.12  PASS   ← thinnest margin in the design
   Mount the wheel as close to the motor face as the coupling allows.
 
 STATIC STABILITY   (h_CG ≈ 0.10 m with battery on the deck — ALLOCATED)
@@ -61,7 +63,7 @@ STATIC STABILITY   (h_CG ≈ 0.10 m with battery on the deck — ALLOCATED)
 
 ==============================================================================
 VERDICT
-  Four motors carry the rover at design mass 4.84 kg with the lowest passing
+  Four motors carry the rover at design mass 5.12 kg with the lowest passing
   setting: DRV8825, no cooling. Governing case is C (5° ramp): the smallest margin
   in every row. At the 6 kg ceiling, case C fails at every current — keep mass
   under ~5.2 kg or accept level floors only.
@@ -76,3 +78,4 @@ NOT ANALYSED: fatigue, buckling, impact, vibration, roller wear, uneven floors,
   or drivers, battery sag under stall, firmware timing. None of this is a
   substitute for the torque measurement above.
 
+wrote drivetrain.json

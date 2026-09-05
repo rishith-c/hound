@@ -1,52 +1,62 @@
 [
-  [
-    "JK42HS40-1704-13A motors",
-    "5",
-    "Four drive wheels; fifth spare"
-  ],
-  [
-    "Raspberry Pi",
-    "1",
-    "Video, interface, sensor processing; model still unknown"
-  ],
-  [
-    "Power bank",
-    "1",
-    "Logic power; verify model, ports and combined output"
-  ],
-  [
-    "HLK-LD2450",
-    "1",
-    "Fixed moving-target tracker; no heartbeat output"
-  ],
-  [
-    "HLK-LD2410C",
-    "2",
-    "One primary stationary/moving presence sensor; second spare"
-  ],
-  [
-    "ESP32-S3",
-    "3",
-    "One sensor interface; two available for optional CSI experiments"
-  ],
-  [
-    "CP2102 USB-UART adapter",
-    "1",
-    "Bench configuration or one radar-to-Pi link; verify 3.3 V UART levels"
-  ],
-  [
-    "TB6600",
-    "1",
-    "Spare; no fifth axis in this design"
-  ],
-  [
-    "Dupont leads and 22 AWG wire",
-    "Existing stock",
-    "Signals and suitable low-current connections"
-  ],
-  [
-    "Three-pin switch",
-    "1",
-    "Motor switch candidate; DC rating and pinout unverified"
-  ]
+ [
+  "JK42HS40-1704-13A NEMA 17 stepper",
+  "5",
+  "Four drive wheels, fifth spare. 0.41 N\u00b7m holding, 1.7 A, 240 g each, 5 mm flatted shaft."
+ ],
+ [
+  "TB6600 stepper driver",
+  "1",
+  "Spare. No fifth axis in this design."
+ ],
+ [
+  "6 V servo buck converter (Ceres)",
+  "1",
+  "From the Ceres turret rail. Confirm it is still in the box; feeds PCA9685 V+."
+ ],
+ [
+  "Three-pin switch",
+  "1",
+  "Not wired in until its DC rating is read and is \u2265 10 A. Until then the XT60 is the switch."
+ ],
+ [
+  "Raspberry Pi",
+  "1",
+  "Camera, radar processing, servo control, interface. Model still unknown \u2014 affects the 5 V budget."
+ ],
+ [
+  "HLK-LD2410C 24 GHz radar",
+  "2",
+  "Primary presence sensor; sees a motionless person. One on the post, one spare."
+ ],
+ [
+  "HLK-LD2450 24 GHz radar",
+  "1",
+  "x/y of moving targets only. On the post 100 mm from the LD2410C."
+ ],
+ [
+  "ESP32-S3 DevKitC (N16R8)",
+  "3",
+  "One bridges both radar UARTs to the Pi over USB. Two free for WiFi CSI experiments."
+ ],
+ [
+  "CP2102 USB-UART",
+  "1",
+  "Bench setup only. Check it is 3.3 V logic before touching a radar."
+ ],
+ [
+  "Ceres pan/tilt turret: 2\u00d7 MG996R-class servos + bracket + 100 \u00d7 60 base",
+  "1",
+  "From the farm rover. Bolts to the front deck tile at X +110. Camera on the tilt bracket."
+ ],
+ [
+  "PCA9685 16-channel servo driver (Ceres)",
+  "1",
+  "I2C 0x40 from the Pi. Tilt ch 0, pan ch 2, as in turret_duet.ino."
+ ],
+ [
+  "Dupont leads, 22 AWG wire",
+  "stock",
+  "I2C, UART, XSHUT lines, motor lead extensions if the 300 mm stock leads fall short."
+ ]
 ]
