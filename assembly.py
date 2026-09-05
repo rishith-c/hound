@@ -140,7 +140,7 @@ def on_deck(pid, inst, name, dims, x, y, mounts, fast, torque, mass, verify="", 
 on_deck("UNO", "—", "UNO R4 WiFi + DRV8825 CNC Shield stack", (UNO[0], UNO[1], SHIELD_STACK_H), -115.7, 86.7,
         "deck top, rear-left", "printed 10 mm bosses on the deck tile + 2 cable ties through printed slots", "hand-tight",
         M["uno_stack"], verify="stack height with heatsinks",
-        note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-B faces −X.")
+        note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces −X. Jumpers: D12 + D13 on the A header, MS3 under each driver (1/16), EN/GND open. Drivers in with EN on EN.")
 on_deck("FAN", "—", "40×40×10 5 V fan over the drivers", FAN, -115.7, 86.7, "printed PETG bridge over the shield",
         "2× M3×8 into deck + 4× M3×30 through fan into bridge", "hand-tight", M["fan"],
         note=f"Blows down onto the four DRV8825 heatsinks. Fan face at Z ≈ {DECK_TOP + 10 + SHIELD_STACK_H + 8:.0f}.")
