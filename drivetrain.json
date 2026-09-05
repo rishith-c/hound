@@ -1,0 +1,99 @@
+{
+ "design_mass_kg": 4.837,
+ "subtotal_kg": 4.206,
+ "margin_required": 1.25,
+ "cases": {
+  "A  level cruise, a=0.1": {
+   "force_N": 6.18,
+   "torque_design_Nm": 0.1028,
+   "torque_6kg_Nm": 0.1275
+  },
+  "B  level responsive, a=0.3": {
+   "force_N": 7.15,
+   "torque_design_Nm": 0.1189,
+   "torque_6kg_Nm": 0.1475
+  },
+  "C  5\u00b0 ramp, a=0.3": {
+   "force_N": 11.26,
+   "torque_design_Nm": 0.1873,
+   "torque_6kg_Nm": 0.2324
+  },
+  "D  strafe on carpet, a=0.3": {
+   "force_N": 8.57,
+   "torque_design_Nm": 0.1426,
+   "torque_6kg_Nm": 0.1768
+  }
+ },
+ "drivers": {
+  "A4988, no cooling": {
+   "i_set_A": 1.0,
+   "t_avail_Nm": 0.1696,
+   "margins_design": [
+    1.65,
+    1.43,
+    0.91,
+    1.19
+   ],
+   "margins_6kg": [
+    1.33,
+    1.15,
+    0.73,
+    0.96
+   ],
+   "pass": false
+  },
+  "A4988, heatsink + fan": {
+   "i_set_A": 1.2,
+   "t_avail_Nm": 0.2035,
+   "margins_design": [
+    1.98,
+    1.71,
+    1.09,
+    1.43
+   ],
+   "margins_6kg": [
+    1.6,
+    1.38,
+    0.88,
+    1.15
+   ],
+   "pass": false
+  },
+  "DRV8825, no cooling": {
+   "i_set_A": 1.5,
+   "t_avail_Nm": 0.2544,
+   "margins_design": [
+    2.48,
+    2.14,
+    1.36,
+    1.78
+   ],
+   "margins_6kg": [
+    2.0,
+    1.73,
+    1.09,
+    1.44
+   ],
+   "pass": true
+  },
+  "DRV8825, heatsink + fan": {
+   "i_set_A": 1.7,
+   "t_avail_Nm": 0.2883,
+   "margins_design": [
+    2.81,
+    2.43,
+    1.54,
+    2.02
+   ],
+   "margins_6kg": [
+    2.26,
+    1.96,
+    1.24,
+    1.63
+   ],
+   "pass": true
+  }
+ },
+ "governing_setting": "DRV8825, no cooling",
+ "governing_case": "C  5\u00b0 ramp, a=0.3"
+}
