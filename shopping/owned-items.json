@@ -5,9 +5,19 @@
   "Four drive wheels, fifth spare. 0.41 N\u00b7m holding, 1.7 A, 240 g each, 5 mm flatted shaft."
  ],
  [
+  "Arduino UNO R4 WiFi (from Walleye)",
+  "1",
+  "The CNC Shield V3 stacks on the R4's headers; 5 V logic, same pinout. Custom timer-ISR firmware, not GRBL. Frees up when the Walleye rail retires."
+ ],
+ [
   "TB6600 stepper driver",
   "1",
   "Spare. No fifth axis in this design."
+ ],
+ [
+  "11.1 V gel-blaster LiPo + its charger",
+  "1",
+  "Read the label: mAh, C rating, connector. Needs \u2265 4 A continuous (any C \u2265 4 on 1000 mAh does it). Charge only with a balance charger; if yours is a two-wire wall brick, that is the first thing to replace, not the pack."
  ],
  [
   "6 V servo buck converter (Ceres)",
@@ -23,6 +33,11 @@
   "Raspberry Pi",
   "1",
   "Camera, radar processing, servo control, interface. Model still unknown \u2014 affects the 5 V budget."
+ ],
+ [
+  "Your USB webcam (C920-class, ~162 g) on the Ceres tilt bracket",
+  "1",
+  "The turret was built for it. Person detection with MobileNet-SSD on the Pi at ~25 fps. If it turns out heavier than 170 g, the ELP board camera (B00KA80N9U, 50 g, $22.49) is the fallback."
  ],
  [
   "HLK-LD2410C 24 GHz radar",
@@ -57,6 +72,6 @@
  [
   "Dupont leads, 22 AWG wire",
   "stock",
-  "I2C, UART, XSHUT lines, motor lead extensions if the 300 mm stock leads fall short."
+  "Everything, including the power branches: the wire calc puts 22 AWG at a 7 A limit against a 4 A burst \u2014 18 AWG was comfort, not need. I2C, UART, XSHUT, motor lead extensions."
  ]
 ]

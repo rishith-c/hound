@@ -36,7 +36,7 @@ def line_total(it):
     return it["qty"] * it["price"] if it["status"] != "owned" else 0.0
 
 def where(it):
-    ps = [p for p in placed.get(it["id"], []) if p["l"] or p["id"] in ("WIRE18", "WIRE22")]
+    ps = [p for p in placed.get(it["id"], []) if p["l"] or p["id"] == "WIRE22"]
     if not ps:
         return "—"
     cells = [f'{p["instance"]} ({p["x"]:+.0f}, {p["y"]:+.0f}, {p["z"]:.0f})' if p["instance"] != "—"
@@ -100,7 +100,7 @@ big_table = f"""<div class="table-wrap"><table>
 </thead>
 <tbody>
 {"".join(rows)}
-<tr><th colspan="4">Buy</th><th align="right">{money(buy_total)}</th><th colspan="2">Optional tools {money(opt_total)} · {owned_n} items already owned</th></tr>
+<tr><th colspan="4">Buy</th><th align="right">{money(buy_total)}</th><th colspan="2">Optional {money(opt_total)} · {owned_n} items already owned</th></tr>
 </tbody></table></div>"""
 
 # ── Placement table ─────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ page = f"""<!doctype html>
 *{{box-sizing:border-box}}body{{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}main{{max-width:1180px;margin:48px auto;padding:0 24px 60px}}h1{{font-size:30px;line-height:1.25}}h2{{font-size:22px;margin-top:36px}}a{{color:#165bc4;text-underline-offset:3px}}table{{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}}th,td{{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}}th{{background:#f5f6f7}}code{{background:#f3f4f5;padding:2px 4px;border-radius:3px}}.table-wrap{{overflow-x:auto}}p{{margin:16px 0}}.note{{font-size:13px;color:#555;margin-top:4px}}.where{{font-size:13px;white-space:nowrap}}td.where{{white-space:normal;min-width:180px}}tr.group th{{background:#e9ecef;font-weight:600}}.tag{{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}}em{{color:#8a4b00;font-style:normal;font-size:13px}}@media(max-width:600px){{main{{margin:28px auto;padding:0 16px 36px}}h1{{font-size:26px}}table{{min-width:620px}}}}@media print{{main{{max-width:none;margin:0;padding:0}}a{{color:inherit}}}}
 input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}}.have-cell{{text-align:center;white-space:nowrap}}tr.owned td{{background:#eff8f0}}#checklist-note{{font-size:14px;color:#555}}
 </style></head><body><main><h1>{esc(meta["title"])}</h1>
-<p><strong>Buy: {money(buy_total)} USD before tax/shipping. Optional tools: {money(opt_total)}. Already owned: {owned_n} items.</strong> {esc(meta["intro"])}</p>
+<p><strong>Buy: {money(buy_total)} USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): {money(opt_total)}. Already owned: {owned_n} items.</strong> {esc(meta["intro"])}</p>
 <p><a href="bom.csv" download>Download the BOM as CSV</a> · <a href="assembly.csv" download>Download every placement as CSV</a> · <a href="drivetrain.txt">Read the full drivetrain calculation</a></p>
 <h2>The design I would build</h2>
 {paras(prose["design"])}
