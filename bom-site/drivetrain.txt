@@ -8,12 +8,11 @@ MASS BUDGET
   4x 80 mm mecanum wheel + 5 mm coupling        0.600 kg  ALLOCATED
   4x steel NEMA 17 bracket                      0.452 kg  MEASURED
   Pan/tilt turret: 2x MG996R-class servo + bracket + PCA9685  0.250 kg  ALLOCATED
-  6 V servo buck converter                      0.040 kg  ALLOCATED
+  2x LM2596 buck (owned): 5.1 V Pi, 6.0 V servos  0.040 kg  ALLOCATED
   8x 2020 corner bracket + T-nuts               0.096 kg  ALLOCATED
   Uno + CNC Shield + 4 drivers + fan            0.117 kg  ALLOCATED
   Raspberry Pi + case                           0.070 kg  ALLOCATED
   Zeee 3S 5200 mAh LiPo                         0.343 kg  MEASURED
-  5 V 3 A buck for Pi logic (replaces power bank)  0.040 kg  ALLOCATED
   2x LD2410C + LD2450 + 2x ESP32-S3             0.060 kg  ALLOCATED
   Owned USB webcam (C920-class)                 0.162 kg  ALLOCATED
   2x VL53L1X                                    0.010 kg  ALLOCATED
@@ -21,23 +20,23 @@ MASS BUDGET
   PETG deck, cradle, radar post, clips          0.500 kg  ALLOCATED
   Cable ties, tape                              0.030 kg  ALLOCATED
   22 AWG wiring + connectors                    0.080 kg  ALLOCATED
-  fasteners + wiring allowance 15%              0.680 kg  ALLOCATED
-  DESIGN MASS                                   5.215 kg
+  fasteners + wiring allowance 15%              0.674 kg  ALLOCATED
+  DESIGN MASS                                   5.169 kg
   ceiling for sensitivity                       6.000 kg
 
 REQUIRED TORQUE PER WHEEL   (T = F · r · √2 / (4 · η),  η = 0.85)
   load case                         F total N  T @ design   T @ 6 kg
-  A  level cruise, a=0.1                 6.66      0.1108     0.1275
-  B  level responsive, a=0.3             7.70      0.1282     0.1475
-  C  5° ramp, a=0.3                     12.14      0.2020     0.2324
-  D  strafe on carpet, a=0.3             9.24      0.1537     0.1768
+  A  level cruise, a=0.1                 6.60      0.1098     0.1275
+  B  level responsive, a=0.3             7.64      0.1270     0.1475
+  C  5° ramp, a=0.3                     12.03      0.2002     0.2324
+  D  strafe on carpet, a=0.3             9.16      0.1524     0.1768
 
 AVAILABLE TORQUE   (T_hold 0.4119 N·m × I/1.7 × k_dyn 0.7)
   driver / current setting           I A  T avail  margins A / B / C / D at design mass   verdict
-  A4988, no cooling                 1.00   0.1696  1.53 / 1.32 / 0.84 / 1.10   FAIL   (6 kg worst 0.73)
-  A4988, heatsink + fan             1.20   0.2035  1.84 / 1.59 / 1.01 / 1.32   FAIL   (6 kg worst 0.88)
-  DRV8825, no cooling               1.50   0.2544  2.30 / 1.98 / 1.26 / 1.65   PASS   (6 kg worst 1.09)
-  DRV8825, heatsink + fan           1.70   0.2883  2.60 / 2.25 / 1.43 / 1.88   PASS   (6 kg worst 1.24)
+  A4988, no cooling                 1.00   0.1696  1.54 / 1.33 / 0.85 / 1.11   FAIL   (6 kg worst 0.73)
+  A4988, heatsink + fan             1.20   0.2035  1.85 / 1.60 / 1.02 / 1.34   FAIL   (6 kg worst 0.88)
+  DRV8825, no cooling               1.50   0.2544  2.32 / 2.00 / 1.27 / 1.67   PASS   (6 kg worst 1.09)
+  DRV8825, heatsink + fan           1.70   0.2883  2.62 / 2.27 / 1.44 / 1.89   PASS   (6 kg worst 1.24)
 
 SPEED–TORQUE VALIDITY   (k_dyn assumes operation well below the corner speed)
   I = 1.0 A: full-current corner    342 rpm   vs operating 24–72 rpm   ratio ≥ 4.8
@@ -56,7 +55,7 @@ POWER AND ENDURANCE   (Zeee 3S 5200 mAh, 80% usable, bus 10.5 V)
   when parked; mecanum wheels on a level floor do not roll away.
 
 SHAFT RADIAL LOAD   (NEMA 17 typical rating 28 N at 20 mm from flange — ASSUMED, unverified for this motor)
-  static 12.8 N/wheel; ×2.0 dynamic (kerbs, bumps) = 25.6 N   margin 1.09  PASS   ← thinnest margin in the design
+  static 12.7 N/wheel; ×2.0 dynamic (kerbs, bumps) = 25.4 N   margin 1.10  PASS   ← thinnest margin in the design
   Mount the wheel as close to the motor face as the coupling allows.
 
 STATIC STABILITY   (h_CG ≈ 0.10 m with battery on the deck — ALLOCATED)
@@ -64,7 +63,7 @@ STATIC STABILITY   (h_CG ≈ 0.10 m with battery on the deck — ALLOCATED)
 
 ==============================================================================
 VERDICT
-  Four motors carry the rover at design mass 5.22 kg with the lowest passing
+  Four motors carry the rover at design mass 5.17 kg with the lowest passing
   setting: DRV8825, no cooling. Governing case is C (5° ramp): the smallest margin
   in every row. At the 6 kg ceiling, case C fails at every current — keep mass
   under ~5.2 kg or accept level floors only.

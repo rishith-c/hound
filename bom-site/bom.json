@@ -10,14 +10,14 @@
   "design": [
    "Four independently driven 80 mm mecanum wheels on the four owned NEMA 17 steppers, a low 350 × 390 mm 2020 frame, the battery slung under the deck for a low centre of gravity, the Ceres pan/tilt turret at the front carrying your webcam and a thermal array so it can look around and track, and both radars on a 200 mm post at the rear looking forward over the turret. Two short-range ToF sensors guard front and rear. The fifth motor and TB6600 stay spare.",
    "No kit does this. Every mecanum chassis kit on Amazon is built for TT or DC gearmotors; none has a NEMA 17 mount. Steel L-brackets under the rails are the cleanest way to put your steppers on mecanum wheels, and the 5 mm couplers in the wheel set match the 5 mm flatted shaft on your motors.",
-   "Power is one pack — your gel-blaster LiPo to start. It feeds the motor drivers directly, a 5 V buck for the Pi, and the Ceres 6 V buck for the servos. The power bank is gone: 350 g of unknown mass was the difference between passing and failing the ramp case.",
+   "Power is one pack — your gel-blaster LiPo to start. It feeds the motor drivers directly and two of your LM2596 bucks: 5.1 V for the Pi, 6.0 V for the servos. The USB power bank stays off the rover: 350 g of unknown mass was the difference between passing and failing the ramp case, and an LM2596 does the same job at 20 g.",
    "Finding people is a four-sensor job, and that is how professional search-and-rescue kit is built: CO2 to narrow the area, thermal to confirm a body, a microphone for voice and knocking, radar for behind obstacles. The rover had only the radar leg. So the pan/tilt turret now carries a thermal array beside the camera — a warm body is unmistakable in 768 pixels, in the dark or in smoke, and thermal-plus-visible on one sweep is the strongest line-of-sight detector on the vehicle. A CO2 sensor rides the radar post for closed rooms, and an I2S microphone listens when the motors are stopped. The Pi runs MobileNet-SSD person detection on the camera at roughly 25 frames per second; fusing that with the thermal blob is the demo.",
    "LD2410C is the primary presence sensor for anyone the camera cannot see: stationary or micro-moving people behind a door or a stud wall, plus breathing. LD2450 adds positions and speeds of moving targets and loses motionless bodies beyond about 2 m; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements — and the 60 GHz breathing/heartbeat modules on the market were skipped: their heart-rate figure benchmarks at a 0.33 correlation against a chest strap, and the owned LD2410C already covers breathing. Start with one radar powered; test the two radar types separately, then together for interference. These sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present."
   ],
   "power": [
-   "Pack -> XT60 (or the pack's own connector) -> three 22 AWG branches: shield VMOT (four DRV8825 -> four motors), 5 V buck IN, 6 V buck IN. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the connector is the disconnect, so keep the pack leads short and sleeved.",
-   "5 V buck OUT -> Pi GPIO pins 2/4 (5 V) and 6 (GND). Set it to 5.10 V unloaded with a multimeter before the Pi is connected. Pi USB-A -> UNO R4 USB-C for logic power and serial.",
-   "6 V buck OUT -> PCA9685 V+ terminal (Ceres). Set to 6.0 V before connecting. Servo current returns through the PCA9685 terminal, never through a USB ground.",
+   "Pack -> XT60 (or the pack's own connector) -> three 22 AWG branches: shield VMOT (four DRV8825 -> four motors), LM2596 #1 IN, LM2596 #2 IN. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the connector is the disconnect, so keep the pack leads short and sleeved.",
+   "LM2596 #1 OUT -> Pi GPIO pins 2/4 (5 V) and 6 (GND). Turn the trimmer to 5.10 V with a multimeter, unloaded, before the Pi is connected — an LM2596 out of the bag can be sitting at 12 V or more. Pi USB-A -> UNO R4 USB-C for logic power and serial.",
+   "LM2596 #2 OUT -> PCA9685 V+ terminal. Set to 6.0 V before connecting. Servo current returns through the PCA9685 terminal, never through a USB ground.",
    "Pi -> camera by USB. Pi -> ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.",
    "Four VL53L1X share I2C only after XSHUT (GPIO 5, 6, 13, 19) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.",
    "Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail."
@@ -143,22 +143,12 @@
    "note": "Read the label: mAh, C rating, connector. Needs ≥ 4 A continuous (any C ≥ 4 on 1000 mAh does it). Charge only with a balance charger; if yours is a two-wire wall brick, that is the first thing to replace, not the pack."
   },
   {
-   "id": "BUCK5",
-   "status": "buy",
-   "group": "Power",
-   "asin": "B07P663XJV",
-   "item": "DROK 8–35 V to 5 V 3 A buck converter",
-   "qty": 1,
-   "price": 9.99,
-   "note": "Replaces the power bank (−310 g). Feeds the Pi on GPIO 5 V. Set 5.10 V before connecting."
-  },
-  {
-   "id": "BUCK6",
+   "id": "LM2596",
    "status": "owned",
    "group": "Power",
-   "item": "6 V servo buck converter (Ceres)",
-   "qty": 1,
-   "note": "From the Ceres turret rail. Confirm it is still in the box; feeds PCA9685 V+."
+   "item": "DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)",
+   "qty": 5,
+   "note": "Two used: one set to 5.10 V for the Pi, one set to 6.0 V for the servos; three spare. SET THE VOLTAGE WITH A MULTIMETER BEFORE CONNECTING ANYTHING — these ship at a random output, often above 12 V, which kills a Pi instantly. Rated ~2 A continuous without a heatsink; keep the Pi's USB load (camera, ESP32) in mind."
   },
   {
    "id": "SW",

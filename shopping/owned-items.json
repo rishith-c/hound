@@ -20,9 +20,9 @@
   "Read the label: mAh, C rating, connector. Needs \u2265 4 A continuous (any C \u2265 4 on 1000 mAh does it). Charge only with a balance charger; if yours is a two-wire wall brick, that is the first thing to replace, not the pack."
  ],
  [
-  "6 V servo buck converter (Ceres)",
-  "1",
-  "From the Ceres turret rail. Confirm it is still in the box; feeds PCA9685 V+."
+  "DROK LM2596 adjustable buck converters, pack of 5 (3.2\u201335 V in, 1.25\u201334 V out)",
+  "5",
+  "Two used: one set to 5.10 V for the Pi, one set to 6.0 V for the servos; three spare. SET THE VOLTAGE WITH A MULTIMETER BEFORE CONNECTING ANYTHING \u2014 these ship at a random output, often above 12 V, which kills a Pi instantly. Rated ~2 A continuous without a heatsink; keep the Pi's USB load (camera, ESP32) in mind."
  ],
  [
   "Three-pin switch",
