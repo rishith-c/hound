@@ -107,7 +107,9 @@
    "The Pi 5 uses a different i2c3 overlay name than the Pi 4. Both stated, since the Pi model is still unknown.",
    "The second LM2596, the Wago block and the top-side XT60 e-stop were wired in the text and placed nowhere. Now placed: LM2596 outboard of the XL4015, Wago and XT60 at the rear-right corner, clear of the Pi and the post flange.",
    "The printed-parts mass allowance (0.5 kg) no longer covered four tiles plus post, bridge, clips and lock. Tiles now specified at 20% infill (~80 g) and the allowance raised to 0.55 kg; the ramp margin still clears 1.25.",
-   "The post's flange, printed with the channel lying flat, would stand vertical and need supports. It is now a separate plate."
+   "The post's flange, printed with the channel lying flat, would stand vertical and need supports. It is now a separate plate.",
+   "The pack's ~100 mm lead cannot reach the rear-corner e-stop. The pigtail kit's second pair is now the extension.",
+   "Sixth pass found nothing structural. The design converged; what remains is measurement."
   ],
   "mesh": [
    "Motor shaft 5 mm with flat → wheel-kit 5 mm coupler (grub screw on the flat) → 80 mm mecanum hub. Same nominal bore on both sides; verify the coupler's set screw lands on the flat.",
@@ -292,7 +294,7 @@
    "item": "Padarsey 2 pairs XT60 14 AWG pigtails",
    "qty": 1,
    "price": 6.99,
-   "note": "The rover-side pigtail splits into the 22 AWG branches. The plug is the disconnect."
+   "note": "Two pairs: one pair is the split pigtail at the Wago, the other pair becomes the ~150 mm extension from the pack under the deck up to the e-stop connector at the rear corner — the pack's own lead is only ~100 mm."
   },
   {
    "id": "XT60EXT",
