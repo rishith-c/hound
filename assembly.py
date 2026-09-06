@@ -156,7 +156,7 @@ on_deck("FAN", "—", "40×40×10 5 V fan over the drivers", FAN, -115.7, 86.7, 
         "printed bridge on 2× M3×8 into deck bosses; fan held to the bridge by 2 cable ties", "hand-tight", M["fan"],
         note=f"Blows down onto the four DRV8825 heatsinks. Fan face at Z ≈ {DECK_TOP + 10 + SHIELD_STACK_H + 8:.0f}.")
 on_deck("PI", "—", "Raspberry Pi", PI, -107.5, -88.0, "deck top, rear-right",
-        "printed 10 mm bosses on the deck tile (58×49 pattern) + 4× M2×16 + nut (bosses 10 + tile 5)", "hand-tight", M["pi"],
+        "printed 8 mm bosses on the deck tile (58×49 pattern) + 4× M2×20 + nut (bosses 8 + tile 5 + PCB 1.6 + nut 1.6 = 16.2; the M2×16 first specified had 1 mm left for board and nut)", "hand-tight", M["pi"],
         note="Spans X −150..−65, Y −116..−60. USB ports face −X (rear). Powered from the 5 V buck on GPIO 2/4 (+) and 6 (−).")
 on_deck("PCA", "—", "PCA9685 servo driver (Ceres)", PCA9685, -29.0, -97.5, "deck top, beside the Pi",
         "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the 6 V buck. I2C from Pi. Servo cables run forward to the turret.")
@@ -167,8 +167,8 @@ on_deck("XL4015", "→ servos 6.0 V", "XL4015 5 A buck (owned)", BUCK, -44.5, 11
         "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 6.0 V before connecting the PCA9685. Own return to the shield GND.")
 on_deck("LM2596", "→ fan + radars 5.0 V", "LM2596 buck (owned)", (43.0, 21.0, 14.0), -44.5, 150.0, "deck top, outboard of the XL4015",
         "printed bosses + 2 cable ties", "hand-tight", 0.020, note="Trim to 5.0 V unloaded. Feeds the fan and both radars so they stay off the Pi's USB budget; dedicated GND wire to the ESP32 alongside the radar signals.")
-on_deck("WAGO", "pack split", "3× Wago 221 lever nuts in a printed clip", (40.0, 30.0, 18.0), -150.0, -165.0, "deck top, rear-right corner",
-        "printed clip + 1 cable tie", "hand-tight", 0.020, note="XT60 pigtail → shield VMOT, XL4015 IN, LM2596 IN. +, − and a spare.")
+on_deck("WAGO", "pack split", "2× Wago 221-415 5-way lever nuts in a printed clip", (40.0, 30.0, 18.0), -150.0, -165.0, "deck top, rear-right corner",
+        "printed clip + 1 cable tie", "hand-tight", 0.020, note="Two 5-way Wago 221-415: one for +, one for − — each takes the pigtail plus three branches (shield VMOT, XL4015 IN, LM2596 IN). A 3-way cannot: source plus three branches is four conductors per polarity.")
 on_deck("XT60", "e-stop", "XT60 mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -150.0, -132.0, "deck top, between the Pi and the Wago",
         "printed saddle + 1 cable tie on the fixed half", "hand-tight", 0.010, note="The pack lead comes up through the rear slot to here. One-handed disconnect from above = the emergency stop.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
@@ -221,7 +221,7 @@ for inst, x, y, face, dims in (("front", 175 + 2 + TOF[2] / 2, 0, "+X", (TOF[2],
                                ("rear", -(175 + 2 + TOF[2] / 2), 0, "−X", (TOF[2], TOF[0], TOF[1]))):
     add("TOF", inst, "VL53L1X ToF module", x, y, RAIL_ZC, *dims, f"on edge, emitter facing {face}, recessed 2 mm inside a printed bumper lip — it is the first thing to touch a wall",
         f"printed clip in the {inst} rail outer slot", "1× M5×8 + M5 T-nut (clip) + 2× M2 (module)", "hand-tight", M["tof"],
-        verify="module hole spacing", note=f"XSHUT → Pi GPIO {dict(front=5, rear=6)[inst]}. Both share I2C 0x29 until re-addressed at boot.")
+        verify="module hole spacing", note=f"XSHUT → Pi BCM GPIO {dict(front=22, rear=27)[inst]} (GPIO 4/5 are the thermal array's I2C bus). Both share I2C 0x29 until re-addressed at boot.")
 
 # ── Wiring ──────────────────────────────────────────────────────────────────
 add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → XL4015 IN (6 V servo rail)", -60, 40, DECK_TOP, 0, 0, 0,
@@ -271,7 +271,7 @@ print(f"\nCHECKS")
 print(f"  parts placed                 {len(parts)}")
 print(f"  AABB collisions              {len(collisions)}  {'PASS' if not collisions else 'FAIL: ' + '; '.join(collisions)}")
 print(f"  lowest point                 Z = {ground_min[0]:.1f} mm  ({ground_min[1]} {ground_min[2]})  → ground clearance")
-print(f"  frame envelope               350 × 390 × {RADAR_Z + 4:.0f} mm  (X × Y × Z incl. radar bar)")
+print(f"  frame envelope               350 × 390 × {RADAR_Z + 4:.0f} mm  (X × Y × Z incl. radar bar); overall width over the wheels {2*(abs(next(p['y'] for p in parts if p['id']=='WHL')) + WHEEL_W/2):.0f} mm")
 print(f"  track / wheelbase            {B:.0f} / {L:.0f} mm")
 print(f"  CG                           x {cg[0]:+.1f}  y {cg[1]:+.1f}  z {cg[2]:.1f} mm   (placed mass {mass:.2f} kg)")
 print(f"  static tip angles            pitch {tip_pitch:.0f}°   roll {tip_roll:.0f}°   PASS")
@@ -282,7 +282,7 @@ print(f"\nNOT CHECKED: fastener pull-out in PETG, deck deflection under the turr
 print(f"  radar detection at Z = {RADAR_Z:.0f} mm (Walleye measured floor-level radar as blind — test before trusting), wheel roller clearance to the bracket foot.\n")
 
 json.dump(dict(frame=dict(origin="chassis centre on floor", axes="+X forward, +Y left, +Z up", units="mm",
-                          envelope=[350, 390, round(RADAR_Z + 4)], track=B, wheelbase=L, cg=[round(c, 1) for c in cg],
+                          envelope=[350, 390, round(RADAR_Z + 4)], overall_width_with_wheels=round(2 * (abs(next(p["y"] for p in parts if p["id"] == "WHL")) + WHEEL_W / 2)), track=B, wheelbase=L, cg=[round(c, 1) for c in cg],
                           ground_clearance=ground_min[0], tip_pitch_deg=round(tip_pitch), tip_roll_deg=round(tip_roll),
                           collisions=collisions),
                parts=parts), open("assembly.json", "w"), indent=1)

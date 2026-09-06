@@ -8,6 +8,7 @@
    390,
    304
   ],
+  "overall_width_with_wheels": 462,
   "track": 431.0,
   "wheelbase": 250.0,
   "cg": [
@@ -555,7 +556,7 @@
    "h": 20.0,
    "orientation": "flat on 10 mm standoffs",
    "mounts_to": "deck top, rear-right",
-   "fasteners": "printed 10 mm bosses on the deck tile (58\u00d749 pattern) + 4\u00d7 M2\u00d716 + nut (bosses 10 + tile 5)",
+   "fasteners": "printed 8 mm bosses on the deck tile (58\u00d749 pattern) + 4\u00d7 M2\u00d720 + nut (bosses 8 + tile 5 + PCB 1.6 + nut 1.6 = 16.2; the M2\u00d716 first specified had 1 mm left for board and nut)",
    "torque": "hand-tight",
    "mass_kg": 0.07,
    "verify": "",
@@ -636,7 +637,7 @@
   {
    "id": "WAGO",
    "instance": "pack split",
-   "part": "3\u00d7 Wago 221 lever nuts in a printed clip",
+   "part": "2\u00d7 Wago 221-415 5-way lever nuts in a printed clip",
    "x": -150.0,
    "y": -165.0,
    "z": 115.0,
@@ -649,7 +650,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.02,
    "verify": "",
-   "note": "XT60 pigtail \u2192 shield VMOT, XL4015 IN, LM2596 IN. +, \u2212 and a spare."
+   "note": "Two 5-way Wago 221-415: one for +, one for \u2212 \u2014 each takes the pigtail plus three branches (shield VMOT, XL4015 IN, LM2596 IN). A 3-way cannot: source plus three branches is four conductors per polarity."
   },
   {
    "id": "XT60",
@@ -883,7 +884,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.005,
    "verify": "module hole spacing",
-   "note": "XSHUT \u2192 Pi GPIO 5. Both share I2C 0x29 until re-addressed at boot."
+   "note": "XSHUT \u2192 Pi BCM GPIO 22 (GPIO 4/5 are the thermal array's I2C bus). Both share I2C 0x29 until re-addressed at boot."
   },
   {
    "id": "TOF",
@@ -901,7 +902,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.005,
    "verify": "module hole spacing",
-   "note": "XSHUT \u2192 Pi GPIO 6. Both share I2C 0x29 until re-addressed at boot."
+   "note": "XSHUT \u2192 Pi BCM GPIO 27 (GPIO 4/5 are the thermal array's I2C bus). Both share I2C 0x29 until re-addressed at boot."
   },
   {
    "id": "WIRE22",
