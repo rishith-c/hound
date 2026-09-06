@@ -34,14 +34,13 @@ A 350 x 390 mm four-wheel mecanum rover on four owned NEMA 17 steppers, a pan/ti
 - 1x SIXQJZML 2× 40 × 40 × 10 mm 5 V fans — $5.99 — https://www.amazon.com/dp/B0DY6GQMJX — One over the drivers on a printed bridge, one spare. Powered from the 5 V buck.
 - 1x Gens ace G-Tech Bashing 2200 mAh 11.1 V 3S 35C LiPo, XT60 — $25.99 — https://www.amazon.com/dp/B0C2CTZPMZ — The good pack: honest capacity, low internal resistance, XT60, and a G-Tech health tag. 35C is 77 A against a 4 A need. ~190 g (verify). At ~2.8 A total draw it runs the rover about 35–40 minutes; a second one doubles a demo day. Strapped low under the deck.
 - 1x Padarsey 2 pairs XT60 14 AWG pigtails — $6.99 — https://www.amazon.com/dp/B07BF8154S — The rover-side pigtail splits into the 22 AWG branches. The plug is the disconnect.
-- 1x Tenergy LiPo charging bag — $8.99 — https://www.amazon.com/dp/B08QCMMGJT — 
 - 1x MLX90640-D55 thermal camera, 32×24, 55° FoV — $66.30 — https://www.amazon.com/dp/B0FQHVSX91 — The biggest gap in the design. A body is ~10 °C above a room and unmistakable in 768 pixels, in darkness or smoke. Rides beside the camera on the tilt bracket so the turret sweeps thermal and visible together. Cannot see through walls — that stays the radar's job.
 - 1x DWEII 2× VL53L1X time-of-flight distance modules — $14.99 — https://www.amazon.com/dp/B09V4DS888 — Two sensors: front and rear, each in a printed clip on the rail's outer slot. Side sensors were cut for cost — strafe only after the camera has seen that side clear.
 - 1x Fgruh 750-piece M3 screw, nut and washer assortment — $9.99 — https://www.amazon.com/dp/B0FGV5FCBN — 16× M3×6 motor screws, turret base bolts, buck and fan-bridge screws.
 - 1x 645-piece M2 stainless screw, nut and washer set, button head — $6.99 — https://www.amazon.com/dp/B0DFWWFY4Q — Radar, ToF and camera boards have ~2 mm holes that no other kit covers. 16 screws used.
 - 1x ALLWIN 100 cable mounts + 100 cable ties — $6.99 — https://www.amazon.com/dp/B0F9T5G2J5 — Board retention through printed slots (no standoffs), motor leads under the deck, power branches on top, and two ties hold the battery in its printed cradle bar.
 
-Buy total: $261.76
+Buy total: $252.77
 
 ## Optional, not in the first order
 - LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions — https://www.amazon.com/dp/B09CT5VGPW — Charger lead: only if your balance charger has banana-plug outputs and no XT60 lead. Cut one end, fit the bananas.
