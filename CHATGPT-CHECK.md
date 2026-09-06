@@ -108,18 +108,19 @@ Drivetrain sizing at 5.13 kg design mass, 80 mm mecanum wheels, direct drive, JK
 - Firmware boundary: R4 runs the four-axis step generator (timer ISR, D2–D7 + D12/D13, enable D8) and takes velocity commands over serial; the Pi runs everything else. Nothing on the shield is driven by GRBL.
 
 ## Power and connections
-- Gens ace pack -> XT60 pigtail -> two 22 AWG branches: shield VMOT (four DRV8825 -> four motors) and XL4015 IN for the servo rail. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the XT60 is the disconnect, so keep the pack leads short and sleeved.
+- Gens ace pack -> XT60 pigtail -> two 22 AWG branches: shield VMOT (four DRV8825 -> four motors) and XL4015 IN for the servo rail. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the XT60 is the disconnect, so bring the mating pair UP through the rear deck slot and mount it on top at the rear edge: the emergency stop must be reachable one-handed from above, not under a moving rover.
+- Power-up ORDER: bank → Pi → R4 first, THEN the pack. Power-down in reverse. With the R4 unpowered the DRV8825 enable pins float low — enabled — so VMOT alone puts full holding current into four motors with nothing to stop it.
 - Power bank -> Pi USB-C. The bank must hold 5 V at 3 A: a 2.4 A bank browns out the moment the camera, thermal array and ESP32 are all drawing. Pi USB-A -> UNO R4 USB-C for logic power and serial. Fallback if the bank misbehaves: an XL4015 or LM2596 trimmed to 5.10 V on GPIO 2/4 and 6.
 - XL4015 OUT -> PCA9685 V+ terminal. Set to 6.0 V with a multimeter before connecting. Its 5 A rating covers both servos stalling at once (~2.5 A each); an LM2596 would sag there. Servo current returns through the PCA9685 terminal, never through a USB ground.
 - Fan and both radars -> an LM2596 trimmed to 5.0 V from the pack, not the Pi's USB. Reason: a C920-class webcam pulls ~500 mA at 1080p, not 250, and the R4 WiFi's radio adds ~150 mA; with the fan and radars also on USB pass-through the Pi 4's 1.2 A port budget is exceeded. With them moved: webcam ~500 + ESP32 ~150 + R4 ~150 (WiFi radio off in firmware) ≈ 800 mA. If the Pi still shows the lightning bolt, the bank is the problem, not the wiring.
 - Pi -> camera by USB. Pi -> ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.
-- Two VL53L1X share I2C only after XSHUT (GPIO 5 and 6) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.
+- Two VL53L1X share I2C only after XSHUT (GPIO 5 and 6) assigns unique addresses at boot. Power the modules from the Pi's 3.3 V pin, never 5 V: their XSHUT and I2C pull-ups follow VIN, and a 5 V pull-up on a Pi GPIO damages it. PCA9685 is on the same bus at 0x40. If the optional SCD41 is fitted, this bus runs at 100 kHz — that sensor's I2C maximum.
 - Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail.
 
 ## Pin map
 - R4 / CNC Shield — X (FL): STEP D2, DIR D5 · Y (FR): STEP D3, DIR D6 · Z (RL): STEP D4, DIR D7 · A (RR): STEP D12, DIR D13 · ENABLE all four: D8 (LOW = on) · fan: shield 5 V / GND header.
-- Pi I2C-1 (GPIO 2/3, 400 kHz): PCA9685 0x40, VL53L1X front and rear (0x29 until re-addressed; XSHUT on GPIO 5 and 6), SCD41 0x62. MLX90640 0x33 on a HARDWARE second bus — Pi 4: dtoverlay=i2c3,pins_4_5 (GPIO 4/5) at 400 kHz, about 8 fps. Not i2c-gpio: bit-banged I2C tops out around 100–200 kHz and the thermal array would crawl at ~3 fps. On a Pi 3, share I2C-1 at 400 kHz instead.
-- Pi I2S (GPIO 18 BCLK, 19 LRCLK, 20 DIN): INMP441. Pi USB: R4 (serial + power), ESP32-S3 (serial + power), webcam. Pi power: bank on USB-C.
+- Pi I2C-1 (GPIO 2/3, 400 kHz): PCA9685 0x40, VL53L1X front and rear (0x29 until re-addressed; XSHUT on GPIO 5 and 6), SCD41 0x62 (which caps the bus at 100 kHz if fitted). VL53L1X modules powered from 3.3 V so their pull-ups never put 5 V on a Pi pin. MLX90640 0x33 on a HARDWARE second bus — Pi 4: dtoverlay=i2c3,pins_4_5 (GPIO 4/5) at 400 kHz, about 8 fps. Not i2c-gpio: bit-banged I2C tops out around 100–200 kHz and the thermal array would crawl at ~3 fps. On a Pi 3, share I2C-1 at 400 kHz instead.
+- Pi I2S (GPIO 18 BCLK, 19 LRCLK, 20 DIN): INMP441 (dtoverlay=googlevoicehat-soundcard or an i2s-mic overlay). Pi USB: R4 (serial + power), ESP32-S3 (serial + power), webcam. Pi power: bank on USB-C.
 - ESP32-S3: UART1 (GPIO 17/18) ↔ LD2410C TX/RX crossed at 256000 baud; UART2 (GPIO 15/16) ↔ LD2450 crossed at 256000. Both radars 5 V from the devkit's 5 V pin, 3.3 V signalling, nothing metal within 10 mm of the antenna faces.
 - PCA9685: tilt on ch 0, pan on ch 2, as in the Ceres turret_duet firmware. V+ from the XL4015 at 6.0 V, VCC from the Pi 3.3 V, GND to both.
 
