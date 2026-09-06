@@ -114,7 +114,7 @@ for inst, sx, sy in (("FL", 1, 1), ("FR", 1, -1), ("RL", -1, 1), ("RR", -1, -1))
     # the coupler allows. Every extra millimetre of overhang multiplies the bearing load.
     wheel_c_y = outer + sy * (5.0 + WHEEL_W / 2)
     add("WHL", f"{inst} ({HAND[inst]})", f"80 mm mecanum wheel, {HAND[inst]}", x, wheel_c_y, AXLE_Z,
-        WHEEL_D, WHEEL_W, WHEEL_D, "axis Y; rollers on the TOP of the wheel point toward chassis centre (X seen from above)",
+        WHEEL_D, WHEEL_W, WHEEL_D, "axis Y; handedness by TEST, not by diagram: drive all four forward on the bench — straight means right; if it crabs or spins, swap the two wheels on one axle",
         f"5 mm coupler on motor {inst} shaft", "coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware",
         "1.5 N·m grub", M["wheel"], verify="wheel width and coupler length",
         note=f"Inner face Y = {wheel_c_y - sy*WHEEL_W/2:+.1f}. Track = {2*abs(wheel_c_y):.0f} mm.")
@@ -149,14 +149,14 @@ def on_deck(pid, inst, name, dims, x, y, mounts, fast, torque, mass, verify="", 
     add(pid, inst, name, x, y, DECK_TOP + dims[2] / 2 + 10.0, *dims, "flat on 10 mm standoffs", mounts, fast, torque, mass, verify, note)
 
 on_deck("UNO", "—", "UNO R4 WiFi + DRV8825 CNC Shield stack", (UNO[0], UNO[1], SHIELD_STACK_H), -115.7, 86.7,
-        "deck top, rear-left", "printed 10 mm bosses on the deck tile + 2 cable ties through printed slots", "hand-tight",
+        "deck top, rear-left", "printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4's 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties", "hand-tight",
         M["uno_stack"], verify="stack height with heatsinks",
         note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces −X. Jumpers: D12 + D13 on the A header, MS3 under each driver (1/16), EN/GND open. Drivers in with EN on EN.")
 on_deck("FAN", "—", "40×40×10 5 V fan over the drivers", FAN, -115.7, 86.7, "printed PETG bridge over the shield",
         "printed bridge on 2× M3×8 into deck bosses; fan held to the bridge by 2 cable ties", "hand-tight", M["fan"],
         note=f"Blows down onto the four DRV8825 heatsinks. Fan face at Z ≈ {DECK_TOP + 10 + SHIELD_STACK_H + 8:.0f}.")
 on_deck("PI", "—", "Raspberry Pi", PI, -107.5, -88.0, "deck top, rear-right",
-        "printed 10 mm bosses on the deck tile (58×49 pattern) + 2× M2 + nut from the M2 kit (Pi holes are 2.7 mm)", "hand-tight", M["pi"],
+        "printed 10 mm bosses on the deck tile (58×49 pattern) + 4× M2×16 + nut (bosses 10 + tile 5)", "hand-tight", M["pi"],
         note="Spans X −150..−65, Y −116..−60. USB ports face −X (rear). Powered from the 5 V buck on GPIO 2/4 (+) and 6 (−).")
 on_deck("PCA", "—", "PCA9685 servo driver (Ceres)", PCA9685, -29.0, -97.5, "deck top, beside the Pi",
         "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the 6 V buck. I2C from Pi. Servo cables run forward to the turret.")
@@ -213,7 +213,7 @@ add("CO2", "—", "SCD41 CO2 sensor", PX - POST[0] / 2 - 4, 0, DECK_TOP + 150, 8
 # seen that side clear — the two side sensors were the first thing cut for cost.
 for inst, x, y, face, dims in (("front", 175 + 2 + TOF[2] / 2, 0, "+X", (TOF[2], TOF[0], TOF[1])),
                                ("rear", -(175 + 2 + TOF[2] / 2), 0, "−X", (TOF[2], TOF[0], TOF[1]))):
-    add("TOF", inst, "VL53L1X ToF module", x, y, RAIL_ZC, *dims, f"on edge, emitter facing {face}",
+    add("TOF", inst, "VL53L1X ToF module", x, y, RAIL_ZC, *dims, f"on edge, emitter facing {face}, recessed 2 mm inside a printed bumper lip — it is the first thing to touch a wall",
         f"printed clip in the {inst} rail outer slot", "1× M5×8 + M5 T-nut (clip) + 2× M2 (module)", "hand-tight", M["tof"],
         verify="module hole spacing", note=f"XSHUT → Pi GPIO {dict(front=5, rear=6)[inst]}. Both share I2C 0x29 until re-addressed at boot.")
 
