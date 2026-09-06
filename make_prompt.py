@@ -13,7 +13,7 @@ L.append("\n## What I am buying (exact Amazon listings)")
 for i in buy: L.append(f"- {i['qty']}x {i['item']} — ${i['qty']*i['price']:.2f} — https://www.amazon.com/dp/{i['asin']} — {i.get('note','')}")
 L.append(f"\nBuy total: ${sum(i['qty']*i['price'] for i in buy):.2f}")
 L.append("\n## Optional, not in the first order")
-for i in opt: L.append(f"- {i['item']} — https://www.amazon.com/dp/{i['asin']} — {i.get('note','')}")
+for i in opt: L.append(f"- {i['item']} — " + (f"https://www.amazon.com/dp/{i['asin']} — " if i.get('asin') else "") + f"{i.get('note','')}")
 L.append("\n## The design, in numbers")
 L.append("Frame: +X forward, +Y left, +Z up, origin at chassis centre on the floor, all mm. " + " ".join(p["fit"]))
 fr = asm["frame"]

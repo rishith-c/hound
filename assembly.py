@@ -57,7 +57,7 @@ RADAR_Z = DECK_TOP + POST[2] + 4.0    # 300: antenna faces horizontal, forward
 # ── Masses, kg, for CG (same figures as drivetrain.py) ─────────────────────
 M = dict(motor=0.240, rail=0.350 * 0.50, wheel=0.150, bracket=0.113, corner=0.012,
          uno_stack=0.117, pi=0.070, lipo=0.190, buck=0.030, radar=0.010, esp32=0.015,
-         cam=0.162, tof=0.005, deck=0.300, cradle=0.060, post=0.100, turret=0.250,
+         cam=0.162, tof=0.005, deck=0.335, cradle=0.060, post=0.100, turret=0.250,
          pca=0.010, fan=0.030, strapwire=0.150)
 
 parts = []
@@ -79,15 +79,18 @@ for inst, x in (("front", CROSS_X), ("rear", -CROSS_X)):
     add("RAIL", f"cross {inst}", "2020 V-slot rail 350 mm, along Y", x, 0, RAIL_ZC, RAIL, RAIL_LEN, RAIL,
         "long axis Y", "butts against inner faces of the side rails", "—", "—", M["rail"],
         note="Spans Y −175..+175 exactly between the side rails. Outer face at X = ±175.")
+# ONE bracket per corner. A 20 mm-tall 2020 inner corner has room for exactly one
+# 17×20 bracket on the inner faces; the earlier "one top, one bottom" put two in
+# the same 20 mm and the top one would have sat under the deck tile. The deck
+# tiles, bolted to all four rails' top slots, are the second shear plane.
 for cx in (CROSS_X, -CROSS_X):
     for sy in (SIDE_Y, -SIDE_Y):
-        for face, z in (("top", RAIL_Z0 + RAIL - 8.5), ("bottom", RAIL_Z0 + 8.5)):
-            add("CNR", f"{'front' if cx > 0 else 'rear'}-{'left' if sy > 0 else 'right'} {face}",
-                "2020 corner bracket 17×20, black", cx - math.copysign(RAIL / 2 + 8.5, cx),
-                sy - math.copysign(RAIL / 2 + 8.5, sy), z, 17, 17, 20,
-                f"inside corner, on the {face} slot pair",
-                "side rail + cross rail", "2× M5×8 hex + 2× M5 T-nut", "3.0 N·m (do not exceed on 2020 T-nuts)",
-                M["corner"], note="One inside each corner on the top slot and one on the bottom slot: 8 total.")
+        add("CNR", f"{'front' if cx > 0 else 'rear'}-{'left' if sy > 0 else 'right'}",
+            "2020 corner bracket 17×20, black", cx - math.copysign(RAIL / 2 + 8.5, cx),
+            sy - math.copysign(RAIL / 2 + 8.5, sy), RAIL_ZC, 17, 17, 20,
+            "inside corner, on the two inner-face slots",
+            "side rail + cross rail", "2× M5×8 hex + 2× M5 T-nut", "3.0 N·m (do not exceed on 2020 T-nuts)",
+            M["corner"], note="One per corner, 4 total. Slide its two T-nuts in before the corner closes.")
 
 # ── Drivetrain ──────────────────────────────────────────────────────────────
 HAND = {"FL": "left-hand", "FR": "right-hand", "RL": "right-hand", "RR": "left-hand"}
@@ -116,9 +119,9 @@ for inst, sx, sy in (("FL", 1, 1), ("FR", 1, -1), ("RL", -1, 1), ("RR", -1, -1))
 
 # ── Deck ────────────────────────────────────────────────────────────────────
 for inst, x in (("front tile", 85.0), ("rear tile", -85.0)):
-    add("PETG", inst, "PETG deck tile 170×350×5", x, 0, DECK_Z0 + DECK_T / 2, 170, 350, DECK_T,
+    add("PETG", inst, "PETG deck tile 170×390×5 (full frame width)", x, 0, DECK_Z0 + DECK_T / 2, 170, 390, DECK_T,
         "flat on rail tops", "all four rails", "6× M5×8 hex (corner kit) + 6× M5 T-nut in the top slots, 3 per side-rail edge; holes counterbored so 3 mm of tile is under the head",
-        "3.0 N·m", M["deck"] / 2, note="Tiles meet at X = 0. Print flat, 5 perimeters, 30% infill.")
+        "3.0 N·m", M["deck"] / 2, note="Tiles meet at X = 0. 390 wide, not 350: a 350 mm tile only reaches the side rails' INNER faces and cannot be bolted to their top slots at Y ±185. Print flat, 5 perimeters, 30% infill; notch the rear tile edge for the battery lead.")
 
 # ── Battery, slung under the deck ───────────────────────────────────────────
 cradle_z = DECK_Z0 - (LIPO[2] + 2 * CRADLE_T) / 2
@@ -241,7 +244,7 @@ L, B = 2 * AXLE_X, 2 * abs(next(p["y"] for p in parts if p["id"] == "WHL"))
 tip_pitch = math.degrees(math.atan((L / 2) / cg[2]))
 tip_roll = math.degrees(math.atan((B / 2) / cg[2]))
 
-fast = {"M5 T-nut": 16 + 12 + 2, "M5×8 (corner kit)": 16 + 12 + 2, "M4 T-nut": 8 + 2, "M4×10 / ×12 (T-nut kit)": 8 + 2,
+fast = {"M5 T-nut": 8 + 12 + 2, "M5×8 (corner kit)": 8 + 12 + 2, "M4 T-nut": 8 + 2, "M4×10 / ×12 (T-nut kit)": 8 + 2,
         "M3×6 (motor, supplied with brackets)": 16, "M3 ×12/×16 + nut (M3 kit)": 4 + 4 + 2 + 2, "M2 + nut": 4 + 4 + 2 + 2 + 4 + 1 + 2, "cable ties": 2 + 2 + 2 + 2 + 2 + 2 + 20}
 kits = {"M5 T-nut": "corner kit 40 + T-nut kit", "M4 T-nut": "T-nut kit 40", "M4×10": "T-nut kit 20", "M3": "750-pc M3 kit", "M2.5": "COMRUN standoff kit"}
 
