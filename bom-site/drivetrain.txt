@@ -18,26 +18,26 @@ MASS BUDGET
   Owned USB webcam (C920-class)                 0.162 kg  ALLOCATED
   2x VL53L1X                                    0.010 kg  ALLOCATED
   MLX90640 thermal + SCD41 CO2 + INMP441 mic    0.025 kg  ALLOCATED
-  PETG deck, cradle, radar post, clips          0.500 kg  ALLOCATED
+  Printed parts: 4 tiles, cradle, post, bridge, clips, lock  0.550 kg  ALLOCATED
   Cable ties, tape                              0.030 kg  ALLOCATED
   22 AWG wiring + connectors                    0.080 kg  ALLOCATED
-  fasteners + wiring allowance 15%              0.669 kg  ALLOCATED
-  DESIGN MASS                                   5.131 kg
+  fasteners + wiring allowance 15%              0.677 kg  ALLOCATED
+  DESIGN MASS                                   5.189 kg
   ceiling for sensitivity                       6.000 kg
 
 REQUIRED TORQUE PER WHEEL   (T = F · r · √2 / (4 · η),  η = 0.85)
   load case                         F total N  T @ design   T @ 6 kg
-  A  level cruise, a=0.1                 6.55      0.1090     0.1275
-  B  level responsive, a=0.3             7.58      0.1261     0.1475
-  C  5° ramp, a=0.3                     11.94      0.1987     0.2324
-  D  strafe on carpet, a=0.3             9.09      0.1512     0.1768
+  A  level cruise, a=0.1                 6.63      0.1103     0.1275
+  B  level responsive, a=0.3             7.66      0.1275     0.1475
+  C  5° ramp, a=0.3                     12.08      0.2010     0.2324
+  D  strafe on carpet, a=0.3             9.19      0.1529     0.1768
 
 AVAILABLE TORQUE   (T_hold 0.4119 N·m × I/1.7 × k_dyn 0.7)
   driver / current setting           I A  T avail  margins A / B / C / D at design mass   verdict
-  A4988, no cooling                 1.00   0.1696  1.56 / 1.34 / 0.85 / 1.12   FAIL   (6 kg worst 0.73)
-  A4988, heatsink + fan             1.20   0.2035  1.87 / 1.61 / 1.02 / 1.35   FAIL   (6 kg worst 0.88)
-  DRV8825, no cooling               1.50   0.2544  2.33 / 2.02 / 1.28 / 1.68   PASS   (6 kg worst 1.09)
-  DRV8825, heatsink + fan           1.70   0.2883  2.64 / 2.29 / 1.45 / 1.91   PASS   (6 kg worst 1.24)
+  A4988, no cooling                 1.00   0.1696  1.54 / 1.33 / 0.84 / 1.11   FAIL   (6 kg worst 0.73)
+  A4988, heatsink + fan             1.20   0.2035  1.85 / 1.60 / 1.01 / 1.33   FAIL   (6 kg worst 0.88)
+  DRV8825, no cooling               1.50   0.2544  2.31 / 1.99 / 1.27 / 1.66   PASS   (6 kg worst 1.09)
+  DRV8825, heatsink + fan           1.70   0.2883  2.61 / 2.26 / 1.43 / 1.89   PASS   (6 kg worst 1.24)
 
 SPEED–TORQUE VALIDITY   (k_dyn assumes operation well below the corner speed)
   I = 1.0 A: full-current corner    342 rpm   vs operating 24–72 rpm   ratio ≥ 4.8
@@ -51,22 +51,22 @@ STEP RATE   (1/8 microstep, four wheels)
 
 POWER AND ENDURANCE   (Zeee 3S 5200 mAh, 80% usable, bus 10.5 V)
   I = 1.0 A: copper   6.0 W + mech  1.3 W + driver  2.6 W =   9.8 W → 0.94 A →  4.4 h motors only
-  I = 1.5 A: copper  13.5 W + mech  1.3 W + driver  5.8 W =  20.5 W → 1.95 A →  2.1 h motors only
+  I = 1.5 A: copper  13.5 W + mech  1.3 W + driver  5.8 W =  20.5 W → 1.96 A →  2.1 h motors only
   Holding at rest draws the copper + driver terms with zero motion. Cut ENABLE (D8)
   when parked; mecanum wheels on a level floor do not roll away.
 
 SHAFT RADIAL LOAD   (NEMA 17 typical rating 28 N at 20 mm from the flange — ASSUMED, unverified for this motor)
-  static 12.6 N/wheel at 23.5 mm overhang; ×1.5 indoor floors, small bumps = 22.2 N-equivalent   margin 1.26  PASS
-  static 12.6 N/wheel at 23.5 mm overhang; ×2.0 kerbs, thresholds          = 29.6 N-equivalent   margin 0.95  FAIL
+  static 12.7 N/wheel at 23.5 mm overhang; ×1.5 indoor floors, small bumps = 22.4 N-equivalent   margin 1.25  PASS
+  static 12.7 N/wheel at 23.5 mm overhang; ×2.0 kerbs, thresholds          = 29.9 N-equivalent   margin 0.94  FAIL
   ← thinnest margin in the design. Indoor floors pass; a 20 mm threshold does not. Keep the wheel tight to the leg.
   Mount the wheel as close to the motor face as the coupling allows.
 
 STATIC STABILITY   (h_CG ≈ 0.10 m with battery on the deck — ALLOCATED)
-  pitch tip 56°,  roll tip 66°   PASS
+  pitch tip 56°,  roll tip 65°   PASS
 
 ==============================================================================
 VERDICT
-  Four motors carry the rover at design mass 5.13 kg with the lowest passing
+  Four motors carry the rover at design mass 5.19 kg with the lowest passing
   setting: DRV8825, no cooling. Governing case is C (5° ramp): the smallest margin
   in every row. At the 6 kg ceiling, case C fails at every current — keep mass
   under ~5.2 kg or accept level floors only.

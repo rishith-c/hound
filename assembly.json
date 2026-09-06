@@ -11,13 +11,13 @@
   "track": 431.0,
   "wheelbase": 250.0,
   "cg": [
-   -2.9,
-   2.4,
-   80.6
+   -4.1,
+   2.0,
+   80.9
   ],
   "ground_clearance": 18.85,
   "tip_pitch_deg": 57,
-  "tip_roll_deg": 70,
+  "tip_roll_deg": 69,
   "collisions": []
  },
  "parts": [
@@ -397,7 +397,7 @@
    "torque": "3.0 N\u00b7m",
    "mass_kg": 0.085,
    "verify": "",
-   "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 5 perimeters, 30% infill. Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
+   "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each \u2014 the mass budget depends on it). Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
   },
   {
    "id": "PETG",
@@ -415,7 +415,7 @@
    "torque": "3.0 N\u00b7m",
    "mass_kg": 0.085,
    "verify": "",
-   "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 5 perimeters, 30% infill. Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
+   "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each \u2014 the mass budget depends on it). Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
   },
   {
    "id": "PETG",
@@ -433,7 +433,7 @@
    "torque": "3.0 N\u00b7m",
    "mass_kg": 0.085,
    "verify": "",
-   "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 5 perimeters, 30% infill. Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
+   "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each \u2014 the mass budget depends on it). Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
   },
   {
    "id": "PETG",
@@ -451,7 +451,7 @@
    "torque": "3.0 N\u00b7m",
    "mass_kg": 0.085,
    "verify": "",
-   "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 5 perimeters, 30% infill. Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
+   "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each \u2014 the mass budget depends on it). Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
   },
   {
    "id": "PETG",
@@ -616,6 +616,60 @@
    "note": "Trim to 6.0 V before connecting the PCA9685. Own return to the shield GND."
   },
   {
+   "id": "LM2596",
+   "instance": "\u2192 fan + radars 5.0 V",
+   "part": "LM2596 buck (owned)",
+   "x": -44.5,
+   "y": 150.0,
+   "z": 113.0,
+   "l": 43.0,
+   "w": 21.0,
+   "h": 14.0,
+   "orientation": "flat on 10 mm standoffs",
+   "mounts_to": "deck top, outboard of the XL4015",
+   "fasteners": "printed bosses + 2 cable ties",
+   "torque": "hand-tight",
+   "mass_kg": 0.02,
+   "verify": "",
+   "note": "Trim to 5.0 V unloaded. Feeds the fan and both radars so they stay off the Pi's USB budget; dedicated GND wire to the ESP32 alongside the radar signals."
+  },
+  {
+   "id": "WAGO",
+   "instance": "pack split",
+   "part": "3\u00d7 Wago 221 lever nuts in a printed clip",
+   "x": -150.0,
+   "y": -165.0,
+   "z": 115.0,
+   "l": 40.0,
+   "w": 30.0,
+   "h": 18.0,
+   "orientation": "flat on 10 mm standoffs",
+   "mounts_to": "deck top, rear-right corner",
+   "fasteners": "printed clip + 1 cable tie",
+   "torque": "hand-tight",
+   "mass_kg": 0.02,
+   "verify": "",
+   "note": "XT60 pigtail \u2192 shield VMOT, XL4015 IN, LM2596 IN. +, \u2212 and a spare."
+  },
+  {
+   "id": "XT60",
+   "instance": "e-stop",
+   "part": "XT60 mating pair on the deck top, rear edge",
+   "x": -150.0,
+   "y": -132.0,
+   "z": 112.0,
+   "l": 30.0,
+   "w": 16.0,
+   "h": 12.0,
+   "orientation": "flat on 10 mm standoffs",
+   "mounts_to": "deck top, between the Pi and the Wago",
+   "fasteners": "printed saddle + 1 cable tie on the fixed half",
+   "torque": "hand-tight",
+   "mass_kg": 0.01,
+   "verify": "",
+   "note": "The pack lead comes up through the rear slot to here. One-handed disconnect from above = the emergency stop."
+  },
+  {
    "id": "ESP32",
    "instance": "#1 radar bridge",
    "part": "ESP32-S3 DevKitC",
@@ -690,7 +744,7 @@
   {
    "id": "PETG",
    "instance": "radar post",
-   "part": "PETG post 40\u00d740\u00d7200 with 60\u00d760\u00d76 flange",
+   "part": "Printed post 40\u00d740\u00d7200 U-channel + separate 60\u00d760\u00d76 flange plate (2\u00d7 M3\u00d710 + nut) \u2014 printed flat, the flange would otherwise stand vertical and need supports",
    "x": -165.0,
    "y": 0,
    "z": 196.0,

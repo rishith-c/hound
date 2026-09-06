@@ -12,7 +12,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <p>Finding people is a four-sensor job, and that is how professional search-and-rescue kit is built: CO2 to narrow the area, thermal to confirm a body, a microphone for voice and knocking, radar for behind obstacles. The rover had only the radar leg. So the pan/tilt turret now carries a thermal array beside the camera — a warm body is unmistakable in 768 pixels, in the dark or in smoke, and thermal-plus-visible on one sweep is the strongest line-of-sight detector on the vehicle. A CO2 sensor rides the radar post for closed rooms, and an I2S microphone listens when the motors are stopped. The Pi runs MobileNet-SSD person detection on the camera at roughly 10 frames per second (TFLite at 300 px on a Pi 4; a Coral stick would triple it); fusing that with the thermal blob is the demo.</p>
 <p>LD2410C is the primary presence sensor for anyone the camera cannot see: stationary or micro-moving people behind a door or a stud wall, plus breathing. LD2450 adds positions and speeds of moving targets and loses motionless bodies beyond about 2 m; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements — and the 60 GHz breathing/heartbeat modules on the market were skipped: their heart-rate figure benchmarks at a 0.33 correlation against a chest strap, and the owned LD2410C already covers breathing. Start with one radar powered; test the two radar types separately, then together for interference. These sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present. One more constraint the geometry forces: the turret sits 270 mm ahead of and 60 mm below the radar boresight — inside the beam. Read the radars only with the turret parked and the motors stopped, and discard LD2450 targets closer than 0.5 m; otherwise every pan registers as a moving person. After the rover stops, wait about five seconds before trusting the LD2410C — it needs a still platform to settle. And configure it: the LD2410C&#x27;s gates 0–1 (0–1.5 m) look straight at the turret&#x27;s metal servo and camera clamp and will report a stationary person forever; set those two gates&#x27; sensitivity to 100 (ignore) with the HLK config command — Walleye&#x27;s ld2410.py already speaks it.</p>
 <h2>Can four motors carry it?</h2>
-<p>Design mass 5.13 kg. Four load cases; the 5° carpet ramp at 0.3 m/s² governs. Lowest passing setting: <strong>DRV8825, no cooling</strong>.</p>
+<p>Design mass 5.19 kg. Four load cases; the 5° carpet ramp at 0.3 m/s² governs. Lowest passing setting: <strong>DRV8825, no cooling</strong>.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -26,16 +26,16 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 </thead>
 <tbody>
 <tr>
-<td>A4988, no cooling</td><td align="right">0.170 N·m</td><td align="right">1.34</td><td align="right">1.12</td><td align="right">0.85</td><td>FAIL ramp</td>
+<td>A4988, no cooling</td><td align="right">0.170 N·m</td><td align="right">1.33</td><td align="right">1.11</td><td align="right">0.84</td><td>FAIL ramp</td>
 </tr>
 <tr>
-<td>A4988, heatsink + fan</td><td align="right">0.203 N·m</td><td align="right">1.61</td><td align="right">1.35</td><td align="right">1.02</td><td>FAIL ramp</td>
+<td>A4988, heatsink + fan</td><td align="right">0.203 N·m</td><td align="right">1.60</td><td align="right">1.33</td><td align="right">1.01</td><td>FAIL ramp</td>
 </tr>
 <tr>
-<td>DRV8825, no cooling</td><td align="right">0.254 N·m</td><td align="right">2.02</td><td align="right">1.68</td><td align="right">1.28</td><td>PASS</td>
+<td>DRV8825, no cooling</td><td align="right">0.254 N·m</td><td align="right">1.99</td><td align="right">1.66</td><td align="right">1.27</td><td>PASS</td>
 </tr>
 <tr>
-<td>DRV8825, heatsink + fan</td><td align="right">0.288 N·m</td><td align="right">2.29</td><td align="right">1.91</td><td align="right">1.45</td><td>PASS</td>
+<td>DRV8825, heatsink + fan</td><td align="right">0.288 N·m</td><td align="right">2.26</td><td align="right">1.89</td><td align="right">1.43</td><td>PASS</td>
 </tr>
 </tbody></table></div>
 <p>Margin = torque available ÷ torque required; acceptance ≥ 1.25 because the running torque is calculated, not measured. At 5.12 kg — Gens ace 2200 mAh pack, ~130 g power bank, your C920-class webcam — the ramp margin at 1.5 A is 1.28: passing, with about 80 g to spare. Weigh the bank and the webcam. If either is heavier than budgeted, run 1.7 A with the fan (1.46) or swap to the 50 g ELP camera. The one measurement that matters most: pull-out torque at 24 rpm, 1.5 A, on the real battery.</p>
@@ -150,8 +150,8 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">5</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">—</td>
-<td class="where">—</td>
+<td class="where">→ fan + radars 5.0 V (-44, +150, 113)</td>
+<td class="where">printed bosses + 2 cable ties</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="DMM" data-owned="1" aria-label="I have all required quantities of Multimeter (owned)"></td><td>Multimeter (owned)<div class="grp">Fasteners and assembly</div><div class="note">Sets the XL4015 to 6.0 V before anything is connected, and checks the pack: 12.6 V full, stop driving at 11.1 V (3.7 V/cell), never below 9.9 V. Check before and after every run — there is no alarm on the balance lead.</div></td>
 <td align="right">1</td>
@@ -304,8 +304,8 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">1</td>
 <td align="right">$10.00</td>
 <td align="right">$10.00</td>
-<td class="where">—</td>
-<td class="where">—</td>
+<td class="where">pack split (-150, -165, 115)</td>
+<td class="where">printed clip + 1 cable tie</td>
 </tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="STEPCABLE" data-owned="0" aria-label="I have all required quantities of 4× stepper motor cables, 4-pin 2.54 mm Dupont female at the shield end"></td><td>4× stepper motor cables, 4-pin 2.54 mm Dupont female at the shield end <span class="tag">optional</span><div class="grp">Build-day consumables — check your parts box first</div><div class="note">The motor leads must land on the shield&#x27;s 4-pin male headers. If the motors came with bare wires, crimp Dupont housings; if with a JST-XH, buy XH-to-Dupont stepper cables. ~400 mm reach needed for the far corner.</div></td>
 <td align="right">1</td>
@@ -401,7 +401,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <tr><th colspan="4">Buy</th><th align="right">$252.77</th><th colspan="2">Optional $170.68 · 19 items already owned</th></tr>
 </tbody></table></div>
 <h2>Where every part goes</h2>
-<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 431 mm, wheelbase 250 mm. Centre of gravity at x -2.9, y +2.4, z 80.6 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 70° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
+<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 431 mm, wheelbase 250 mm. Centre of gravity at x -4.1, y +2.0, z 80.9 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 69° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -509,6 +509,15 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>XL4015</code></td><td>→ servos 6.0 V</td><td>XL4015 5 A buck (owned)</td><td align="right">-44.5</td><td align="right">+110.5</td><td align="right">115.0</td><td>flat on 10 mm standoffs</td><td>deck top, ahead of the R4</td><td>printed bosses + 2 cable ties</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
+<td><code>LM2596</code></td><td>→ fan + radars 5.0 V</td><td>LM2596 buck (owned)</td><td align="right">-44.5</td><td align="right">+150.0</td><td align="right">113.0</td><td>flat on 10 mm standoffs</td><td>deck top, outboard of the XL4015</td><td>printed bosses + 2 cable ties</td><td>hand-tight</td><td>—</td>
+</tr>
+<tr>
+<td><code>WAGO</code></td><td>pack split</td><td>3× Wago 221 lever nuts in a printed clip</td><td align="right">-150.0</td><td align="right">-165.0</td><td align="right">115.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right corner</td><td>printed clip + 1 cable tie</td><td>hand-tight</td><td>—</td>
+</tr>
+<tr>
+<td><code>XT60</code></td><td>e-stop</td><td>XT60 mating pair on the deck top, rear edge</td><td align="right">-150.0</td><td align="right">-132.0</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, between the Pi and the Wago</td><td>printed saddle + 1 cable tie on the fixed half</td><td>hand-tight</td><td>—</td>
+</tr>
+<tr>
 <td><code>ESP32</code></td><td>#1 radar bridge</td><td>ESP32-S3 DevKitC</td><td align="right">-100.0</td><td align="right">-17.3</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-centre, just ahead of the radar post</td><td>printed bosses + 2 cable ties through printed slots</td><td>hand-tight</td><td>devkit hole positions</td>
 </tr>
 <tr>
@@ -521,7 +530,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>THERM</code></td><td>above the camera</td><td>MLX90640-D55 thermal array, 55° FoV</td><td align="right">+114.0</td><td align="right">+0.0</td><td align="right">230.0</td><td>boresight parallel to the camera, +X at tilt = 0</td><td>printed PETG/PLA saddle on top of the camera clamp</td><td>2× M2 + nut through the saddle</td><td>hand-tight</td><td>breakout hole spacing</td>
 </tr>
 <tr>
-<td><code>PETG</code></td><td>radar post</td><td>PETG post 40×40×200 with 60×60×6 flange</td><td align="right">-165.0</td><td align="right">+0.0</td><td align="right">196.0</td><td>vertical, on the rear cross rail through the deck; PRINT IT FLAT as a 3-wall U-channel, open side rearward as the cable run — a 200 mm upright needs 200 mm of Z that small printers lack</td><td>rear tile → rear cross rail top slot</td><td>2× M4×12 (T-nut kit) through flange + deck into 2× M4 T-nuts in the rear rail top slot, at Y ±20; flange and tile counterbored to 3 mm each</td><td>2.0 N·m</td><td>—</td>
+<td><code>PETG</code></td><td>radar post</td><td>Printed post 40×40×200 U-channel + separate 60×60×6 flange plate (2× M3×10 + nut) — printed flat, the flange would otherwise stand vertical and need supports</td><td align="right">-165.0</td><td align="right">+0.0</td><td align="right">196.0</td><td>vertical, on the rear cross rail through the deck; PRINT IT FLAT as a 3-wall U-channel, open side rearward as the cable run — a 200 mm upright needs 200 mm of Z that small printers lack</td><td>rear tile → rear cross rail top slot</td><td>2× M4×12 (T-nut kit) through flange + deck into 2× M4 T-nuts in the rear rail top slot, at Y ±20; flange and tile counterbored to 3 mm each</td><td>2.0 N·m</td><td>—</td>
 </tr>
 <tr>
 <td><code>PETG</code></td><td>radar bar</td><td>PETG radar bar 120×20×8 on the post top</td><td align="right">-165.0</td><td align="right">+0.0</td><td align="right">300.0</td><td>horizontal, antenna faces toward +X</td><td>radar post top</td><td>2× M3×10 + M3 nut through the post wall (no heat-set inserts on the list)</td><td>hand-tight</td><td>—</td>
@@ -660,6 +669,9 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>Sensor breakouts commonly ship with unsoldered headers while the iron was optional. Flagged at unboxing.</li>
 <li>The front ToF module protruded 4 mm past the rail face as the rover&#x27;s leading point. Now recessed in a printed bumper lip.</li>
 <li>The Pi 5 uses a different i2c3 overlay name than the Pi 4. Both stated, since the Pi model is still unknown.</li>
+<li>The second LM2596, the Wago block and the top-side XT60 e-stop were wired in the text and placed nowhere. Now placed: LM2596 outboard of the XL4015, Wago and XT60 at the rear-right corner, clear of the Pi and the post flange.</li>
+<li>The printed-parts mass allowance (0.5 kg) no longer covered four tiles plus post, bridge, clips and lock. Tiles now specified at 20% infill (~80 g) and the allowance raised to 0.55 kg; the ramp margin still clears 1.25.</li>
+<li>The post&#x27;s flange, printed with the channel lying flat, would stand vertical and need supports. It is now a separate plate.</li>
 </ul>
 <h2>Total cost</h2>
 <div class="table-wrap"><table class="totals">
