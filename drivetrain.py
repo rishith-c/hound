@@ -200,11 +200,15 @@ def main(emit_json=False):
     print(f"  Holding at rest draws the copper + driver terms with zero motion. Cut ENABLE (D8)")
     print(f"  when parked; mecanum wheels on a level floor do not roll away.")
 
-    print(f"\nSHAFT RADIAL LOAD   (NEMA 17 typical rating 28 N at 20 mm from flange — ASSUMED, unverified for this motor)")
+    print(f"\nSHAFT RADIAL LOAD   (NEMA 17 typical rating 28 N at 20 mm from the flange — ASSUMED, unverified for this motor)")
     n_static = m_design * G / 4
-    print(f"  static {n_static:.1f} N/wheel; ×2.0 dynamic (kerbs, bumps) = {2*n_static:.1f} N"
-          f"   margin {28/(2*n_static):.2f}  {'PASS' if 28/(2*n_static) >= 1.0 else 'FAIL'}"
-          f"   ← thinnest margin in the design")
+    overhang = 23.5                       # wheel centre to flange face, mm (bracket leg 3 + 5 clearance + half wheel)
+    lever = overhang / 20.0               # rating is quoted at 20 mm; load scales with the lever
+    for dyn, case in ((1.5, "indoor floors, small bumps"), (2.0, "kerbs, thresholds")):
+        n = dyn * n_static * lever
+        print(f"  static {n_static:.1f} N/wheel at {overhang:.1f} mm overhang; ×{dyn} {case:26s} = {n:.1f} N-equivalent"
+              f"   margin {28/n:.2f}  {'PASS' if 28/n >= 1.0 else 'FAIL'}")
+    print(f"  ← thinnest margin in the design. Indoor floors pass; a 20 mm threshold does not. Keep the wheel tight to the leg.")
     print(f"  Mount the wheel as close to the motor face as the coupling allows.")
 
     print(f"\nSTATIC STABILITY   (h_CG ≈ 0.10 m with battery on the deck — ALLOCATED)")

@@ -55,8 +55,10 @@ POWER AND ENDURANCE   (Zeee 3S 5200 mAh, 80% usable, bus 10.5 V)
   Holding at rest draws the copper + driver terms with zero motion. Cut ENABLE (D8)
   when parked; mecanum wheels on a level floor do not roll away.
 
-SHAFT RADIAL LOAD   (NEMA 17 typical rating 28 N at 20 mm from flange — ASSUMED, unverified for this motor)
-  static 12.6 N/wheel; ×2.0 dynamic (kerbs, bumps) = 25.2 N   margin 1.11  PASS   ← thinnest margin in the design
+SHAFT RADIAL LOAD   (NEMA 17 typical rating 28 N at 20 mm from the flange — ASSUMED, unverified for this motor)
+  static 12.6 N/wheel at 23.5 mm overhang; ×1.5 indoor floors, small bumps = 22.2 N-equivalent   margin 1.26  PASS
+  static 12.6 N/wheel at 23.5 mm overhang; ×2.0 kerbs, thresholds          = 29.6 N-equivalent   margin 0.95  FAIL
+  ← thinnest margin in the design. Indoor floors pass; a 20 mm threshold does not. Keep the wheel tight to the leg.
   Mount the wheel as close to the motor face as the coupling allows.
 
 STATIC STABILITY   (h_CG ≈ 0.10 m with battery on the deck — ALLOCATED)
