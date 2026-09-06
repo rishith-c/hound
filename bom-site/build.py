@@ -184,6 +184,8 @@ input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:point
 {paras(prose["fit"])}
 <h2>Compute before claiming it works</h2>
 {paras(prose["compute"])}
+<h2>Does it all mesh? Every interface, checked</h2>
+{bullets(prose["mesh"])}
 <h2>Pin map</h2>
 {bullets(prose["pins"])}
 <h2>Build order</h2>
