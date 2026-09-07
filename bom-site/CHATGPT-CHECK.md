@@ -43,7 +43,7 @@ A 350 x 390 mm four-wheel mecanum rover on four owned NEMA 17 steppers, a pan/ti
 Buy total: $261.37
 
 ## Optional, not in the first order
-- Blue threadlocker (Loctite 242/243 or equivalent) — Four coupler grub screws carry the whole drivetrain. Parts box first.
+- Blue threadlocker (Loctite 242/243 or equivalent) — Four coupler grub screws carry the whole drivetrain. Parts box first. Plus two resistors from any parts drawer: one 10 kΩ (EN pull-up on the shield) and two 4.7 kΩ (I2C pull-ups for BCM 4/5 if the thermal module has none).
 - 2× Wago 221-415 5-way lever nuts (or solder + heat-shrink) — One per polarity: the pigtail plus three branches is four conductors on each of + and −. Three 3-way connectors, first specified, cannot do it.
 - 4× stepper motor cables, 4-pin 2.54 mm Dupont female at the shield end — The motor leads must land on the shield's 4-pin male headers. If the motors came with bare wires, crimp Dupont housings; if with a JST-XH, buy XH-to-Dupont stepper cables. ~400 mm reach needed for the far corner.
 - 1000 µF 10 V electrolytic capacitor across PCA9685 V+ — Parts box. Two MG996R hitting a stop together sag the servo rail without it; the PCA9685 has an empty footprint for exactly this.
@@ -112,7 +112,7 @@ Drivetrain sizing at 5.19 kg design mass, 80 mm mecanum wheels, direct drive, JK
 - XL4015 OUT 6.0 V → PCA9685 V+ terminal → MG996R servos (4.8–7.2 V). PCA9685 VCC ← Pi 3.3 V; I2C 0x40 ← Pi GPIO 2/3 at 3.3 V. Nothing on this rail sees pack voltage.
 - Power bank 5 V/3 A → Pi USB-C. Pi USB-A → UNO R4 USB-C (5 V logic, CNC Shield V3 is a 5 V shield: pinout matches). Pi USB-A → ESP32-S3 USB-C. Pi USB-A → webcam. Four Pi USB ports, four loads, ~950 mA of a 1.2 A budget.
 - LM2596 at 5.0 V → 40 mm fan (150 mA) and both radars' VCC (5 V, ~200 mA peak). Radar UART is 3.3 V, matching the ESP32-S3 GPIO. Radar TX → ESP32 RX and vice versa, 256000 baud. Verify with the multimeter that the devkit's 5 V pin is even connected on your clone before relying on it for anything.
-- Pi I2C-1 (3.3 V, 400 kHz): PCA9685 0x40, VL53L1X ×2 at 0x29 re-addressed via XSHUT on GPIO 5/6, SCD41 0x62 — no address clashes. MLX90640 0x33 on a hardware second bus (Pi 4: i2c3 on GPIO 4/5, 400 kHz, ~8 fps). VL53L1X and MLX90640 modules run on 3.3 V from the Pi header.
+- Pi I2C-1 (3.3 V, 400 kHz): PCA9685 0x40, VL53L1X ×2 at 0x29 re-addressed via XSHUT on BCM GPIO 22/27, SCD41 0x62 — no address clashes. MLX90640 0x33 on a hardware second bus (Pi 4: i2c3 on GPIO 4/5, 400 kHz, ~8 fps). VL53L1X and MLX90640 modules run on 3.3 V from the Pi header.
 - Pi I2S GPIO 18/19/20 → INMP441 (3.3 V). Pi ↔ R4 serial over the same USB cable that powers it.
 - Firmware boundary: R4 runs the four-axis step generator (timer ISR, D2–D7 + D12/D13, enable D8) and takes velocity commands over serial; the Pi runs everything else. Nothing on the shield is driven by GRBL.
 
@@ -127,10 +127,10 @@ Drivetrain sizing at 5.19 kg design mass, 80 mm mecanum wheels, direct drive, JK
 - Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail.
 
 ## Pin map
-- R4 / CNC Shield — X (FL): STEP D2, DIR D5 · Y (FR): STEP D3, DIR D6 · Z (RL): STEP D4, DIR D7 · A (RR): STEP D12, DIR D13 · ENABLE all four: D8 (LOW = on) · fan: shield 5 V / GND header.
+- R4 / CNC Shield — X (FL): STEP D2, DIR D5 · Y (FR): STEP D3, DIR D6 · Z (RL): STEP D4, DIR D7 · A (RR): STEP D12, DIR D13 · ENABLE all four: D8 (LOW = on) · fan: on the LM2596 5 V rail, NOT the shield's 5 V header (that header is the R4's USB 5 V).
 - Pi I2C-1 (BCM GPIO 2/3, 400 kHz): PCA9685 0x40, VL53L1X front and rear (0x29 until re-addressed; XSHUT on BCM GPIO 22 and 27 — NOT 5/6, which the thermal bus uses), SCD41 0x62 (caps the bus at 100 kHz if fitted). MLX90640 0x33 on a HARDWARE second bus — Pi 4: dtoverlay=i2c3,pins_4_5 (BCM GPIO 4/5); Pi 5: dtoverlay=i2c3-pi5,pins_4_5 — at 400 kHz, about 8 fps. Not i2c-gpio. VL53L1X modules powered from 3.3 V so their pull-ups never put 5 V on a Pi pin.
 - Pi I2S (BCM GPIO 18 BCLK, 19 LRCLK, 20 DIN): INMP441 (dtoverlay=googlevoicehat-soundcard or an i2s-mic overlay). Pi USB: R4 (serial + power), ESP32-S3 #1 (serial + power), webcam — addressed by /dev/serial/by-id, never by /dev/ttyACMn. Pi power: bank on USB-C. Pi 5 note: with a 3 A supply the Pi 5 caps USB peripherals at 600 mA by default — set usb_max_current_enable=1 in config.txt (then the bank must genuinely hold 3 A) or use a Pi 4.
-- ESP32-S3: UART1 (GPIO 17/18) ↔ LD2410C TX/RX crossed at 256000 baud; UART2 (GPIO 15/16) ↔ LD2450 crossed at 256000. Both radars 5 V from the devkit's 5 V pin, 3.3 V signalling, nothing metal within 10 mm of the antenna faces.
+- ESP32-S3: UART1 (GPIO 17/18) ↔ LD2410C TX/RX crossed at 256000 baud; UART2 (GPIO 15/16) ↔ LD2450 crossed at 256000. Both radars take 5 V from the LM2596 rail (not the devkit's 5 V pin — that is the Pi's USB budget), 3.3 V signalling, GND common with ESP32 #1 through the star, nothing metal within 10 mm of the antenna faces.
 - PCA9685: tilt on ch 0 only — the continuous-rotation pan servo is mechanically locked and ELECTRICALLY DISCONNECTED, which halves the servo-rail load. V+ from the XL4015 at 6.0 V (one MG996R stalling ≈ 2.5 A), VCC from Pi 3.3 V, GND to both.
 - ESP32-S3 #2 (beacon) and #3 (rover receiver): NO USB data link — the RuView firmware on them streams CSI as UDP over WiFi to a sink IP. The Pi runs a WiFi hotspot; both nodes are re-provisioned (provision.sh) with that SSID and the Pi's hotspot address as SINK_IP. #3 is powered from the LM2596 5 V pin ONLY (Espressif: header 5 V and USB are mutually exclusive supplies). #2 from any USB 5 V source at the doorway.
 
@@ -197,6 +197,15 @@ The radar sits at Z = 300 mm. Earlier measurements on the same LD2410C (project 
 - EXTERNAL REVIEW, pushed back: the 400 mm post was an option under test, not a commitment, and the bearing/torque assumptions were already labelled ASSUMED — those two are restated, not changed.
 - Battery swapped to the user's HOOVO 3S 2200 80C shorty 2-pack: it is Deans, not XT60. Rather than an adapter in the 4 A path, the T-plug pigtail line became two Deans 30 cm extensions (one whole for the pack lead, one cut into a pigtail of each gender). Cradle re-drawn 75 × 33.8 × 26.4, mass 190 → 140 g, ramp margin 1.27 → 1.28, 0 collisions. The optional XT60 extension went away with it.
 - Motor bracket checked against its drawing, not its bullets: foot is 50 × 51 (was guessed 42 × 35), slots are 4.3 mm wide (M4 only — an M5 T-nut screw would not pass), and each screw lands at the inner end of its slot because the rail's bottom slot sits 10 mm from the outer face. The Ø22 bore is nominal against a Ø22 boss (check it slips), the motor's tapped holes are ~4.5 mm deep so M3×6 not M3×8, and the axle-to-foot offset is 31 ±1.5 pending a ruler on the real part.
+- WIRING PASS 1 (wiring.py, netlist as code): the pin map put the fan on the shield's 5 V header and the radars on the ESP32 devkit's 5 V pin — both are the Pi's 1.2 A USB budget, and both contradict the power section that puts them on the LM2596. Pin map corrected; the netlist is now the single source.
+- WIRING PASS 1: the mesh section still re-addressed the ToF sensors via XSHUT on GPIO 5/6 after the pin map moved to BCM 22/27. Fixed — GPIO 5 is the thermal bus.
+- WIRING PASS 1: drivetrain.py budgeted step rates at 1/8 microstepping while the build order fits MS3 caps, which on a DRV8825 is 1/16. Settled on 1/16 (one cap per driver, six jumpers total); 0.3 m/s is 3,820 pulses/s per axis, inside the R4's budget.
+- WIRING PASS 1: the build order had the shield step twice, one version without the VMOT-connected Vref warning. Merged; the coupler note moved to the drive step.
+- WIRING PASS 2: DRV8825 nENABLE has an internal pull-down, so for the ~1 s the R4 sits in reset (boot, watchdog, upload) all four drivers are enabled. A 10 kΩ pull-up from EN to the shield's 5 V closes that window; the R4-unpowered case stays a power-up rule.
+- WIRING PASS 2: BCM 4/5 carry no on-board I2C pull-ups, unlike BCM 2/3. The thermal module must have its own or the second bus is dead — VERIFY on the module, 4.7 kΩ in the parts drawer.
+- WIRING PASS 2: the bank cable is a spec, not a cable. At the Pi's 2.5 A peak a 1 m phone cable drops over a volt; a 24 AWG 0.3 m cable drops 0.13 V. And the webcam on its captive 1.5 m lead can see 4.4 V at 1080p — if it resets, run 720p.
+- WIRING PASS 2: ESP32 #1 with WiFi left on puts the Pi USB at 1.2 A of 1.2 A. WiFi.mode(WIFI_OFF) is a requirement of its firmware, not a nicety.
+- WIRING PASS 2: the tilt servo gets 3.3 V PWM because the PCA9685's VCC must stay at 3.3 V (its I2C pull-ups follow VCC). Usually fine for an MG996R; the fix if not is a buffer, never a 5 V VCC.
 
 ## What I want from you
 1. Mechanical: walk every interface and say whether the two parts actually mate (bore vs shaft, bolt pattern vs holes, screw length vs stack, slot vs T-nut, print-bed fit). Flag anything nominal that could be wrong on the real part.
@@ -207,3 +216,31 @@ The radar sits at Z = 300 mm. Earlier measurements on the same LD2410C (project 
 6. Build day: what is missing from the buy list and the owned list that I will discover I need?
 7. Rank the three most likely reasons this rover does not move on the first try, and the three most likely reasons it drives fine but reports no person through the drywall.
 8. Finally: list any fault you found that is NOT already in the 'Already found and fixed' section, in order of severity, one line each.
+
+## Wiring, checked by wiring.py (the netlist as code — treat it as the source of truth over the prose)
+18 loads on six rails, 12 wire segments, 12 signal links; checks: voltage windows, rail current budgets, wire ampacity and drop, connector ratings, logic levels, pin uniqueness, I2C addresses, USB budget, bank→Pi→webcam voltage chain, ground-loop drops. Result: 0 FAIL, 9 WARN, 6 VERIFY, 6 PROCEDURE, 59 PASS.
+Pack 2.46 A avg / 6.24 A peak (43 min per 2200 mAh pack); bank 1.32 / 2.49 A; Pi USB 1.05 A of 1.2 A; Pi input 4.77 V; webcam 4.4 V worst case.
+Rails: PACK 10.5–12.6 V → shield VMOT, XL4015 IN, LM2596 IN via two 5-way Wagos on 22 AWG. V_SERVO 6.0 V (XL4015) → PCA9685 V+ only. V5_LM 5.0 V (LM2596) → fan, LD2410C, LD2450, ESP32 #3 header pin. V5_BANK → Pi USB-C (24 AWG ≤ 0.3 m cable). Pi USB → webcam, UNO R4, ESP32 #1. Pi 3.3 V → MLX90640, 2× VL53L1X, PCA9685 VCC, INMP441, SCD41.
+Non-PASS findings, all already folded into the design (please try to break them):
+- WARN: V5_PI_USB (Pi 4 downstream USB (4 ports, shared)): avg 0.55 A of 1.2 A (46%), peak 1.05 A of 1.2 A (88%)
+- WARN: webcam sees 4.40 V at its 500 mA descriptor (4.56 V at a typical 250 mA) through its own captive 1.5 m cable; USB floor 4.75 V, most cameras run to ~4.4 V. If it drops out at 1080p, run 720p — its cable cannot be shortened
+- WARN: A 1 m 28 AWG phone cable to the Pi would drop 1.06 V → 3.84 V at the Pi = brownout. The bank cable is a spec: ≤ 0.3 m with ≥ 24 AWG power conductors (any '3 A fast-charge' cable)
+- WARN: Motor phases run 1.5 A through Dupont 2.54 contacts rated 2.0 A — inside rating but the crimp quality is the margin. A contact that heats in the wheels-up test gets re-crimped or soldered.
+- WARN: Tilt servo stall 2.5 A through the PCA9685's 2.54 mm channel header (rated 2.0 A). Momentary, and how every servo board works; keep stalls short with tilt limits in software
+- WARN: DRV8825 nENABLE has an internal pull-down: during the R4's ~1 s reset window (boot, watchdog, sketch upload) D8 floats and all four drivers are ENABLED at full holding current. Add a 10 kΩ pull-up from the shield's EN pin to its 5 V header (consumables). The R4-unpowered case is still the power-up order
+- WARN: No fuse on the pack and no cell alarm (declined). A 2200 mAh 80C pack delivers >70 A into a short; the T-plug is a disconnect, not protection. Listed under Safety as reviewer-recommended.
+- WARN: Pi 5 only: default 600 mA USB cap → set usb_max_current_enable=1, or use the Pi 4 this file assumes.
+- WARN: bank → Pi USB-C cable: 24 AWG × 0.3 m, peak 2.49 A (ampacity 3.5 A, USB-C 3.0 A), round-trip drop 126 mV = 2.5%
+- VERIFY: Load-test the bank at 2.5 A for 60 s with the meter on the Pi's 5 V pin: below 4.8 V the bank is not a 3 A bank.
+- VERIFY: Confirm with the meter that ESP32-S3 #3's clone devkit actually wires its 5 V header pin to the module (some clones leave it floating) before trusting it as a power input; never plug its USB while the 5 V pin is fed.
+- VERIFY: Before connecting SDA/SCL: power each I2C module alone and meter SDA to GND — it must read ≤ 3.3 V. A module whose pull-ups go to 5 V goes on 3.3 V power or not on the Pi.
+- VERIFY: BCM 4/5 have NO on-board I2C pull-ups (BCM 2/3 have 1.8 kΩ). The MLX90640 module must carry its own, or add 4.7 kΩ from SDA and SCL to 3.3 V (consumables). And w1-gpio (1-Wire) defaults to BCM 4 — leave that overlay off
+- VERIFY: ESP32-S3 #3's WiFi bursts (~0.5 A steps) share the LM2596 rail with both radars. If a radar's frames go bad only while the CSI stream runs, put 100 µF across that radar's VCC/GND at its connector
+- VERIFY: PCA9685 VCC is 3.3 V, so the tilt servo gets 3.3 V PWM. MG996R clones normally accept it; if the servo jitters or ignores commands, that is the level. Do NOT raise VCC to 5 V — the board's I2C pull-ups follow VCC and would put 5 V on the Pi's SDA/SCL. A 74HCT125 buffer fixes it
+- PROCEDURE: Servo return: PCA9685 V+ GND terminal → XL4015 OUT− (its own wire). Motor return: shield GND terminal → Wago. Neither ever through a board GND pin or a USB cable.
+- PROCEDURE: DRV8825 1/16 = M2 only → ONE cap on MS3 under each driver, MS1/MS2 open. Four caps, plus the D12 and D13 jumpers on the A header = six jumpers total. Caps go on before the drivers.
+- PROCEDURE: Motor coil pairs by multimeter: the two leads that show ~2 Ω are one coil. A coil split across the 2B/2A–1A/1B header halves makes a motor buzz and not turn.
+- PROCEDURE: Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. DRV8825 nENABLE floats LOW = enabled; with VMOT alone four motors sit at full holding current with nothing commanding them.
+- PROCEDURE: ESP32-S3 #1 firmware must call WiFi.mode(WIFI_OFF): with its radio on, Pi USB peak is 1.20 A of 1.2 A — the port limiter trips and takes the R4's power and serial link with it
+- PROCEDURE: Read the sense resistor on one driver: R100 → Vref = 0.75 V for 1.5 A; R200 → 1.50 V. Set all four with the multimeter, motors unplugged, before any motor is connected.
+Same ask as above for this section: find what the checker cannot see — a wrong datasheet number, a connector gender, a rail I forgot, a ground path I mis-drew.
