@@ -189,12 +189,12 @@ def main(emit_json=False):
         print(f"  {v:.1f} m/s = {rpm_at(v):5.1f} rpm → {s:6.0f} steps/s per wheel, {4*s:6.0f} total"
               f"   {'OK' if s < 5000 else 'EXCEEDS'} vs 5 000/axis ISR budget")
 
-    print(f"\nPOWER AND ENDURANCE   (Zeee 3S 5200 mAh, 80% usable, bus {V_BUS_LOADED} V)")
+    print(f"\nPOWER AND ENDURANCE   (Gens ace 3S 2200 mAh, 80% usable, bus {V_BUS_LOADED} V)")
     for i_set in (1.0, 1.5):
         t_b = req["B  level responsive, a=0.3"][0]
         p, cu, me, dr = power(i_set, t_b, V_CRUISE)
         i_bus = p / V_BUS_LOADED
-        hours = 5.2 * 0.8 / i_bus
+        hours = 2.2 * 0.8 / i_bus
         print(f"  I = {i_set:.1f} A: copper {cu:5.1f} W + mech {me:4.1f} W + driver {dr:4.1f} W"
               f" = {p:5.1f} W → {i_bus:4.2f} A → {hours:4.1f} h motors only")
     print(f"  Holding at rest draws the copper + driver terms with zero motion. Cut ENABLE (D8)")
