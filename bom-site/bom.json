@@ -19,7 +19,7 @@
    "Power-up ORDER: bank → Pi → R4 first, THEN the pack. Power-down in reverse. With the R4 unpowered the DRV8825 enable pins float low — enabled — so VMOT alone puts full holding current into four motors with nothing to stop it.",
    "Power bank -> Pi USB-C. The bank must hold 5 V at 3 A: a 2.4 A bank browns out the moment the camera, thermal array and ESP32 are all drawing. Pi USB-A -> UNO R4 USB-C for logic power and serial. Fallback if the bank misbehaves: an XL4015 or LM2596 trimmed to 5.10 V on PHYSICAL HEADER PINS 2 or 4 (5 V) and 6 (GND) — physical pin numbers, not BCM GPIO numbers — and never with the bank connected at the same time; two supplies in parallel fight.",
    "XL4015 OUT -> PCA9685 V+ terminal. Set to 6.0 V with a multimeter before connecting. Its 5 A rating covers the tilt servo stalling (~2.5 A) with room to spare now that the locked pan servo is disconnected; an LM2596 would sag there. Servo current returns through the PCA9685 terminal, never through a USB ground.",
-   "Fan and both radars -> an LM2596 trimmed to 5.0 V from the pack, not the Pi's USB. Pi USB carries only the webcam (~500 mA at 1080p), ESP32 #1 (~150 mA) and the R4 (~150 mA, WiFi radio off): ≈ 800 mA, inside a Pi 4's 1.2 A. ESP32 #3 draws nothing from USB — it is on the LM2596 and talks over WiFi. On a Pi 5 the default 600 mA USB cap must be lifted in config.txt.",
+   "Fan and both radars -> an LM2596 trimmed to 5.0 V from the pack, through two 5-way Wagos, not the Pi's USB. Pi USB carries only the webcam (~500 mA at 1080p), ESP32 #1 (~150 mA, WiFi OFF in firmware) and the R4 (~150 mA, radio off): ≈ 800 mA average, 1.05 A peak, inside a Pi 4's 1.2 A. Nothing CSI is wired on the rover. On a Pi 5 the default 600 mA USB cap must be lifted in config.txt.",
    "Pi -> camera by USB. Pi -> ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.",
    "Two VL53L1X share I2C only after XSHUT (BCM GPIO 22 and 27) assigns unique addresses at boot. Power the modules from the Pi's 3.3 V pin, never 5 V: their XSHUT and I2C pull-ups follow VIN, and a 5 V pull-up on a Pi GPIO damages it. PCA9685 is on the same bus at 0x40. If the optional SCD41 is fitted, this bus runs at 100 kHz — that sensor's I2C maximum.",
    "Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail."
@@ -64,7 +64,7 @@
    "Pi I2S (BCM GPIO 18 BCLK, 19 LRCLK, 20 DIN): INMP441 (dtoverlay=googlevoicehat-soundcard or an i2s-mic overlay). Pi USB: R4 (serial + power), ESP32-S3 #1 (serial + power), webcam — addressed by /dev/serial/by-id, never by /dev/ttyACMn. Pi power: bank on USB-C. Pi 5 note: with a 3 A supply the Pi 5 caps USB peripherals at 600 mA by default — set usb_max_current_enable=1 in config.txt (then the bank must genuinely hold 3 A) or use a Pi 4.",
    "ESP32-S3: UART1 (GPIO 17/18) ↔ LD2410C TX/RX crossed at 256000 baud; UART2 (GPIO 15/16) ↔ LD2450 crossed at 256000. Both radars take 5 V from the LM2596 rail (not the devkit's 5 V pin — that is the Pi's USB budget), 3.3 V signalling, GND common with ESP32 #1 through the star, nothing metal within 10 mm of the antenna faces.",
    "PCA9685: tilt on ch 0 only — the continuous-rotation pan servo is mechanically locked and ELECTRICALLY DISCONNECTED, which halves the servo-rail load. V+ from the XL4015 at 6.0 V (one MG996R stalling ≈ 2.5 A), VCC from Pi 3.3 V, GND to both.",
-   "ESP32-S3 #2 (beacon) and #3 (rover receiver): NO USB data link — the RuView firmware on them streams CSI as UDP over WiFi to a sink IP. The Pi runs a WiFi hotspot; both nodes are re-provisioned (provision.sh) with that SSID and the Pi's hotspot address as SINK_IP. #3 is powered from the LM2596 5 V pin ONLY (Espressif: header 5 V and USB are mutually exclusive supplies). #2 from any USB 5 V source at the doorway."
+   "ESP32-S3 #2 and #3 are NOT on the rover. Walleye's csi_rx firmware writes CSI to Serial (it would need a cable to the Pi), and the RuView node firmware receives CSI from the access point's frames — so the transmitter is the Pi's own 2.4 GHz hotspot on the rover, and the two nodes are receivers placed at the doorway and the far wall on any USB 5 V source (a phone charger, the second bank), streaming CSI back over that same WiFi as UDP to SINK_IP:5005 on the Pi. Re-provision both with the hotspot SSID and the Pi's hotspot address (provision.sh). Two bistatic links through two walls, zero rover wiring."
   ],
   "review": [
    "Microstepping jumpers sit under the driver sockets — caps, not wires, and they go on before the drivers. I first said Dupont leads would do; you caught it.",
@@ -134,7 +134,11 @@
    "WIRING PASS 2: BCM 4/5 carry no on-board I2C pull-ups, unlike BCM 2/3. The thermal module must have its own or the second bus is dead — VERIFY on the module, 4.7 kΩ in the parts drawer.",
    "WIRING PASS 2: the bank cable is a spec, not a cable. At the Pi's 2.5 A peak a 1 m phone cable drops over a volt; a 24 AWG 0.3 m cable drops 0.13 V. And the webcam on its captive 1.5 m lead can see 4.4 V at 1080p — if it resets, run 720p.",
    "WIRING PASS 2: ESP32 #1 with WiFi left on puts the Pi USB at 1.2 A of 1.2 A. WiFi.mode(WIFI_OFF) is a requirement of its firmware, not a nicety.",
-   "WIRING PASS 2: the tilt servo gets 3.3 V PWM because the PCA9685's VCC must stay at 3.3 V (its I2C pull-ups follow VCC). Usually fine for an MG996R; the fix if not is a buffer, never a 5 V VCC."
+   "WIRING PASS 2: the tilt servo gets 3.3 V PWM because the PCA9685's VCC must stay at 3.3 V (its I2C pull-ups follow VCC). Usually fine for an MG996R; the fix if not is a buffer, never a 5 V VCC.",
+   "WIRING PASS 3: the CSI plan had ESP32 #2 as a transmitting beacon and #3 as a receiver wired on the rover. Reading the firmware: Walleye's csi_rx outputs on Serial (needs a cable), and RuView nodes receive the access point's frames. So the Pi's hotspot on the rover is the transmitter and both nodes go OFF the rover as receivers on USB chargers. Removes a rail load, a dual-supply question and a USB-budget question in one move.",
+   "WIRING PASS 3: each radar's GND needs two wires — a power return to the LM2596 OUT− and the cable GND to ESP32 #1. With only the cable GND, 180 mA of radar current returns through the USB grounds and shifts every serial link by ~70 mV: the Ceres fault, again.",
+   "WIRING PASS 3: the LM2596 output was drawn as a daisy chain through Dupont pins. It gets its own pair of 5-way Wagos (four of the pack of ten used).",
+   "WIRING PASS 3: three build-day killers written down as procedure: driver orientation (EN over EN, backwards = dead), the 1000 µF cap's stripe to GND, and the fan's rated voltage checked against its rail. The fan listing says 5 V, 0.15 A — confirmed."
   ],
   "mesh": [
    "Motor shaft 5 mm with flat → wheel-kit 5 mm coupler (grub screw on the flat) → 80 mm mecanum hub. Same nominal bore on both sides; verify the coupler's set screw lands on the flat.",
@@ -153,7 +157,7 @@
    "Four ways of seeing a person, four different physics: the radar sees RF REFLECTED off a torso (range and periodic motion, through drywall); the ESP32 pair sees RF TRANSMITTED across a space and disturbed by a body (presence, through drywall, no range); the thermal array sees EMITTED heat (a warm blob, line of sight); the camera sees VISIBLE shape (a person-shaped box, line of sight). They fail differently, which is the point — but they also cannot all corroborate the same target: nothing optical sees through the wall.",
    "So there are TWO TRACKS, never mixed. HIDDEN track (RF only): radar + CSI. VISIBLE track (optical only): camera + thermal, associated by position — a thermal blob and a person box count together only when they overlap in the image. A person the camera does not see is NOT vetoed by the camera; a radiator in this room and radar activity behind the wall are two observations, not one.",
    "What the RF track can honestly claim: the radar reports periodic motion in the 0.13–0.60 Hz band with a confidence score; that score is a measure of REPETITION, not of life. Tested: a 0.35 Hz sine through the same code reads 21 breaths/min at 7.95/10. A fan, a curtain or a vibrating duct does the same. The label is therefore BREATHING-LIKE PERIODICITY, never ALIVE, and it needs: a still platform (windows during any rover or servo motion are discarded), timestamped samples (the tracker currently assumes 10 Hz), the same rate in two consecutive 30 s windows, and a range that stays put. Radar and CSI agreeing raises it to RF ACTIVITY, CORROBORATED — still not a person.",
-   "ESP32 #2 stays the beacon at the doorway the rover last passed and #3 the receiver on the rover, over WiFi/UDP as the RuView firmware already does. That puts an RF path across the wall between the doorway and the rover — one wall, the one it just drove through, not every wall. CSI needs an empty-room calibration for the geometry it is in; without one it reports change, not presence.",
+   "The CSI geometry, corrected by reading the firmware: the RuView nodes are RECEIVERS of the access point's frames, so the rover's own Pi hotspot is the transmitter and ESP32 #2 and #3 sit off the rover — one at the doorway the rover came through, one against the far wall of the search area — each on a USB charger, streaming CSI back over WiFi as UDP. Every rover position gives two RF paths through walls to two fixed points. CSI needs an empty-room calibration for the geometry it is in; without one it reports change, not presence.",
    "The station protocol: stop; motors off; turret parked; 5 s radar settle; 30 s dwell running Walleye's vitals.py while the receiver logs CSI; then a rotation in 20° steps for the thermal + camera sweep and a coarse radar bearing — coarse because step counts give COMMANDED heading, and mecanum wheels slip; then report all four bars with their labels. About 60 s per station.",
    "The sentence that survives a hard question: 'radar and WiFi both showed breathing-band periodicity 2 m behind that wall, stable for a minute; nothing optical could see it; go look.' Not 'the rover found a living person.'"
   ]
@@ -243,7 +247,7 @@
    "item": "SIXQJZML 2× 40 × 40 × 10 mm 5 V fans",
    "qty": 1,
    "price": 5.99,
-   "note": "One over the drivers on a printed bridge, one spare. Powered from the shield's 5 V / GND header."
+   "note": "Listing confirms 5 V, 0.15 A, 2-pin. One over the drivers on a printed bridge, one spare. Powered from the LM2596 5 V rail through the Wagos — NOT the shield's 5 V header, which is the R4's USB 5 V."
   },
   {
    "id": "TB6600",
@@ -367,7 +371,7 @@
    "group": "Sensing and compute",
    "item": "ESP32-S3 DevKitC (N16R8)",
    "qty": 3,
-   "note": "Three roles, all over WiFi: #1 bridges both radar UARTs to the Pi over USB; #2 is the CSI beacon at the doorway on any USB 5 V source; #3 rides the rover on the LM2596 5 V pin (no USB — header and USB supplies are mutually exclusive on the DevKitC) streaming CSI as UDP to the Pi's hotspot, exactly as the RuView firmware already on it does. Re-provision #2 and #3 with the hotspot SSID and the Pi's address as sink."
+   "note": "Three roles: #1 rides the rover and bridges both radar UARTs to the Pi over USB with its own WiFi OFF (that is a Pi USB budget rule, not a preference). #2 and #3 are OFF the rover: RuView receiver nodes at the doorway and the far wall on any USB 5 V source, listening to the Pi's hotspot on the rover and streaming CSI back as UDP. Nothing CSI is wired on the rover. Re-provision #2 and #3 with the hotspot SSID and the Pi's address as SINK_IP."
   },
   {
    "id": "CP2102",
@@ -463,9 +467,9 @@
   },
   {
    "id": "WAGO",
-   "item": "2× Wago 221-415 5-way lever nuts (or solder + heat-shrink)",
+   "item": "Wago 221-415 5-way lever nuts, pack of 10 (or solder + heat-shrink)",
    "price": 12.0,
-   "note": "One per polarity: the pigtail plus three branches is four conductors on each of + and −. Three 3-way connectors, first specified, cannot do it.",
+   "note": "Four used: two for the pack (+ and −: pigtail plus three branches is four conductors each), two for the LM2596 output (+ and −: buck plus fan and two radars). A 3-way cannot do either job.",
    "status": "optional",
    "group": "Build-day consumables — check your parts box first",
    "qty": 1,

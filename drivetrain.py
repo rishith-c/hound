@@ -74,7 +74,7 @@ MASS_ITEMS = [
     ("Uno + CNC Shield + 4 drivers + fan",     0.117,             "ALLOCATED"),
     ("Raspberry Pi + case",                    0.070,             "ALLOCATED"),
     ("HOOVO 3S 2200 mAh 80C shorty LiPo",       0.140,             "ALLOCATED"),  # listing says 138 g; VERIFY on receipt
-    ("2x LD2410C + LD2450 + 2x ESP32-S3",      0.060,             "ALLOCATED"),
+    ("LD2410C + LD2450 + ESP32-S3 #1 (allocation kept)", 0.060,   "ALLOCATED"),
     ("Owned USB webcam (C920-class)",          0.162,             "ALLOCATED"),  # Ceres DESIGN.md envelope
     ("2x VL53L1X",                             0.010,             "ALLOCATED"),
     ("MLX90640 thermal + SCD41 CO2 + INMP441 mic", 0.025,         "ALLOCATED"),
