@@ -73,7 +73,7 @@ MASS_ITEMS = [
     ("8x 2020 corner bracket + T-nuts",        8 * 0.012,         "ALLOCATED"),
     ("Uno + CNC Shield + 4 drivers + fan",     0.117,             "ALLOCATED"),
     ("Raspberry Pi + case",                    0.070,             "ALLOCATED"),
-    ("Gens ace 3S 2200 mAh 35C LiPo",           0.190,             "ALLOCATED"),  # VERIFY on receipt
+    ("HOOVO 3S 2200 mAh 80C shorty LiPo",       0.140,             "ALLOCATED"),  # listing says 138 g; VERIFY on receipt
     ("2x LD2410C + LD2450 + 2x ESP32-S3",      0.060,             "ALLOCATED"),
     ("Owned USB webcam (C920-class)",          0.162,             "ALLOCATED"),  # Ceres DESIGN.md envelope
     ("2x VL53L1X",                             0.010,             "ALLOCATED"),
@@ -189,7 +189,7 @@ def main(emit_json=False):
         print(f"  {v:.1f} m/s = {rpm_at(v):5.1f} rpm → {s:6.0f} steps/s per wheel, {4*s:6.0f} total"
               f"   {'OK' if s < 5000 else 'EXCEEDS'} vs 5 000/axis ISR budget")
 
-    print(f"\nPOWER AND ENDURANCE   (Gens ace 3S 2200 mAh, 80% usable, bus {V_BUS_LOADED} V)")
+    print(f"\nPOWER AND ENDURANCE   (HOOVO 3S 2200 mAh shorty, 80% usable, bus {V_BUS_LOADED} V)")
     for i_set in (1.0, 1.5):
         t_b = req["B  level responsive, a=0.3"][0]
         p, cu, me, dr = power(i_set, t_b, V_CRUISE)
