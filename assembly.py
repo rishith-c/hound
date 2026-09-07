@@ -26,8 +26,8 @@ NEMA_LEN = 39.5             # body length                                    MEA
 NEMA_PITCH = 31.0           # bolt pattern                                   MEASURED (drawing)
 SHAFT_D, SHAFT_LEN = 5.0, 22.0   # shaft length VERIFY                        drawing: 5 mm with flat
 BRK_T = 3.0                 # Anndason steel                                 MEASURED (listing)
-BRK_OFFSET = 31.0           # axle centre to foot face                        from AMAZON-BOM fit section
-BRK_FOOT_W, BRK_FOOT_D = 42.0, 35.0   # VERIFY
+BRK_OFFSET = 31.0           # axle centre to foot outer face: drawing bore centre ≈30 from bend line + ~1.5 half-thickness   ±1.5 VERIFY on receipt
+BRK_FOOT_W, BRK_FOOT_D = 50.0, 51.0   # Anndason drawing: plate 50 wide, foot 51 long   MEASURED (listing drawing)
 WHEEL_D, WHEEL_W = 80.0, 31.0         # width VERIFY
 COUPLER_LEN = 15.0                    # VERIFY
 AXLE_X = 125.0              # wheelbase 250
@@ -103,12 +103,12 @@ for inst, sx, sy in (("FL", 1, 1), ("FR", 1, -1), ("RL", -1, 1), ("RR", -1, -1))
     add("BRK", inst, "Steel NEMA 17 L-bracket, inverted under rail", x, outer - sy * BRK_FOOT_D / 2,
         RAIL_Z0 - BRK_T / 2, BRK_FOOT_W, BRK_FOOT_D, BRK_T,
         "foot flat against rail underside, leg hanging down flush with rail outer face",
-        f"side rail {'left' if sy > 0 else 'right'} underside", "2× M4×10 hex + 2× M4 T-nut (bottom slot)",
-        "2.0 N·m", M["bracket"], verify="foot 42×35 and slot spacing",
+        f"side rail {'left' if sy > 0 else 'right'} underside", "2× M4×10 hex + 2× M4 T-nut (bottom slot) — the foot slots are 4.3 mm wide: M4 only, M5 will not pass",
+        "2.0 N·m", M["bracket"], verify="drawing: slots 4.3×34 at 25.73 pitch, starting 8 mm from the bend — the rail's bottom slot centre is 10 mm from the outer face, so each screw lands at the INNER END of its foot slot; if it does not reach, slide the bracket 1–2 mm inboard. Bore Ø22 nominal vs Ø22 boss: check it slips on; sand if tight",
         note=f"Leg centre Y = {leg_y:+.1f}; axle hole centre at Z = {AXLE_Z:.0f}.")
     add("MOT", f"{inst} (motor {['FL','FR','RL','RR'].index(inst)+1})", "JK42HS40-1704-13A NEMA 17",
         x, motor_c_y, AXLE_Z, NEMA, NEMA_LEN, NEMA, f"shaft along Y pointing {'+Y' if sy > 0 else '−Y'} (outboard)",
-        f"bracket {inst} leg, inboard side", "4× M3×6 socket head through leg into flange", "0.8 N·m (aluminium threads)",
+        f"bracket {inst} leg, inboard side", "4× M3×6 socket head through leg into flange (NEMA 17 tapped holes are ~4.5 mm deep: 3 mm plate + 6 mm screw = 3 mm engagement; an M3×8 bottoms out before it clamps — do not use the bracket's screws if they are 8 mm without a washer)", "0.8 N·m (aluminium threads)",
         M["motor"], note=f"Flange face at Y = {motor_face_y:+.1f}; body bottom at Z = {AXLE_Z - NEMA/2:.1f} (ground clearance). Leads exit inboard.")
     # Wheel inner face 5 mm outboard of the bracket leg: as close to the motor bearing as
     # the coupler allows. Every extra millimetre of overhang multiplies the bearing load.

@@ -26,7 +26,7 @@ A 350 x 390 mm four-wheel mecanum rover on four owned NEMA 17 steppers, a pan/ti
 
 ## What I am buying (exact Amazon listings)
 - 1x SmaringRobot 4× 80 mm mecanum wheels with 5 mm couplings — $29.99 — https://www.amazon.com/dp/B0DWSWQV4T — Two left-hand, two right-hand. The 5 mm coupler was made for DC gearmotor D-shafts: if its bore is a D, its flat depth must match the motor's flat; if it is a round bore with a grub screw, the screw goes on the flat with blue threadlocker. Do not print a hub.
-- 1x Anndason 6× steel NEMA 17 L-brackets with screws — $16.99 — https://www.amazon.com/dp/B073QW9RPZ — Four used, two spare. 3 mm steel, 113 g each. Base slots are 4.3 mm: M4 T-nuts, not M5. The screws in the box may be M3×8: through a 3 mm leg that leaves 5 mm into a flange hole that is ~4.5 mm deep — they bottom out and never clamp. Use M3×6 from the M3 kit, or add a washer.
+- 1x Anndason 6× steel NEMA 17 L-brackets with screws — $16.99 — https://www.amazon.com/dp/B073QW9RPZ — Checked against the listing's dimension drawing: face 4× M3 on 31 mm + Ø22 bore = the NEMA 17 pattern; 3 mm steel plain L (no gussets, whatever the bullet says); foot 50 × 51 with two 4.3 × 34 mm slots 25.73 apart — that is an M4 slot, so the foot takes M4 T-nuts from the T-nut kit, not M5. Inverted under the side rail, leg flush with the outer face, motor in the corner of the L with 7 mm between its top and the foot. Six in the box, four used, two spare. Axle sits 31 ±1.5 mm below the rail: measure on receipt and set BRK_OFFSET.
 - 1x VICHSAMWY 4× 350 mm 2020 V-slot aluminium extrusion — $16.59 — https://www.amazon.com/dp/B099M9DMSL — All four used at full length. Nothing to cut.
 - 1x TOCLUX 20× 2020 corner brackets with M5 screws and T-nuts — $14.99 — https://www.amazon.com/dp/B0F1B85397 — Eight for the frame corners; the rest and the 40 M5 T-nuts cover deck and post attachment.
 - 1x Bemaka 2020 T-nut kit, M3/M4/M5, with M4×10 and M4×12 screws — $13.99 — https://www.amazon.com/dp/B0FQ55VFDK — The M4 T-nuts and M4×10 screws hold the motor brackets to the rails.
@@ -67,17 +67,17 @@ Frame: +X forward, +Y left, +Z up, origin at chassis centre on the floor, all mm
 Envelope 350 x 390 x 304 mm, track 431, wheelbase 250, CG z = 81 mm, ground clearance 18.9 mm, tip angles 57/69 deg, 0 bounding-box collisions in the placement check.
 
 Key placements (part centre x, y, z mm; fastener):
-- BRK FL: (+125, +178, 70) — 2× M4×10 hex + 2× M4 T-nut (bottom slot)
-- MOT FL (motor 1): (+125, +172, 40) — 4× M3×6 socket head through leg into flange
+- BRK FL: (+125, +170, 70) — 2× M4×10 hex + 2× M4 T-nut (bottom slot) — the foot slots are 4.3 mm wide: M4 only, M5 will not pass
+- MOT FL (motor 1): (+125, +172, 40) — 4× M3×6 socket head through leg into flange (NEMA 17 tapped holes are ~4.5 mm deep: 3 mm plate + 6 mm screw = 3 mm engagement; an M3×8 bottoms out before it clamps — do not use the bracket's screws if they are 8 mm without a washer)
 - WHL FL (left-hand): (+125, +216, 40) — coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware
-- BRK FR: (+125, -178, 70) — 2× M4×10 hex + 2× M4 T-nut (bottom slot)
-- MOT FR (motor 2): (+125, -172, 40) — 4× M3×6 socket head through leg into flange
+- BRK FR: (+125, -170, 70) — 2× M4×10 hex + 2× M4 T-nut (bottom slot) — the foot slots are 4.3 mm wide: M4 only, M5 will not pass
+- MOT FR (motor 2): (+125, -172, 40) — 4× M3×6 socket head through leg into flange (NEMA 17 tapped holes are ~4.5 mm deep: 3 mm plate + 6 mm screw = 3 mm engagement; an M3×8 bottoms out before it clamps — do not use the bracket's screws if they are 8 mm without a washer)
 - WHL FR (right-hand): (+125, -216, 40) — coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware
-- BRK RL: (-125, +178, 70) — 2× M4×10 hex + 2× M4 T-nut (bottom slot)
-- MOT RL (motor 3): (-125, +172, 40) — 4× M3×6 socket head through leg into flange
+- BRK RL: (-125, +170, 70) — 2× M4×10 hex + 2× M4 T-nut (bottom slot) — the foot slots are 4.3 mm wide: M4 only, M5 will not pass
+- MOT RL (motor 3): (-125, +172, 40) — 4× M3×6 socket head through leg into flange (NEMA 17 tapped holes are ~4.5 mm deep: 3 mm plate + 6 mm screw = 3 mm engagement; an M3×8 bottoms out before it clamps — do not use the bracket's screws if they are 8 mm without a washer)
 - WHL RL (right-hand): (-125, +216, 40) — coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware
-- BRK RR: (-125, -178, 70) — 2× M4×10 hex + 2× M4 T-nut (bottom slot)
-- MOT RR (motor 4): (-125, -172, 40) — 4× M3×6 socket head through leg into flange
+- BRK RR: (-125, -170, 70) — 2× M4×10 hex + 2× M4 T-nut (bottom slot) — the foot slots are 4.3 mm wide: M4 only, M5 will not pass
+- MOT RR (motor 4): (-125, -172, 40) — 4× M3×6 socket head through leg into flange (NEMA 17 tapped holes are ~4.5 mm deep: 3 mm plate + 6 mm screw = 3 mm engagement; an M3×8 bottoms out before it clamps — do not use the bracket's screws if they are 8 mm without a washer)
 - WHL RR (left-hand): (-125, -216, 40) — coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware
 - LIPO —: (+0, +0, 75) — printed retaining bar + 2 cable ties
 - UNO —: (-116, +87, 128) — printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4's 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties
@@ -196,6 +196,7 @@ The radar sits at Z = 300 mm. Earlier measurements on the same LD2410C (project 
 - EXTERNAL REVIEW: fuse and in-run cell monitoring were declined; the reviewer calls them unresolved requirements. Both restored as an optional Safety group so the decision is visible, not buried.
 - EXTERNAL REVIEW, pushed back: the 400 mm post was an option under test, not a commitment, and the bearing/torque assumptions were already labelled ASSUMED — those two are restated, not changed.
 - Battery swapped to the user's HOOVO 3S 2200 80C shorty 2-pack: it is Deans, not XT60. Rather than an adapter in the 4 A path, the T-plug pigtail line became two Deans 30 cm extensions (one whole for the pack lead, one cut into a pigtail of each gender). Cradle re-drawn 75 × 33.8 × 26.4, mass 190 → 140 g, ramp margin 1.27 → 1.28, 0 collisions. The optional XT60 extension went away with it.
+- Motor bracket checked against its drawing, not its bullets: foot is 50 × 51 (was guessed 42 × 35), slots are 4.3 mm wide (M4 only — an M5 T-nut screw would not pass), and each screw lands at the inner end of its slot because the rail's bottom slot sits 10 mm from the outer face. The Ø22 bore is nominal against a Ø22 boss (check it slips), the motor's tapped holes are ~4.5 mm deep so M3×6 not M3×8, and the axle-to-foot offset is 31 ±1.5 pending a ruler on the real part.
 
 ## What I want from you
 1. Mechanical: walk every interface and say whether the two parts actually mate (bore vs shaft, bolt pattern vs holes, screw length vs stack, slot vs T-nut, print-bed fit). Flag anything nominal that could be wrong on the real part.
