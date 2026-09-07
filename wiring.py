@@ -233,7 +233,7 @@ out(WARN, "connector", f"Tilt servo stall {rail_sum('V_SERVO', 5):.1f} A through
 out(PASS, "wago", "Wago 221-415 accepts 0.14–4 mm² (24–12 AWG), solid or fine-stranded: the 14 AWG pigtail and the 22 AWG branches both land in it without ferrules")
 
 # 13. pass 3 — the paths a schematic hides
-radar_ret = sum(l[4] for l in LOADS if "radar" in l[0])
+radar_ret = sum(l[4] for l in LOADS if l[0].startswith("LD24"))
 out(PROC, "radar-gnd", f"Each radar's GND pin gets TWO wires: one to the LM2596 OUT− (its power return) and the cable's GND to ESP32 #1 (signal reference). With only the cable GND, the radars' {radar_ret*1000:.0f} mA returns through ESP32 #1 → Pi → R4 USB → shield → Wago: {radar_ret*0.4*1000:.0f} mV of ground shift on every serial link. That is the exact Ceres fault")
 out(PROC, "lm-dist", "LM2596 OUT feeds three loads (fan, LD2410C, LD2450): four conductors per polarity, so two MORE 5-way Wagos (four of the pack of ten used) or a soldered splice. Never daisy-chain through a load's connector")
 out(PROC, "driver-orient", "DRV8825 into the shield socket with its EN pin over the socket's EN label (the trimpot ends up toward the shield's power terminal on genuine Pololu layouts; clones vary — go by the label). Backwards = dead driver on power-up, no warning")
