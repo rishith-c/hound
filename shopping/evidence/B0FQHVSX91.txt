@@ -1,9 +1,2 @@
-ASIN B0FQHVSX91
-MLX90640-D55 Thermal Imaging Camera, 32x24 IR Array
-Observed 2026-09-05 on Amazon US search results, page 1, query "MLX90640 thermal camera module 32x24"
-Price: $66.30
-Delivery: FREE delivery tomorrow, Sep 6
-Rating: 5.0 out of 5 stars (few reviews)
-Why selected: 55 degree field of view (D55) chosen over the 110 degree D110/wide variants at the same $66.30 - on a sweeping pan/tilt turret the narrower FoV gives ~4x the angular resolution per pixel, so a person is resolvable further away. Same price as B0F312VWW3 (FoV unstated) and B0F2YYKP58 (110 degree). Waveshare B07ZKJPZ7Z is $80.99 and 110 degree.
-Sensor facts (Melexis / Adafruit / Pimoroni): 768 pixels, -40 to 300 C, ~1 C accuracy, I2C up to 1 MHz, up to 64 FPS, 3-6 V.
-Not verified from this capture: board dimensions and hole spacing, header orientation.
+ASIN B0FQHVSX91 — listing bullets read via the logged-in Amazon session on 2026-09-07
+MLX90640-D55 module, 32×24, 55° FoV, I2C up to 1 MHz, 'works with 3.3V/5V logic levels', 20 × 18 mm, < 23 mA, −40 to 300 °C, 0.5–64 Hz refresh. 3.3/5 V logic claim implies onboard regulation/level handling → still meter SDA to GND at 3.3 V power before it meets the Pi (P1-04), and confirm it carries I2C pull-ups (BCM 4/5 have none).

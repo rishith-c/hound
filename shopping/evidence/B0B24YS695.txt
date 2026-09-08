@@ -1,9 +1,2 @@
-ASIN B0B24YS695
-CNC Shield Expansion Board V3.0 + 4Pcs DRV8825 Stepper Motor Driver Module with Heat Sink for Engraver 3D Printer Ramps 1.4 StepStick
-Observed 2026-09-05 on Amazon US search results, page 1, query "CNC Shield V3 DRV8825 kit arduino"
-Price: $15.99
-Delivery: Two-Day FREE delivery Mon, Sep 7
-Rating: 4.4 out of 5 stars (13)
-Why selected: cheapest DRV8825 shield kit with sub-week delivery. DAOKI B08KFYKKN4 $17.49 ships Sep 25–Oct 21. RATTMMOTOR $16.30 also Sep 7 but not captured with ASIN.
-Replaces: ACEIRMC B07TT3C3HB (A4988 kit, $9.99) — A4988 fails the 5 degree ramp case at every current it can run; see ../../drivetrain.py
-Not verified from this capture: sense-resistor value on the carriers, pin header orientation, jumper caps included.
+ASIN B0B24YS695 — listing bullets read via the logged-in Amazon session on 2026-09-07
+AITIAO CNC Shield V3.0 + 4× DRV8825 + 4× heatsinks. DRV8825 confirmed by bullets ('full to 1/32 step, adjustable current limit, overcurrent/overtemperature protection'). 'D12 and D13 ... custom firmware to perform the complete axis 4' matches the A-axis plan. No jumper caps listed — user owns them (needs 6).
