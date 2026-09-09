@@ -395,7 +395,7 @@
    "orientation": "flat on rail tops",
    "mounts_to": "one side rail + one cross rail",
    "fasteners": "3\u00d7 M5\u00d78 + M5 T-nut into the side-rail top slot, 2\u00d7 into the cross-rail top slot (corner kit) at 1.5 N\u00b7m \u2014 3 mm of PLA under the head crushes at the 3.0 the corners take; 3\u00d7 M3\u00d78 + nut per lap seam",
-   "torque": "3.0 N\u00b7m",
+   "torque": "1.5 N\u00b7m on the M5 (PLA under the head); 1.0 N\u00b7m on the M3 seam nuts",
    "mass_kg": 0.085,
    "verify": "",
    "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each \u2014 the mass budget depends on it). Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
@@ -413,7 +413,7 @@
    "orientation": "flat on rail tops",
    "mounts_to": "one side rail + one cross rail",
    "fasteners": "3\u00d7 M5\u00d78 + M5 T-nut into the side-rail top slot, 2\u00d7 into the cross-rail top slot (corner kit) at 1.5 N\u00b7m \u2014 3 mm of PLA under the head crushes at the 3.0 the corners take; 3\u00d7 M3\u00d78 + nut per lap seam",
-   "torque": "3.0 N\u00b7m",
+   "torque": "1.5 N\u00b7m on the M5 (PLA under the head); 1.0 N\u00b7m on the M3 seam nuts",
    "mass_kg": 0.085,
    "verify": "",
    "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each \u2014 the mass budget depends on it). Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
@@ -431,7 +431,7 @@
    "orientation": "flat on rail tops",
    "mounts_to": "one side rail + one cross rail",
    "fasteners": "3\u00d7 M5\u00d78 + M5 T-nut into the side-rail top slot, 2\u00d7 into the cross-rail top slot (corner kit) at 1.5 N\u00b7m \u2014 3 mm of PLA under the head crushes at the 3.0 the corners take; 3\u00d7 M3\u00d78 + nut per lap seam",
-   "torque": "3.0 N\u00b7m",
+   "torque": "1.5 N\u00b7m on the M5 (PLA under the head); 1.0 N\u00b7m on the M3 seam nuts",
    "mass_kg": 0.085,
    "verify": "",
    "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each \u2014 the mass budget depends on it). Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
@@ -449,7 +449,7 @@
    "orientation": "flat on rail tops",
    "mounts_to": "one side rail + one cross rail",
    "fasteners": "3\u00d7 M5\u00d78 + M5 T-nut into the side-rail top slot, 2\u00d7 into the cross-rail top slot (corner kit) at 1.5 N\u00b7m \u2014 3 mm of PLA under the head crushes at the 3.0 the corners take; 3\u00d7 M3\u00d78 + nut per lap seam",
-   "torque": "3.0 N\u00b7m",
+   "torque": "1.5 N\u00b7m on the M5 (PLA under the head); 1.0 N\u00b7m on the M3 seam nuts",
    "mass_kg": 0.085,
    "verify": "",
    "note": "Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each \u2014 the mass budget depends on it). Wire pass-through slots 20\u00d78 mm beside each motor corner and at the rear centre for the pack lead \u2014 the tiles cover the whole frame and every under-deck wire has to come up somewhere."
@@ -488,7 +488,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.14,
    "verify": "",
-   "note": "Lowest heavy part \u2192 h_CG. Balance lead to the cell alarm, velcro alarm to cradle side."
+   "note": "Lowest heavy part \u2192 h_CG. Balance lead tucked beside the pack; the cell alarm is optional."
   },
   {
    "id": "PETG",
@@ -560,7 +560,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.07,
    "verify": "",
-   "note": "Spans X \u2212150..\u221265, Y \u2212116..\u221260. USB ports face \u2212X (rear). Powered from the 5 V buck on GPIO 2/4 (+) and 6 (\u2212)."
+   "note": "Spans X \u2212150..\u221265, Y \u2212116..\u221260. USB ports face \u2212X (rear). Powered from the USB bank on USB-C; the fallback is a buck at 5.10 V on PHYSICAL header pins 2/4 (+) and 6 (\u2212), never with the bank connected too."
   },
   {
    "id": "PCA",
@@ -704,7 +704,7 @@
    "torque": "1.0 N\u00b7m",
    "mass_kg": 0.25,
    "verify": "hole positions on the actual Ceres base",
-   "note": "Spans X +60..+160, Y \u221230..+30. Pan servo cable and tilt servo cable to PCA9685 ch 2 / ch 0."
+   "note": "Spans X +60..+160, Y \u221230..+30. Tilt servo cable to PCA9685 ch 0; the pan servo stays disconnected."
   },
   {
    "id": "CAM",
@@ -740,7 +740,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.005,
    "verify": "breakout hole spacing",
-   "note": "I2C 0x33 on the Pi's SECOND I2C bus (dtoverlay i2c-gpio) so the 1 MHz thermal reads never stall the ToF/servo bus. 55\u00b0 FoV: a person at 4 m fills ~6 pixels tall, a warm blob ~10 \u00b0C above the room. Ribbon runs with the camera USB through the tilt axis."
+   "note": "I2C 0x33 on the Pi's SECOND I2C bus (hardware i2c3 on BCM 4/5: dtoverlay=i2c3,pins_4_5, 400 kHz) so the 1 MHz thermal reads never stall the ToF/servo bus. 55\u00b0 FoV: a person at 4 m fills ~6 pixels tall, a warm blob ~10 \u00b0C above the room. Ribbon runs with the camera USB through the tilt axis."
   },
   {
    "id": "PETG",

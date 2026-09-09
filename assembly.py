@@ -129,7 +129,7 @@ for inst, x, y in (("front-left tile", 87.5, 97.5), ("front-right tile", 87.5, -
                    ("rear-left tile", -87.5, 97.5), ("rear-right tile", -87.5, -97.5)):
     add("PETG", inst, "Printed deck tile 175×195×5, half-thickness lap (15 mm tongue / rebate) on the centreline edges", x, y, DECK_Z0 + DECK_T / 2, 175, 195, DECK_T,
         "flat on rail tops", "one side rail + one cross rail", "3× M5×8 + M5 T-nut into the side-rail top slot, 2× into the cross-rail top slot (corner kit) at 1.5 N·m — 3 mm of PLA under the head crushes at the 3.0 the corners take; 3× M3×8 + nut per lap seam",
-        "3.0 N·m", M["deck"] / 4, note="Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each — the mass budget depends on it). Wire pass-through slots 20×8 mm beside each motor corner and at the rear centre for the pack lead — the tiles cover the whole frame and every under-deck wire has to come up somewhere.")
+        "1.5 N·m on the M5 (PLA under the head); 1.0 N·m on the M3 seam nuts", M["deck"] / 4, note="Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each — the mass budget depends on it). Wire pass-through slots 20×8 mm beside each motor corner and at the rear centre for the pack lead — the tiles cover the whole frame and every under-deck wire has to come up somewhere.")
 
 # ── Battery, slung under the deck ───────────────────────────────────────────
 cradle_z = DECK_Z0 - (LIPO[2] + 2 * CRADLE_T) / 2
@@ -139,7 +139,7 @@ add("PETG", "battery cradle", f"PETG cradle {LIPO[0]+8:.0f}×{LIPO[1]+6:.0f}×{L
     note=f"Cradle bottom at Z = {cradle_z - (LIPO[2]+2*CRADLE_T)/2:.0f}: 61 mm ground clearance, above the 18.9 mm motor bottoms.")
 add("LIPO", "—", "HOOVO 3S 2200 mAh 80C shorty, T-plug (Deans)", 0, 0, cradle_z, *LIPO, "long axis X, T-plug lead exits −X (rear)",
     "battery cradle", "printed retaining bar + 2 cable ties", "hand-tight", M["lipo"],
-    note="Lowest heavy part → h_CG. Balance lead to the cell alarm, velcro alarm to cradle side.")
+    note="Lowest heavy part → h_CG. Balance lead tucked beside the pack; the cell alarm is optional.")
 add("PETG", "cradle retaining bar", "printed bar 140×12×6 across the cradle mouth", 0, 0, cradle_z - (LIPO[2] + 2 * CRADLE_T) / 2 + 3, 140, 12, 6,
     "spans the open bottom of the cradle", "cradle side walls, two printed hooks", "2× cable ties through printed slots", "hand-tight", 0.01,
     note="Replaces a bought strap. Print two.")
@@ -157,7 +157,7 @@ on_deck("FAN", "—", "40×40×10 5 V fan over the drivers", FAN, -115.7, 86.7, 
         note=f"Blows down onto the four DRV8825 heatsinks. Fan face at Z ≈ {DECK_TOP + 10 + SHIELD_STACK_H + 8:.0f}.")
 on_deck("PI", "—", "Raspberry Pi", PI, -107.5, -88.0, "deck top, rear-right",
         "printed 8 mm bosses on the deck tile (58×49 pattern) + 4× M2×20 + nut (bosses 8 + tile 5 + PCB 1.6 + nut 1.6 = 16.2; the M2×16 first specified had 1 mm left for board and nut)", "hand-tight", M["pi"],
-        note="Spans X −150..−65, Y −116..−60. USB ports face −X (rear). Powered from the 5 V buck on GPIO 2/4 (+) and 6 (−).")
+        note="Spans X −150..−65, Y −116..−60. USB ports face −X (rear). Powered from the USB bank on USB-C; the fallback is a buck at 5.10 V on PHYSICAL header pins 2/4 (+) and 6 (−), never with the bank connected too.")
 on_deck("PCA", "—", "PCA9685 servo driver (Ceres)", PCA9685, -29.0, -97.5, "deck top, beside the Pi",
         "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the 6 V buck. I2C from Pi. Servo cables run forward to the turret.")
 on_deck("BANK", "→ Pi", "USB power bank, compact (owned)", (100.0, 60.0, 15.0), 0.0, 0.0, "deck top, centre, over the LiPo cradle",
@@ -180,14 +180,14 @@ TX = 110.0
 add("PT", "base", "Ceres pan/tilt turret base plate 100×60×6", TX, 0, DECK_TOP + TURRET_BASE[2] / 2, *TURRET_BASE,
     "flat on deck; PAN STAGE LOCKED — the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3", "front-left/right tiles across the seam",
     "4× M3×16 through base (6 mm) + deck (5 mm) + 4× M3 nut (M3 kit)", "1.0 N·m", M["turret"],
-    verify="hole positions on the actual Ceres base", note="Spans X +60..+160, Y −30..+30. Pan servo cable and tilt servo cable to PCA9685 ch 2 / ch 0.")
+    verify="hole positions on the actual Ceres base", note="Spans X +60..+160, Y −30..+30. Tilt servo cable to PCA9685 ch 0; the pan servo stays disconnected.")
 CAM_Z = DECK_TOP + TURRET_BASE[2] + TURRET_H
 add("CAM", "on tilt bracket", "Owned USB webcam (C920-class)", TX, 0, CAM_Z, *CAM,
     "lens forward (+X) at tilt = 0", "turret tilt bracket — the Ceres clamp it was built for", "Ceres camera clamp; 2 cable ties as backup", "hand-tight",
     M["cam"], verify="camera mass ≤ 170 g and clamp fit", note=f"Lens centre Z ≈ {CAM_Z:.0f}. USB to Pi. Clear of the radar line of sight at Z 300.")
 add("THERM", "above the camera", "MLX90640-D55 thermal array, 55° FoV", TX + 4, 0, CAM_Z + CAM[2] / 2 + 4 + 2, 26, 18, 8,
     "boresight parallel to the camera, +X at tilt = 0", "printed PETG/PLA saddle on top of the camera clamp", "2× M2 + nut through the saddle", "hand-tight",
-    0.005, verify="breakout hole spacing", note="I2C 0x33 on the Pi's SECOND I2C bus (dtoverlay i2c-gpio) so the 1 MHz thermal reads never stall the ToF/servo bus. 55° FoV: a person at 4 m fills ~6 pixels tall, a warm blob ~10 °C above the room. Ribbon runs with the camera USB through the tilt axis.")
+    0.005, verify="breakout hole spacing", note="I2C 0x33 on the Pi's SECOND I2C bus (hardware i2c3 on BCM 4/5: dtoverlay=i2c3,pins_4_5, 400 kHz) so the 1 MHz thermal reads never stall the ToF/servo bus. 55° FoV: a person at 4 m fills ~6 pixels tall, a warm blob ~10 °C above the room. Ribbon runs with the camera USB through the tilt axis.")
 
 # ── Radar post, rear centre, looking forward over the turret ────────────────
 PX = -CROSS_X
