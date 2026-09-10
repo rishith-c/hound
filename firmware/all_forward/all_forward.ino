@@ -9,7 +9,7 @@
 
 const uint8_t STEP_PIN[4] = { 3, 12, 2, 4 };   // FL(Y) FR(A) BL(X) BR(Z)
 const uint8_t DIR_PIN[4]  = { 6, 13, 5, 7 };
-const uint8_t DIR_LEVEL[4] = { HIGH, HIGH, HIGH, HIGH };   // flip to LOW for any wheel that runs backward
+const uint8_t DIR_LEVEL[4] = { LOW, HIGH, LOW, HIGH };    // FL and BL flipped after the first bench run   // flip to LOW for any wheel that runs backward
 const uint8_t EN_PIN = 8;
 
 const int32_t TICK_HZ = 20000;
