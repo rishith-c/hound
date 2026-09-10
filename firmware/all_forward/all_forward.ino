@@ -45,6 +45,8 @@ void setup() {
 }
 
 void loop() {
-  Serial.print("all four forward at "); Serial.print(rate); Serial.println(" steps/s  (FL=Y D3/D6, FR=A D12/D13, BL=X D2/D5, BR=Z D4/D7)");
+  Serial.print("build 3 · rate "); Serial.print(rate); Serial.print(" steps/s · DIR FL(D6)="); Serial.print(DIR_LEVEL[0] ? "HIGH" : "LOW");
+  Serial.print(" FR(D13)="); Serial.print(DIR_LEVEL[1] ? "HIGH" : "LOW"); Serial.print(" BL(D5)="); Serial.print(DIR_LEVEL[2] ? "HIGH" : "LOW");
+  Serial.print(" BR(D7)="); Serial.println(DIR_LEVEL[3] ? "HIGH" : "LOW");
   delay(1000);
 }
