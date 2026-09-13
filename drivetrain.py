@@ -187,7 +187,7 @@ def main(emit_json=False):
     for v in (V_CRUISE, V_MAX):
         s = step_rate(v, 16)
         print(f"  {v:.1f} m/s = {rpm_at(v):5.1f} rpm → {s:6.0f} steps/s per wheel, {4*s:6.0f} total"
-              f"   {'OK' if s < 5000 else 'EXCEEDS'} vs 5 000/axis ISR budget")
+              f"   {'OK' if s < 9000 else 'EXCEEDS'} vs 9 000/axis ISR budget (20 kHz ISR, bench-verified)")
 
     print(f"\nPOWER AND ENDURANCE   (HOOVO 3S 2200 mAh shorty, 80% usable, bus {V_BUS_LOADED} V)")
     for i_set in (1.0, 1.5):
