@@ -43,9 +43,9 @@ const float   WHEEL_D_MM  = 80.0f;
 const int     FULL_STEPS  = 200;
 const float   LX_MM       = 125.0f;          // half wheelbase (axles at X ±125)
 const float   LY_MM       = 215.5f;          // half track    (wheel centres at Y ±215.5)
-const int32_t TICK_HZ     = 20000;           // step ISR rate → max 10 000 steps/s per axis
-const int32_t MAX_RATE    = 9000;            // steps/s per axis: 90 % of what a 20 kHz ISR can pulse (bench-verified 19.5 kHz)
-const float   V_MAX_MM    = 480.0f;          // physics ceiling: half the 1.5 A corner speed (228 rpm = 955 mm/s, drivetrain.py)
+const int32_t TICK_HZ     = 30000;           // step ISR rate → max 15 000 steps/s per axis (was 20 kHz; verify the ticks counter still tracks)
+const int32_t MAX_RATE    = 13500;           // steps/s per axis: 90 % of what the ISR can pulse
+const float   V_MAX_MM    = 800.0f;          // physics ceiling: 84 % of the 1.5 A corner speed (228 rpm = 955 mm/s at 10.5 V, drivetrain.py) — torque is still full here
 const float   ACCEL_MM_S2 = 600.0f;          // ramp in mm/s² (0.6 m/s²; case-B torque margin stays > 1.6 at 5.2 kg)
 const uint32_t WATCHDOG_TICKS = TICK_HZ * 4 / 10;   // 400 ms
 const uint32_t IDLE_DISABLE_MS = 3000;       // drivers off after 3 s of zero velocity
