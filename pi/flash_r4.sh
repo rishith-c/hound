@@ -4,7 +4,7 @@
 #   pi/flash_r4.sh              flashes firmware/r4_drive
 #   pi/flash_r4.sh all_forward  flashes a different sketch folder under firmware/
 set -e
-PI="${PI_HOST:-rishith@192.168.68.68}"
+PI="${PI_HOST:-rishithc@192.168.68.68}"
 SKETCH="${1:-r4_drive}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FQBN=arduino:renesas_uno:unor4wifi

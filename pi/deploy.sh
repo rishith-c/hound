@@ -5,7 +5,7 @@
 #   pi/deploy.sh --demo [arg]    then run demo.py on the Pi
 # Host: $PI_HOST or the default below.
 set -e
-PI="${PI_HOST:-rishith@192.168.68.68}"
+PI="${PI_HOST:-rishithc@192.168.68.68}"
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
 command rsync -az --delete --exclude venv --exclude '__pycache__' "$DIR/rover/" "$PI:rover/"
