@@ -317,7 +317,7 @@ void handleSerial() {
       char* p = (char*)line.c_str() + 1;          // newlib-nano has no float scanf: parse by hand
       a = strtof(p, &p); b = strtof(p, &p); d = strtof(p, &p);
       float sp = speedPct / 100.0f * maxMm(), wr = sp / (LX_MM + LY_MM);
-      if (cmd != 'c') circleOn = false;
+      if (cmd != 'c' && cmd != '?') circleOn = false;      // any drive command cancels the circle; a status query does not
       switch (cmd) {
         case 'v': setVelocity(a, b, d); break;
         case 'f': setVelocity( sp, 0, 0); break;   case 'b': setVelocity(-sp, 0, 0); break;
