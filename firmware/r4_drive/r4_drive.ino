@@ -26,6 +26,7 @@
 #include "FspTimer.h"
 
 // ───────────────────────── access point ─────────────────────────
+#define ENABLE_WIFI 0                        // 0 for the rover: the Pi drives it over USB and the radio would eat the Pi USB budget. 1 = bench GUI.
 const char* AP_SSID = "rover-r4";
 const char* AP_PASS = "rover-1234";          // change it; WPA2 needs 8+ characters
 
@@ -179,7 +180,7 @@ const char* statusJson() {
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), MAX_RATE / stepsPerMm(), timerOk ? 1 : 0, (unsigned long)isrTicks, WiFi.localIP().toString().c_str());
+    stepsPerMm(), MAX_RATE / stepsPerMm(), timerOk ? 1 : 0, (unsigned long)isrTicks, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -325,17 +326,23 @@ void setup() {
   timerOk = startTimer();
   if (!timerOk) Serial.println("{\"error\":\"no free GPT timer\"}");
 
+#if ENABLE_WIFI
   if (WiFi.status() == WL_NO_MODULE) { Serial.println("{\"error\":\"no WiFi module\"}"); }
   else {
     WiFi.config(IPAddress(192, 168, 4, 1));
     if (WiFi.beginAP(AP_SSID, AP_PASS) != WL_AP_LISTENING) Serial.println("{\"error\":\"beginAP failed\"}");
     else { server.begin(); Serial.print("{\"ap\":\""); Serial.print(AP_SSID); Serial.print("\",\"url\":\"http://"); Serial.print(WiFi.localIP()); Serial.println("/\"}"); }
   }
+#else
+  Serial.println("{\"wifi\":\"off\",\"link\":\"usb serial 115200\"}");
+#endif
 }
 
 void loop() {
   static uint32_t lastMotionMs = 0;
+#if ENABLE_WIFI
   handleHttp();
+#endif
   handleSerial();
 
   bool moving = anyMotion;
