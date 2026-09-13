@@ -99,7 +99,7 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
 </style></head><body><main>
 <h1>rover remote</h1>
 <div class=row>
- <label>speed <input id=sp type=range min=20 max=190 value=100> <span id=spv>100</span> mm/s</label>
+ <label>speed <input id=sp type=range min=20 max=530 value=415> <span id=spv>415</span> mm/s</label>
  <label>microsteps <select id=ms><option>16<option selected>32</select></label>
  <label><input id=hold type=checkbox> hold drivers</label>
  <span id=lat></span>
