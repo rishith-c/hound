@@ -173,7 +173,10 @@ on_deck("T-plug", "e-stop", "T-plug mating pair on the deck top, rear edge", (30
         "printed saddle + 1 cable tie on the fixed half", "hand-tight", 0.010, note="The pack lead comes up through the rear slot to here. One-handed disconnect from above = the emergency stop.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
-        note="UART1 → LD2410C, UART2 → LD2450. USB-C to the Pi.")
+        note="UART1 → LD2410C left, UART2 → LD2450; the right LD2410C on a third UART (GPIO 4/5). USB-C to the Pi, WiFi OFF in firmware.")
+on_deck("ESP32", "#3 CSI receiver", "ESP32-S3 DevKitC", ESP32, 60.0, 120.0, "deck top, front-left, antenna toward +X, nothing metal within 20 mm",
+        "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
+        note="csi_rx_udp firmware: 5 V from the LM2596 rail (never USB), streams CSI to the Pi hotspot on channel 6. ESP32 #2 (csi_tx) is dropped on a 10 cm stand as far along the wall as the room allows.")
 
 # ── Turret (Ceres pan/tilt) at the front centre ─────────────────────────────
 TX = 110.0
@@ -197,16 +200,17 @@ add("PETG", "radar post", "Printed post 40×40×200 U-channel + separate 60×60�
     note="Hollow 3 mm walls, print upright. Cable channel down the +X face for the two radar leads.")
 add("PETG", "radar bar", "PETG radar bar 120×20×8 on the post top", PX, 0, DECK_TOP + POST[2] + 4, 120, 20, 8,
     "horizontal, antenna faces toward +X", "radar post top", "2× M3×10 + M3 nut through the post wall (no heat-set inserts on the list)", "hand-tight", 0.02)
-add("LD2410C", "#1 (primary)", "HLK-LD2410C radar", PX + 6, 50, RADAR_Z, *LD2410C, "antenna face +X, horizontal",
-    "radar bar, Y +50", "2× M2 or a printed clip; nothing metal within 10 mm of the antenna face", "hand-tight", M["radar"],
+add("LD2410C", "#1 (left)", "HLK-LD2410C radar", PX + 6, 50, RADAR_Z, *LD2410C, "antenna face +X toed out 30° to the LEFT (yaw +30°), horizontal",
+    "radar bar, Y +50, on a printed 30° wedge", "2× M2 or a printed clip; nothing metal within 10 mm of the antenna face", "hand-tight", M["radar"],
     verify="PCB 35×7", note=f"Boresight Z = {RADAR_Z:.0f}, passes over the camera (top ≈ {DECK_TOP + TURRET_BASE[2] + TURRET_H + 10:.0f}). Walleye found floor-level radar sees nothing — this height is a compromise to TEST.")
-add("LD2450", "—", "HLK-LD2450 radar", PX + 6, -50, RADAR_Z, *LD2450, "antenna face +X, horizontal", "radar bar, Y −50",
+add("LD2450", "—", "HLK-LD2450 radar", PX + 6, 0, RADAR_Z, *LD2450, "antenna face +X, straight ahead, horizontal", "radar bar, Y 0 (centre)",
     "2× M2 or printed clip", "hand-tight", M["radar"], verify="PCB 43×15",
-    note="100 mm from the LD2410C. Power one at a time first; then test both for mutual interference.")
-add("LD2410C", "#2 (spare)", "HLK-LD2410C radar — not mounted", 0, 0, 0, *LD2410C, "—", "in the parts box", "—", "—", 0,
-    note="Spare. Swap in if #1 fails.")
-add("MIC", "—", "INMP441 I2S microphone", PX + 6, 0, RADAR_Z, 14, 12, 3, "port facing +X, centred between the radars",
-    "radar bar, Y 0", "1× M2 + nut (or VHB)", "hand-tight", 0.002, verify="board hole",
+    note="Between the two LD2410Cs, 50 mm from each. Its own ±60° field gives x/y of anything that moves; bench-test whether it reports a still, breathing person. Power one radar at a time first, then all three, and watch for mutual interference.")
+add("LD2410C", "#2 (right)", "HLK-LD2410C radar", PX + 6, -50, RADAR_Z, *LD2410C, "antenna face +X toed out 30° to the RIGHT (yaw −30°), horizontal",
+    "radar bar, Y −50, on a mirrored printed 30° wedge", "2× M2 or a printed clip; nothing metal within 10 mm of the antenna face", "hand-tight", M["radar"],
+    verify="PCB 35×7", note="The pair is an amplitude-comparison direction finder: log(E_left / E_right) at the breathing gate gives bearing (localize.py). Both in 0.2 m gate mode.")
+add("MIC", "—", "INMP441 I2S microphone", PX + POST[0] / 2 + 3, 0, DECK_TOP + 120, 14, 12, 3, "port facing +X, on the post's front face below the bar",
+    "radar post, FRONT face, 120 mm up", "1× M2 + nut (or VHB)", "hand-tight", 0.002, verify="board hole",
     note="I2S to Pi GPIO 18/19/20. Stop-and-listen: motors and fan off, ENABLE low, then 3 s capture. Voice/knock energy only — one mic gives no bearing.")
 add("CO2", "—", "SCD41 CO2 sensor", PX - POST[0] / 2 - 4, 0, DECK_TOP + 150, 8, 24, 20, "sensing face −X (rear), in free air",
     "radar post, LEFT face, 150 mm up (the rear face is the open side of the U-channel)", "printed saddle + 2× M2 + nut", "hand-tight", 0.005, verify="breakout hole spacing",

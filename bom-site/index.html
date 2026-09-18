@@ -208,21 +208,21 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">2</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">#1 (primary) (-159, +50, 300); #2 (spare) (+0, +0, 0)</td>
+<td class="where">#1 (left) (-159, +50, 300); #2 (right) (-159, -50, 300)</td>
 <td class="where">2× M2 or a printed clip; nothing metal within 10 mm of the antenna face</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="LD2450" data-owned="1" aria-label="I have all required quantities of HLK-LD2450 24 GHz radar"></td><td>HLK-LD2450 24 GHz radar<div class="grp">Sensing and compute</div><div class="note">x/y of moving targets only. On the post 100 mm from the LD2410C — same 24 GHz band, so it stays POWERED OFF by default and is switched on only for the moving-target demo; the two together have not been tested for interference.</div></td>
 <td align="right">1</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">(-159, -50, 300)</td>
+<td class="where">(-159, +0, 300)</td>
 <td class="where">2× M2 or printed clip</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="ESP32" data-owned="1" aria-label="I have all required quantities of ESP32-S3 DevKitC (N16R8)"></td><td>ESP32-S3 DevKitC (N16R8)<div class="grp">Sensing and compute</div><div class="note">Three roles: #1 rides the rover and bridges both radar UARTs to the Pi over USB with its own WiFi OFF (that is a Pi USB budget rule, not a preference). #2 and #3 are OFF the rover: RuView receiver nodes at the doorway and the far wall on any USB 5 V source, listening to the Pi&#x27;s hotspot on the rover and streaming CSI back as UDP. Nothing CSI is wired on the rover. Re-provision #2 and #3 with the hotspot SSID and the Pi&#x27;s address as SINK_IP.</div></td>
 <td align="right">3</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">#1 radar bridge (-100, -17, 112)</td>
+<td class="where">#1 radar bridge (-100, -17, 112); #3 CSI receiver (+60, +120, 112)</td>
 <td class="where">printed bosses + 2 cable ties through printed slots</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="CP2102" data-owned="1" aria-label="I have all required quantities of CP2102 USB-UART"></td><td>CP2102 USB-UART<div class="grp">Sensing and compute</div><div class="note">Bench setup only. Check it is 3.3 V logic before touching a radar.</div></td>
@@ -355,7 +355,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">1</td>
 <td align="right">$8.49</td>
 <td align="right">$8.49</td>
-<td class="where">(-159, +0, 300)</td>
+<td class="where">(-142, +0, 216)</td>
 <td class="where">1× M2 + nut (or VHB)</td>
 </tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="FUSE" data-owned="0" aria-label="I have all required quantities of Anyongora 4× 16 AWG inline fuse holders with 3–15 A blade fuses"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0F6NPV287">Anyongora 4× 16 AWG inline fuse holders with 3–15 A blade fuses</a> <span class="tag">optional</span><div class="grp">Safety — reviewer recommended, your call</div><div class="note">A 35C pack delivers over 70 A into a short. The T-plug is a disconnect, not protection. 10 A blade inline on the pack + lead, before the Wago. Declined earlier; the external reviewer put it back on the table.</div></td>
@@ -410,7 +410,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <tr><th colspan="4">Buy</th><th align="right">$261.37</th><th colspan="2">Optional $179.27 · 19 items already owned</th></tr>
 </tbody></table></div>
 <h2>Where every part goes</h2>
-<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 431 mm, wheelbase 250 mm. Centre of gravity at x -4.1, y +2.0, z 80.9 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 69° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
+<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 431 mm, wheelbase 250 mm. Centre of gravity at x -4.2, y +2.4, z 81.5 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 69° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -530,6 +530,9 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>ESP32</code></td><td>#1 radar bridge</td><td>ESP32-S3 DevKitC</td><td align="right">-100.0</td><td align="right">-17.3</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-centre, just ahead of the radar post</td><td>printed bosses + 2 cable ties through printed slots</td><td>hand-tight</td><td>devkit hole positions</td>
 </tr>
 <tr>
+<td><code>ESP32</code></td><td>#3 CSI receiver</td><td>ESP32-S3 DevKitC</td><td align="right">+60.0</td><td align="right">+120.0</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, front-left, antenna toward +X, nothing metal within 20 mm</td><td>printed bosses + 2 cable ties through printed slots</td><td>hand-tight</td><td>devkit hole positions</td>
+</tr>
+<tr>
 <td><code>PT</code></td><td>base</td><td>Ceres pan/tilt turret base plate 100×60×6</td><td align="right">+110.0</td><td align="right">+0.0</td><td align="right">99.0</td><td>flat on deck; PAN STAGE LOCKED — the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3</td><td>front-left/right tiles across the seam</td><td>4× M3×16 through base (6 mm) + deck (5 mm) + 4× M3 nut (M3 kit)</td><td>1.0 N·m</td><td>hole positions on the actual Ceres base</td>
 </tr>
 <tr>
@@ -545,16 +548,16 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>PETG</code></td><td>radar bar</td><td>PETG radar bar 120×20×8 on the post top</td><td align="right">-165.0</td><td align="right">+0.0</td><td align="right">300.0</td><td>horizontal, antenna faces toward +X</td><td>radar post top</td><td>2× M3×10 + M3 nut through the post wall (no heat-set inserts on the list)</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>LD2410C</code></td><td>#1 (primary)</td><td>HLK-LD2410C radar</td><td align="right">-159.0</td><td align="right">+50.0</td><td align="right">300.0</td><td>antenna face +X, horizontal</td><td>radar bar, Y +50</td><td>2× M2 or a printed clip; nothing metal within 10 mm of the antenna face</td><td>hand-tight</td><td>PCB 35×7</td>
+<td><code>LD2410C</code></td><td>#1 (left)</td><td>HLK-LD2410C radar</td><td align="right">-159.0</td><td align="right">+50.0</td><td align="right">300.0</td><td>antenna face +X toed out 30° to the LEFT (yaw +30°), horizontal</td><td>radar bar, Y +50, on a printed 30° wedge</td><td>2× M2 or a printed clip; nothing metal within 10 mm of the antenna face</td><td>hand-tight</td><td>PCB 35×7</td>
 </tr>
 <tr>
-<td><code>LD2450</code></td><td>—</td><td>HLK-LD2450 radar</td><td align="right">-159.0</td><td align="right">-50.0</td><td align="right">300.0</td><td>antenna face +X, horizontal</td><td>radar bar, Y −50</td><td>2× M2 or printed clip</td><td>hand-tight</td><td>PCB 43×15</td>
+<td><code>LD2450</code></td><td>—</td><td>HLK-LD2450 radar</td><td align="right">-159.0</td><td align="right">+0.0</td><td align="right">300.0</td><td>antenna face +X, straight ahead, horizontal</td><td>radar bar, Y 0 (centre)</td><td>2× M2 or printed clip</td><td>hand-tight</td><td>PCB 43×15</td>
 </tr>
 <tr>
-<td><code>LD2410C</code></td><td>#2 (spare)</td><td>HLK-LD2410C radar — not mounted</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">0.0</td><td>—</td><td>in the parts box</td><td>—</td><td>—</td><td>—</td>
+<td><code>LD2410C</code></td><td>#2 (right)</td><td>HLK-LD2410C radar</td><td align="right">-159.0</td><td align="right">-50.0</td><td align="right">300.0</td><td>antenna face +X toed out 30° to the RIGHT (yaw −30°), horizontal</td><td>radar bar, Y −50, on a mirrored printed 30° wedge</td><td>2× M2 or a printed clip; nothing metal within 10 mm of the antenna face</td><td>hand-tight</td><td>PCB 35×7</td>
 </tr>
 <tr>
-<td><code>MIC</code></td><td>—</td><td>INMP441 I2S microphone</td><td align="right">-159.0</td><td align="right">+0.0</td><td align="right">300.0</td><td>port facing +X, centred between the radars</td><td>radar bar, Y 0</td><td>1× M2 + nut (or VHB)</td><td>hand-tight</td><td>board hole</td>
+<td><code>MIC</code></td><td>—</td><td>INMP441 I2S microphone</td><td align="right">-142.0</td><td align="right">+0.0</td><td align="right">216.0</td><td>port facing +X, on the post&#x27;s front face below the bar</td><td>radar post, FRONT face, 120 mm up</td><td>1× M2 + nut (or VHB)</td><td>hand-tight</td><td>board hole</td>
 </tr>
 <tr>
 <td><code>CO2</code></td><td>—</td><td>SCD41 CO2 sensor</td><td align="right">-189.0</td><td align="right">+0.0</td><td align="right">246.0</td><td>sensing face −X (rear), in free air</td><td>radar post, LEFT face, 150 mm up (the rear face is the open side of the U-channel)</td><td>printed saddle + 2× M2 + nut</td><td>hand-tight</td><td>breakout hole spacing</td>
