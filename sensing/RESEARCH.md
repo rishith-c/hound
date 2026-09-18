@@ -68,6 +68,31 @@ Read 2026-09-16. Each entry: what the paper or project established, and the desi
   sensors see different physics. *Drove:* the two-track design — RF senses never fused with optical ones into one
   number, because nothing optical can veto something behind a wall.
 
+## Second pass (2026-09-17): what through-wall WiFi actually is, and what the kit can do
+
+- **Wi-Vi** (Adib & Katabi, MIT 2013) and **WiTrack / RF-Capture / RF-Pose**: the "see through walls with WiFi"
+  results everyone cites. Wi-Vi needs two transmit antennas driving inverse signals so static reflections cancel;
+  WiTrack is an FMCW radio; RF-Capture used ~20 antennas. None runs on an ESP32, and none is what a government
+  through-wall unit uses (those are UWB impulse radars, the Xaver class). *Drove:* honesty about what WiFi does
+  here — presence and breathing on a link, not imaging — and putting the mapping job on the 24 GHz radars, which
+  ARE small FMCW radios.
+- **Espressif esp-csi / esp-radar** (github.com/espressif/esp-csi): vendor-supported presence and motion detection
+  on the ESP32-S3 from CSI, with on-device training and a web monitor. *Drove:* running the vendor firmware on the
+  two dropped nodes as an independent presence vote, alongside the raw-CSI receiver.
+- **Wang et al., UbiComp 2016** ("Do user location and body orientation matter?") and **Zhang et al., IMWUT 2018**
+  (Fresnel diffraction model): WiFi respiration sensing is a function of the person's position within the link's
+  Fresnel zones; a quarter-wavelength shift flips it between detectable and invisible. *Drove:* the Fresnel dither —
+  the rover moves its receiver by λ/4 four times per station, which the simulation shows doubles detection.
+- **TU Wien 2023** (ESP32-S3 through-wall activity recognition with a directional antenna): the ESP32-S3 is
+  enough hardware for through-wall CSI at range when the antenna is directional. *Drove:* a biquad antenna as the
+  one CSI upgrade worth its cost, if CSI ever becomes the bottleneck.
+- **WiFi DensePose / RuView** (2026): commodity-router pose estimation exists but needs many CSI-capable nodes and
+  a trained model; not a 6-hour build. *Drove:* nothing beyond what the RuView firmware already gives.
+- **Hi-Link LD2410 user manual**: distance-gate resolution is configurable, 0.75 m or 0.2 m (command 0x00AA); the
+  LD2450 tracks micro-motion of a body, not only walking. *Drove:* 0.2 m gates for the strafe-aperture
+  localisation (median error 8 cm in simulation), and a bench test of whether the LD2450 reports a still,
+  breathing person's bearing.
+
 ## What nobody had measured that this design needs
 
 1. Modulation-to-noise ratio of the LD2410C's 0–100 static-gate energy versus range through a two-sided stud

@@ -55,6 +55,8 @@ def table(headers, rows):
 
 
 S = R["summary"]; fan = R["fan_discrimination"]; th = R["thermal_vs_range"]; m = R["mission"]
+LOC = json.load(open(os.path.join(HERE, "localize_results.json")))
+FR = json.load(open(os.path.join(HERE, "fresnel_results.json")))
 page = f"""<title>Hound Sensing Simulation</title>
 <style>
 :root{{--ground:#F4F6F8;--surface:#fff;--ink:#17212B;--muted:#5B6B7A;--line:#D5DCE3;--accent:#2E5C8A}}
@@ -91,6 +93,16 @@ table{{border-collapse:collapse;font-size:14px;margin:10px 0}}th,td{{border:1px 
 <h2>Thermal sees a person at every range in the room, and so does it see a laptop</h2>
 {table(["posture"] + [f"{r} m" for r in (1, 2, 3, 4, 5, 6)], [[p] + [f"{th[p][str(r)]:.0%}" for r in (1, 2, 3, 4, 5, 6)] for p in ("stand", "lie")])}
 <p>False positives on thermal alone: radiator {th['false_positive']['radiator']:.0%} (too hot, rejected), laptop {th['false_positive']['laptop']:.0%}, sunlit wall patch {th['false_positive']['sun']:.0%}. That is why thermal never yields PERSON VISIBLE on its own: the fusion needs the camera at the same bearing, and in the scenario chart the laptop and radiator rooms report nothing.</p>
+
+<h2>Putting the person on the map: the rover is the rail</h2>
+<p>Walleye moved one LD2410C along a rail and intersected its range circles. Hound's mecanum base strafes along the wall instead, stopping every 25 cm for a range reading, and its two LD2410Cs are toed out ±30° so the ratio of their energies gives a left/right bearing at every stop. Monte Carlo over random positions up to 4 m behind the wall, 150 trials each (localize.py):</p>
+{table(["configuration", "median error", "90th pct", "along the wall", "depth"], [[k, f"{v['median_err_m']:.2f} m", f"{v['p90_err_m']:.2f} m", f"{v['median_along_wall_m']:.2f} m", f"{v['median_depth_m']:.2f} m"] for k, v in LOC.items() if ("5 stops" in k or "1 stop" in k)])}
+<p>One stop with the toed-out pair already beats a single radar by an order of magnitude. Five stops in 0.2 m gate mode (the LD2410's fine-resolution setting) put the person within about 8 cm, better than the 10–13 cm MIT's WiTrack reached with a purpose-built radio. It costs 20 s of strafing per station.</p>
+
+<h2>WiFi on purpose: the Fresnel dither</h2>
+<p>WiFi breathing detection works or fails depending on where the person sits relative to the link's Fresnel zones, to within centimetres. A receiver that can move 3.1 cm, a quarter wavelength, walks every point in the room a quarter of the way through its zone, so four stops guarantee one in quadrature. Random person 0.8–3.5 m behind the wall, transmitter dropped 1.5 m along it (fresnel.py):</p>
+{table(["receiver", "detection probability"], [["static", f"{FR['detection_probability']['static']:.0%}"], ["4-step dither", f"{FR['detection_probability']['dither4']:.0%}"], ["8-step dither", f"{FR['detection_probability']['dither8']:.0%}"]])}
+<p>{esc(FR['rule'])}</p>
 
 <h2>Mission</h2>
 <p>{m['rooms']} rooms, {m['stations']} stations of {m['station_s']} s plus {m['travel_m']} m of driving at 0.4 m/s: <b>{m['total_min']} min</b> of a {m['pack_min']} min pack. Repeating every through-wall station from a second angle doubles the station time and still fits.</p>
