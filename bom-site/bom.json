@@ -1,6 +1,6 @@
 {
  "meta": {
-  "title": "Indoor search rover — practical BOM",
+  "title": "Hound — indoor search rover, practical BOM",
   "intro": "The complete build: one list of everything on the rover including what you already own, each part tied to its position in millimetres and the fastener that holds it, the four-motor torque check, the wiring, the pin map, the build order, and a total. Owned rows are pre-ticked and cost $0; the buy list is only what the rover cannot work without, and every screw on it comes from two kits. Prices observed September 4–5, 2026. Physical validation is still outstanding.",
   "margin_note": "Margin = torque available ÷ torque required; acceptance ≥ 1.25 because the running torque is calculated, not measured. At 5.12 kg — Gens ace 2200 mAh pack, ~130 g power bank, your C920-class webcam — the ramp margin at 1.5 A is 1.28: passing, with about 80 g to spare. Weigh the bank and the webcam. If either is heavier than budgeted, run 1.7 A with the fan (1.46) or swap to the 50 g ELP camera. The one measurement that matters most: pull-out torque at 24 rpm, 1.5 A, on the real battery.",
   "price_date": "Sept 4–5, 2026",

@@ -14,7 +14,7 @@ fi
 
 sudo tee /etc/systemd/system/rover-web.service >/dev/null <<EOF
 [Unit]
-Description=Rover remote-control web app
+Description=Hound remote-control web app
 After=network.target
 [Service]
 User=$U
@@ -28,7 +28,7 @@ EOF
 
 sudo tee /etc/systemd/system/rover-tunnel.service >/dev/null <<EOF
 [Unit]
-Description=Cloudflare quick tunnel to the rover web app
+Description=Cloudflare quick tunnel to the Hound web app
 After=network-online.target rover-web.service
 Wants=network-online.target
 [Service]

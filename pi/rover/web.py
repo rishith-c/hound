@@ -85,7 +85,7 @@ def status():
 
 
 PAGE = r"""<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>rover remote</title><style>
+<title>Hound remote</title><style>
 body{margin:0;background:#0f151b;color:#e6ebf0;font:16px system-ui,sans-serif}main{max-width:760px;margin:0 auto;padding:14px}
 h1{font-size:18px;margin:0 0 10px;color:#93a1ae;font-weight:600}
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
@@ -97,7 +97,7 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
 .w b{display:block;font-size:15px;color:#93a1ae}#st{font-family:ui-monospace,monospace;font-size:12px;color:#93a1ae;white-space:pre-wrap}
 .warn{color:#ff8a4c;font-size:13px}kbd{background:#2a3641;border-radius:3px;padding:0 5px;font-family:ui-monospace,monospace}
 </style></head><body><main>
-<h1>rover remote</h1>
+<h1>Hound remote</h1>
 <div class=row>
  <label>speed <input id=sp type=range min=20 max=530 value=415> <span id=spv>415</span> mm/s</label>
  <label>microsteps <select id=ms><option>16<option selected>32</select></label>
@@ -197,7 +197,7 @@ class H(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(f"rover remote on port {PORT}, key {KEY}  →  http://<host>:{PORT}/?k={KEY}", flush=True)
+    print(f"Hound remote on port {PORT}, key {KEY}  →  http://<host>:{PORT}/?k={KEY}", flush=True)
     srv = ThreadingHTTPServer(("0.0.0.0", PORT), H)
     try:
         srv.serve_forever()

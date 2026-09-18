@@ -1,5 +1,5 @@
 /*
-  r4_drive.ino — UNO R4 WiFi + CNC Shield V3 + 4× DRV8825 → mecanum rover drive.
+  r4_drive.ino — Hound: UNO R4 WiFi + CNC Shield V3 + 4× DRV8825 → mecanum rover drive.
 
   What it does
     • Hosts its own WiFi access point with a one-page web GUI: drive buttons (forward,
@@ -27,7 +27,7 @@
 
 // ───────────────────────── access point ─────────────────────────
 #define ENABLE_WIFI 0                        // 0 for the rover: the Pi drives it over USB and the radio would eat the Pi USB budget. 1 = bench GUI.
-const char* AP_SSID = "rover-r4";
+const char* AP_SSID = "hound";
 const char* AP_PASS = "rover-1234";          // change it; WPA2 needs 8+ characters
 
 // ───────────────────────── wheel ↔ axis ─────────────────────────
