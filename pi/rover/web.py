@@ -144,7 +144,7 @@ window.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(held===k){hel
 const wh=document.getElementById('wheels');W.forEach((n,i)=>{const d=document.createElement('div');d.innerHTML='<b>'+n+'</b><span id=r'+i+'>0</span>';wh.append(d);});
 function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];document.getElementById('r'+i).textContent=(r>0?'▲ ':r<0?'▼ ':'· ')+Math.abs(r);});
  document.getElementById('ms').value=s.ms;document.getElementById('sp').max=Math.floor(s.maxmm||190);
- document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
+ document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';}
 setInterval(()=>{if(!cur)api('status');},700);api('status');
 </script></body></html>"""
