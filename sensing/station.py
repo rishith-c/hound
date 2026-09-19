@@ -37,26 +37,39 @@ LOG = os.path.expanduser("~/rover/stations.jsonl")
 
 
 # ── real drivers (Pi) ────────────────────────────────────────────────────────
-class RadarBridge:
-    """ESP32 #1 forwards LD2410C engineering frames over USB serial; parse with Walleye's ld2410.py."""
+class RadarUSB:
+    """Each radar's UART goes through its own CP2102 USB-serial adapter straight into the Pi (TX/RX/GND only; the
+    radars are powered from the 5 V rail). Ports are matched by /dev/serial/by-id, which encodes the adapter's serial
+    number, so label each adapter once: which one is LEFT, RIGHT, and the LD2450. Frames parsed by Walleye's ld2410.py."""
 
-    def __init__(self, port=None, baud=115200):
-        import glob
+    def __init__(self, port: str, baud=256000):
         import serial
-        from ld2410 import Parser  # Walleye bench/ld2410.py, copied next to this file on the Pi
-        self.port = port or next(p for p in sorted(glob.glob("/dev/serial/by-id/*")) if "CP2102" in p or "Espressif" in p or "ESP32" in p)
-        self.ser = serial.Serial(self.port, baud, timeout=0.05)
-        self.parser = Parser()
+        from ld2410 import FrameReader
+        self.port = port
+        self.ser = serial.Serial(port, baud, timeout=0.05)
+        self.reader = FrameReader()
 
     def collect(self, seconds: float):
         """Timestamped static-gate energies for every gate: returns (t, gates[n, 9])."""
         t, rows = [], []
         t0 = time.time()
         while time.time() - t0 < seconds:
-            for frame in self.parser.feed(self.ser.read(512)):
-                if "static_gates" in frame:
-                    t.append(time.time()); rows.append(frame["static_gates"][:9])
+            for frame in self.reader.feed(self.ser.read(512)):
+                g = frame.get("static_gates") or frame.get("static")
+                if g:
+                    t.append(time.time()); rows.append(list(g)[:9] + [0] * max(0, 9 - len(g)))
         return np.array(t), np.array(rows, float)
+
+
+def radar_ports():
+    """CP2102 adapters as the Pi sees them, sorted by serial number so the mapping is stable across reboots.
+    Write the mapping into ~/rover/radars.json once: {"left": "<by-id path>", "right": "...", "ld2450": "..."}."""
+    import glob
+    cfg = os.path.expanduser("~/rover/radars.json")
+    if os.path.exists(cfg):
+        return json.load(open(cfg))
+    found = sorted(p for p in glob.glob("/dev/serial/by-id/*") if "CP2102" in p or "CP210" in p)
+    return dict(zip(("left", "right", "ld2450"), found))
 
 
 class CsiSink:
@@ -123,7 +136,12 @@ def open_drivers(sim: bool):
     if sim:
         return {}
     d = {}
-    for name, cls in (("radar", RadarBridge), ("csi", CsiSink), ("thermal", Thermal), ("camera", Camera)):
+    for name, path in radar_ports().items():
+        try:
+            d[f"radar_{name}"] = RadarUSB(path)
+        except Exception as e:
+            print(f"  radar {name}: absent ({e.__class__.__name__}: {e})")
+    for name, cls in (("csi", CsiSink), ("thermal", Thermal), ("camera", Camera)):
         try:
             d[name] = cls()
         except Exception as e:                 # absent hardware is reported, never faked
@@ -143,13 +161,19 @@ def run_station(name: str, drivers: dict, sim: bool, rng=None, scenario=None, r4
         feats = sim_station(rng, scenario)
     else:
         time.sleep(5.0)                          # settle
-        if "radar" in drivers:
-            t1, g1 = drivers["radar"].collect(30.0); t2, g2 = drivers["radar"].collect(30.0)
-            best = None
-            for gate in range(2, min(9, g1.shape[1])):          # gates 0–1 masked: the turret sits in them
-                f = radar_features(t1, g1[:, gate], t2, g2[:, gate]); f["gate"] = gate
-                if best is None or f["conf"] > best["conf"]:
-                    best = f
+        radars = {k[6:]: v for k, v in drivers.items() if k.startswith("radar_") and k != "radar_ld2450"}
+        if radars:
+            best = None; energy = {}
+            for side, drv in radars.items():                     # both LD2410Cs, same 60 s
+                t1, g1 = drv.collect(30.0); t2, g2 = drv.collect(30.0)
+                for gate in range(2, min(9, g1.shape[1])):       # gates 0–1 masked: the turret sits in them
+                    f = radar_features(t1, g1[:, gate], t2, g2[:, gate]); f["gate"] = gate; f["side"] = side
+                    if best is None or f["conf"] > best["conf"]:
+                        best = f
+                    energy.setdefault(gate, {})[side] = float(np.mean(np.concatenate([g1[:, gate], g2[:, gate]])))
+            if best and "left" in energy.get(best["gate"], {}) and "right" in energy[best["gate"]]:
+                e = energy[best["gate"]]
+                best["lr_ratio"] = float(np.log(max(e["left"], 1e-3) / max(e["right"], 1e-3)))   # bearing evidence (localize.py)
             feats["radar"] = best
         if "csi" in drivers:
             tc, A = drivers["csi"].collect(30.0)

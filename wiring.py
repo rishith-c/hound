@@ -45,10 +45,12 @@ LOADS = [
     ("40 mm fan on the driver heatsinks",       "V5_LM",    4.5, 5.5,  0.15, 0.20, "Dupont 2.54",         "LISTING"),
     ("LD2410C radar",                           "V5_LM",    4.5, 5.5,  0.08, 0.10, "JST 1.25",            "DS: ≤ 80 mA"),
     ("LD2450 radar",                            "V5_LM",    4.5, 5.5,  0.10, 0.20, "JST 1.25",            "DS: ≤ 200 mA"),
+    ("LD2410C radar #2 (right, toed out)",       "V5_LM",    4.5, 5.5,  0.08, 0.10, "JST 1.25",            "DS: ≤ 80 mA"),
+    ("ESP32-S3 #3 CSI receiver (5 V pin, WiFi on)", "V5_LM", 4.5, 5.5, 0.25, 0.50, "header 2.54",         "DS: WiFi bursts to ~500 mA; csi_rx_udp firmware"),
     ("Raspberry Pi 4 itself",                   "V5_BANK",  4.75, 5.25, 0.70, 1.20, "USB-C",              "DS: idle 0.6 A, loaded 1.2 A without USB peripherals"),
     ("Webcam (C920-class, 1080p)",              "V5_PI_USB",4.75, 5.25, 0.25, 0.50, "USB-A",              "DS: 500 mA descriptor, ~250 typical"),
     ("UNO R4 WiFi + shield logic",              "V5_PI_USB",4.75, 5.25, 0.15, 0.20, "USB-A",              "DS: radio off"),
-    ("ESP32-S3 #1 radar bridge (USB, WiFi off)","V5_PI_USB",4.75, 5.25, 0.15, 0.35, "USB-A",              "DS"),
+    ("3× CP2102 USB-serial adapters + 4-port hub","V5_PI_USB",4.75, 5.25, 0.06, 0.10, "USB-A",             "DS: ~15 mA each + hub; radars are NOT powered from them"),
     ("MLX90640 thermal array",                  "V3_PI",    3.0,  3.6,  0.023, 0.025, "header 2.54",      "DS: 23 mA"),
     ("VL53L1X ToF front",                       "V3_PI",    2.6,  3.6,  0.02, 0.04, "header 2.54",        "DS"),
     ("VL53L1X ToF rear",                        "V3_PI",    2.6,  3.6,  0.02, 0.04, "header 2.54",        "DS"),
@@ -70,29 +72,31 @@ WIRES = [
     ("bank → Pi USB-C cable",                                       24, 0.30, "USB-C",            "RAIL:V5_BANK"),
     ("Pi USB-A → webcam (captive cable, 1.5 m)",                    28, 1.50, "USB-A",            "PACK_LOAD:Webcam (C920-class, 1080p)"),
     ("Pi USB-A → UNO R4 USB-C",                                     28, 0.30, "USB-A",            "PACK_LOAD:UNO R4 WiFi + shield logic"),
-    ("Pi USB-A → ESP32-S3 #1 USB-C",                                28, 0.30, "USB-A",            "PACK_LOAD:ESP32-S3 #1 radar bridge (USB, WiFi off)"),
+    ("Pi USB-A → hub → 3× CP2102 (TX/RX/GND only)",                 28, 0.30, "USB-A",            "PACK_LOAD:3× CP2102 USB-serial adapters + 4-port hub"),
 ]
 
 # ── Signals: (driver, pin(s), V_out_high, receiver, pin(s), V_in_max, V_ih_min, bus)
 SIGNALS = [
     ("UNO R4 (5 V logic)", "D2/D5 D3/D6 D4/D7 D12/D13 STEP/DIR, D8 EN", 5.0, "DRV8825 ×4", "STEP DIR nENABLE", 5.25, 2.2, "R4"),
-    ("LD2410C TX (3.3 V)", "TX", 3.3, "ESP32-S3 #1", "GPIO 18 (UART1 RX)", 3.6, 2.4, "ESP1"),
-    ("ESP32-S3 #1 GPIO 17 (UART1 TX)", "GPIO 17", 3.3, "LD2410C", "RX", 3.6, 2.0, "ESP1"),
-    ("LD2450 TX (3.3 V)", "TX", 3.3, "ESP32-S3 #1", "GPIO 16 (UART2 RX)", 3.6, 2.4, "ESP1"),
-    ("ESP32-S3 #1 GPIO 15 (UART2 TX)", "GPIO 15", 3.3, "LD2450", "RX", 3.6, 2.0, "ESP1"),
+    ("LD2410C left TX (3.3 V)", "TX", 3.3, "CP2102 #1", "RXD (3.3 V logic)", 3.6, 2.0, "USB"),
+    ("CP2102 #1 TXD", "TXD", 3.3, "LD2410C left", "RX", 3.6, 2.0, "USB"),
+    ("LD2410C right TX (3.3 V)", "TX", 3.3, "CP2102 #2", "RXD", 3.6, 2.0, "USB"),
+    ("CP2102 #2 TXD", "TXD", 3.3, "LD2410C right", "RX", 3.6, 2.0, "USB"),
+    ("LD2450 TX (3.3 V)", "TX", 3.3, "CP2102 #3", "RXD", 3.6, 2.0, "USB"),
+    ("CP2102 #3 TXD", "TXD", 3.3, "LD2450", "RX", 3.6, 2.0, "USB"),
     ("Pi I2C-1 (BCM 2/3, pull-ups 3.3 V)", "SDA/SCL", 3.3, "PCA9685 0x40, VL53L1X 0x29→0x30, SCD41 0x62", "SDA/SCL", 3.6, 2.3, "I2C1"),
     ("Pi i2c3 (BCM 4/5, pull-ups 3.3 V)", "SDA/SCL", 3.3, "MLX90640 0x33", "SDA/SCL", 3.6, 2.3, "I2C3"),
     ("Pi BCM 22 / 27", "XSHUT out", 3.3, "VL53L1X front / rear", "XSHUT (pull-up to VIN = 3.3)", 3.6, 1.2, "GPIO"),
     ("Pi I2S (BCM 18/19/20)", "BCLK/LRCLK/DIN", 3.3, "INMP441", "SCK/WS/SD", 3.6, 2.3, "I2S"),
     ("Pi ↔ UNO R4", "USB CDC", 5.0, "UNO R4", "USB", 5.25, 0, "USB"),
-    ("Pi ↔ ESP32-S3 #1", "USB CDC (UART0 bridge)", 5.0, "ESP32-S3 #1", "USB", 5.25, 0, "USB"),
-    ("ESP32-S3 #2 and #3, OFF the rover (doorway / far wall), RuView receiver nodes", "WiFi UDP → SINK_IP:5005", 0, "Pi hotspot on the rover (the CSI transmitter)", "wlan0, 2.4 GHz", 0, 0, "WIFI"),
+    ("Pi ↔ 3× CP2102", "USB → /dev/serial/by-id/*CP2102*", 5.0, "radars at 256000 baud", "USB", 5.25, 0, "USB"),
+    ("ESP32-S3 #2 csi_tx, OFF the rover 3 m along the wall on any USB 5 V: 100 Hz ESP-NOW probes, channel 6", "radio", 0, "ESP32-S3 #3 csi_rx_udp on the rover: CSI of every probe → UDP to the Pi hotspot (channel 6) port 5005", "wlan0", 0, 0, "WIFI"),
 ]
 
 PI_BCM = {"I2C1 SDA": 2, "I2C1 SCL": 3, "i2c3 SDA": 4, "i2c3 SCL": 5, "I2S BCLK": 18, "I2S LRCLK": 19, "I2S DIN": 20, "XSHUT front": 22, "XSHUT rear": 27}
 R4_PINS = {"X STEP": 2, "Y STEP": 3, "Z STEP": 4, "X DIR": 5, "Y DIR": 6, "Z DIR": 7, "ENABLE": 8, "A STEP (jumper SpnEn)": 12, "A DIR (jumper SpnDir)": 13}
 R4_RESERVED_BY_SHIELD = {9: "X limit", 10: "Y limit", 11: "Z limit", 14: "A0 abort", 15: "A1 hold", 16: "A2 resume", 17: "A3 coolant"}
-ESP1_GPIO = {"UART1 TX": 17, "UART1 RX": 18, "UART2 TX": 15, "UART2 RX": 16}
+ESP1_GPIO = {}   # ESP32 #1 is now the spare: the radars reach the Pi through CP2102 adapters
 ESP32S3_AVOID = {0: "strap", 3: "strap", 45: "strap", 46: "strap", 19: "USB D-", 20: "USB D+", 43: "UART0 TX (console)", 44: "UART0 RX (console)"}
 I2C_BUSES = {
     "I2C1": [("PCA9685", 0x40, 1000), ("VL53L1X front (re-addressed)", 0x30, 400), ("VL53L1X rear", 0x29, 400), ("SCD41 (optional)", 0x62, 100)],
@@ -174,7 +178,7 @@ def unique(name, table, avoid=None):
         seen[v] = k
         if avoid and v in avoid: out(FAIL, "pins", f"{name}: pin {v} ('{k}') is {avoid[v]}")
     out(PASS, "pins", f"{name}: {len(table)} pins, all distinct" + (f", none on {sorted(avoid)}" if avoid else ""))
-unique("Pi BCM", PI_BCM); unique("UNO R4 / shield", R4_PINS, R4_RESERVED_BY_SHIELD); unique("ESP32-S3 #1", ESP1_GPIO, ESP32S3_AVOID)
+unique("Pi BCM", PI_BCM); unique("UNO R4 / shield", R4_PINS, R4_RESERVED_BY_SHIELD)
 
 # 7. I2C addresses and bus speed
 for bus, devs in I2C_BUSES.items():
@@ -207,7 +211,7 @@ out(PROC, "phases", "Motor coil pairs by multimeter: the two leads that show ~2 
 out(WARN, "protection", "No fuse on the pack and no cell alarm (declined). A 2200 mAh 80C pack delivers >70 A into a short; the T-plug is a disconnect, not protection. Listed under Safety as reviewer-recommended.")
 out(WARN, "connector", f"Motor phases run 1.5 A through Dupont 2.54 contacts rated {CONNECTOR_A['Dupont 2.54']} A — inside rating but the crimp quality is the margin. A contact that heats in the wheels-up test gets re-crimped or soldered.")
 out(VERIFY, "bank", "Load-test the bank at 2.5 A for 60 s with the meter on the Pi's 5 V pin: below 4.8 V the bank is not a 3 A bank.")
-out(PROC, "csi-nodes", "ESP32 #2 and #3 are NOT on the rover. Walleye's csi_rx firmware writes CSI to Serial (a wire to the Pi), and the RuView firmware's nodes are receivers of the AP's frames — so the transmitter is the Pi's own 2.4 GHz hotspot on the rover, and the two nodes sit at the doorway and the far wall on any USB power, streaming CSI back over that same WiFi as UDP. Two bistatic links through two walls, zero rover wiring, nothing on the Pi's USB budget.")
+out(PROC, "csi-nodes", "CSI v2: ESP32 #2 runs csi_tx OFF the rover (dropped as far along the wall as the room allows, any USB 5 V, channel 6, 100 Hz probes). ESP32 #3 runs csi_rx_udp ON the rover from the LM2596 5 V pin — USB never connected while the 5 V pin is fed — and streams the CSI of every probe to the Pi hotspot, which must be on channel 6, UDP port 5005. ESP32 #1 is the spare.")
 out(PASS, "bulk-cap", "1000 µF 25 V across VMOT at the shield terminal (consumables) — protects the drivers from the pack lead's inductance on connect.")
 
 # 11. voltage chain: bank → cable → Pi → USB port → the farthest device (webcam on its captive 1.5 m cable)
@@ -225,7 +229,7 @@ out(WARN, "V-chain", f"A 1 m 28 AWG phone cable to the Pi would drop {bad:.2f} V
 
 # 12. things that turn a PASS into a FAIL if someone forgets them
 usb_wifi = rail_sum("V5_PI_USB", 5) - 0.35 + 0.50
-out(PROC, "usb", f"ESP32-S3 #1 firmware must call WiFi.mode(WIFI_OFF): with its radio on, Pi USB peak is {usb_wifi:.2f} A of 1.2 A — the port limiter trips and takes the R4's power and serial link with it")
+out(PASS, "usb", "No ESP32 on the Pi USB any more: the radars come in on CP2102 adapters (~15 mA each) through a 4-port hub with the R4; the webcam keeps its own port")
 out(WARN, "enable", "DRV8825 nENABLE has an internal pull-down: during the R4's ~1 s reset window (boot, watchdog, sketch upload) D8 floats and all four drivers are ENABLED at full holding current. Add a 10 kΩ pull-up from the shield's EN pin to its 5 V header (consumables). The R4-unpowered case is still the power-up order")
 out(VERIFY, "i2c3", "BCM 4/5 have NO on-board I2C pull-ups (BCM 2/3 have 1.8 kΩ). The MLX90640 module must carry its own, or add 4.7 kΩ from SDA and SCL to 3.3 V (consumables). And w1-gpio (1-Wire) defaults to BCM 4 — leave that overlay off")
 out(VERIFY, "servo-pwm", "PCA9685 VCC is 3.3 V, so the tilt servo gets 3.3 V PWM. MG996R clones normally accept it; if the servo jitters or ignores commands, that is the level. Do NOT raise VCC to 5 V — the board's I2C pull-ups follow VCC and would put 5 V on the Pi's SDA/SCL. A 74HCT125 buffer fixes it")
@@ -234,8 +238,8 @@ out(PASS, "wago", "Wago 221-415 accepts 0.14–4 mm² (24–12 AWG), solid or fi
 
 # 13. pass 3 — the paths a schematic hides
 radar_ret = sum(l[4] for l in LOADS if l[0].startswith("LD24"))
-out(PROC, "radar-gnd", f"Each radar's GND pin gets TWO wires: one to the LM2596 OUT− (its power return) and the cable's GND to ESP32 #1 (signal reference). With only the cable GND, the radars' {radar_ret*1000:.0f} mA returns through ESP32 #1 → Pi → R4 USB → shield → Wago: {radar_ret*0.4*1000:.0f} mV of ground shift on every serial link. That is the exact Ceres fault")
-out(PROC, "lm-dist", "LM2596 OUT feeds three loads (fan, LD2410C, LD2450): four conductors per polarity, so two MORE 5-way Wagos (four of the pack of ten used) or a soldered splice. Never daisy-chain through a load's connector")
+out(PROC, "radar-gnd", f"Each radar's GND gets TWO wires: one to the LM2596 OUT− Wago (its power return, {radar_ret*1000:.0f} mA for the three) and one to its CP2102's GND pin (signal reference). Never power a radar from the CP2102's 5 V pin: that is the Pi USB budget, and the return would run through the Pi")
+out(PROC, "lm-dist", "LM2596 OUT feeds five loads (fan, two LD2410C, LD2450, ESP32 #3): six conductors per polarity. Fan straight off the LM2596 OUT terminals, the four sensors from a 5-way Wago pair. Never daisy-chain through a load's connector")
 out(PROC, "driver-orient", "DRV8825 into the shield socket with its EN pin over the socket's EN label (the trimpot ends up toward the shield's power terminal on genuine Pololu layouts; clones vary — go by the label). Backwards = dead driver on power-up, no warning")
 out(PROC, "cap-polarity", "1000 µF electrolytic across VMOT: stripe = negative, to the GND terminal. Reversed, it vents on the first power-up")
 out(VERIFY, "bank-cable", "If the bank's output is USB-C and the Pi 4 is an early board (pre-2020, rev 1.1), an e-marked C-to-C cable will not power it — use an A-to-C cable or a plain C-to-C. Later Pi 4s and all Pi 5s are fine")
