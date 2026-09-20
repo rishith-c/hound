@@ -32,6 +32,8 @@ arduino-cli compile -u -p /dev/cu.usbmodem101 --fqbn arduino:avr:uno tools/therm
 
 ## Run the GUI
 
+Use a Python with Tk 8.6 (python.org 3.11/3.12: `/usr/local/bin/python3`). Apple's built-in `/usr/bin/python3` ships Tk 8.5, which draws a blank white window on current macOS.
+
 ```bash
 pip install pyserial numpy pillow adafruit-circuitpython-mlx90640
 python3 tools/thermal_test/thermal_gui.py
