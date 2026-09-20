@@ -90,7 +90,7 @@ p,li{max-width:900px}.lead{font-size:17px;color:#3a4652}
 .box{background:#fff;border:1px solid #d8dde3;border-radius:8px;padding:14px 16px;margin:12px 0}
 .ok{border-left:5px solid #2f9e44}.warn{border-left:5px solid #e67700}.bad{border-left:5px solid #c92a2a}.alt{border-left:5px solid #7048e8}
 figure{margin:12px 0;background:#fff;border:1px solid #d8dde3;border-radius:8px;padding:8px;overflow:auto}
-figure img{display:block;min-width:900px;width:100%;height:auto}figcaption{font-size:13px;color:#5a6672;padding:6px 4px 0}
+figure img{display:block;width:100%;height:auto;min-width:900px}.two figure img{min-width:0}figcaption{font-size:13px;color:#5a6672;padding:6px 4px 0}
 table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{border:1px solid #d8dde3;padding:4px 6px;text-align:left;vertical-align:top}th{background:#eef1f4}
 td.c{font-family:ui-monospace,Menlo,monospace;white-space:nowrap}.sw{display:inline-block;width:12px;height:12px;border:1px solid #888;vertical-align:middle;margin-right:4px}
 pre{background:#101820;color:#e6ebf0;padding:14px;border-radius:8px;overflow:auto;font-size:12px;max-height:520px}
@@ -127,6 +127,7 @@ for n in D["diagrams"]:
 <details><summary>Connections ({len(D['connections'][n])} wires)</summary>{table(n)}</details>
 <details><summary>Connector pin lists and notes</summary>{pins(n)}</details>""")
 
+art_figs = "".join(f'<figure{" class=alt" if n.startswith("3b") else ""}><a href="wiring/art-{n}.png" target="_blank"><img src="wiring/art-{n}.png" alt="{E(TITLES[n])}"></a><figcaption>{E(TITLES[n])}</figcaption></figure>' for n in D["diagrams"])
 page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>Hound wiring</title><style>{CSS}</style></head><body><main>
 <h1>Hound — wiring</h1>
@@ -136,7 +137,12 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 
 <div class=box><b>The sensors.</b> The two LD2410C radars each go through their own CP2102 adapter into the Pi's USB hub: only TX, RX and GND on the adapter; power from the 5 V Wagos. The LD2450 (the long one) is the third radar: it tracks up to three moving targets with x/y position and is what turns "someone is 2.1 m away" into "someone is 2.1 m away, 0.4 m to the left". It needs a third CP2102 (on order or skipped) and until then stays unplugged. Thermal array (MLX90640) rides on the tilt bracket beside the webcam and hangs on the Pi's second I2C bus alone, so it can run fast. ToF ×2, mic, PCA9685 on the Pi's first I2C/I2S. Pack side: e-stop → two Wagos → shield, XL4015 (6.0 V servo), LM2596 (5.0 V fan + radars + ESP32 no.3). Pi on its own USB bank.</div>
 
-<h2>Diagrams</h2>
+<h2>Illustrated (Fritzing style)</h2>
+<p>The same net list drawn the way a Fritzing breadboard view looks: real part artwork from the open Fritzing libraries (<a href="https://github.com/fritzing/fritzing-parts">fritzing-parts</a>, <a href="https://github.com/adafruit/Fritzing-Library">Adafruit</a>, <a href="https://github.com/Protoneer/Fritzing_Parts">Protoneer's CNC Shield</a>, <a href="https://github.com/RafaGS/Fritzing">RafaGS's LD2410C</a>; CC-BY-SA), pin positions read from the parts' own connector definitions, wires routed by <code>wiring_art.py</code> from the net list. Parts no library has (Wagos, fan, hub, webcam, bank, LD2450, CP2102 sticks, the two perfboards) are drawn by hand. Stand-ins are labelled: the R4 is drawn as an Uno, both bucks as the LM2596 module, the ESP32-S3 as a C3 devkit, the INMP441 as Adafruit's I2S mic. Click any picture for full size.</p>
+<figure><a href="wiring/art-poster.png" target="_blank"><img src="wiring/art-poster.png" alt="Hound — everything wired"></a><figcaption>Everything on one sheet (as built). <a href="wiring/art-poster-standalone.svg" download>Standalone SVG</a> (zoomable, all artwork embedded).</figcaption></figure>
+<div class=two>{art_figs}</div>
+
+<h2>Harness sheets (WireViz)</h2>
 <p>Left-to-right: source → wire (colour, gauge, length) → destination. Every pin name is the part's own silkscreen or datasheet name.</p>
 {''.join(figs)}
 
