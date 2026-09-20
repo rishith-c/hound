@@ -8,7 +8,6 @@ connectors:
     - 3 SDA1 BCM2
     - 5 SCL1 BCM3
     - 6 GND
-    - 7 BCM4 i2c3-SDA
     - 9 GND
     - 12 BCM18 I2S-BCLK
     - 13 BCM27 XSHUT-rear
@@ -16,13 +15,12 @@ connectors:
     - 15 BCM22 XSHUT-front
     - 17 3V3
     - 20 GND
-    - 29 BCM5 i2c3-SCL
     - 30 GND
     - 35 BCM19 I2S-LRCLK
     - 38 BCM20 I2S-DIN
     - 39 GND
-    notes: 'Physical pin numbers (odd = inner row from the SD-card end). i2c3 on BCM 4/5 needs dtoverlay=i2c3 (setup_pi.sh does it) and has NO on-board pull-ups: the MLX breakout''s own 10 kΩ do the job.
-      w1-gpio must stay off.'
+    notes: Physical pin numbers (odd = inner row from the SD-card end). One I2C bus (pins 3/5) for thermal + both ToFs; three boards share it, so chain through their second headers or a mini breadboard
+      — one female per Pi pin.
   MLX:
     type: MLX90640 thermal array breakout (0x33)
     pinlabels:
@@ -30,7 +28,7 @@ connectors:
     - GND
     - SCL
     - SDA
-    notes: 'On i2c3 (BCM 4/5) ALONE. The breakout''s own 10 kΩ pull-ups set the bus speed: 400 kHz (8 fps) — station.py uses 4 fps. Rides beside the webcam on the tilt bracket.'
+    notes: 'On I2C-1 with the two ToFs (no address clash: 0x33 / 0x29 / 0x30). 400 kHz gives 8 fps; station.py uses 4. Rides beside the webcam on the tilt bracket.'
   TOF_F:
     type: VL53L1X ToF FRONT (0x29 → re-addressed 0x30 by XSHUT)
     pinlabels:
@@ -115,13 +113,13 @@ connections:
   - MLX:
     - GND
 - - PI:
-    - 29 BCM5 i2c3-SCL
+    - 5 SCL1 BCM3
   - W_MLX:
     - 3
   - MLX:
     - SCL
 - - PI:
-    - 7 BCM4 i2c3-SDA
+    - 3 SDA1 BCM2
   - W_MLX:
     - 4
   - MLX:

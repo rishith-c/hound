@@ -22,7 +22,7 @@ import yaml
 ROOT = os.path.dirname(os.path.abspath(__file__))
 WDIR = os.path.join(ROOT, "bom-site", "wiring")
 PARTS = json.load(open(os.path.join(WDIR, "parts", "parts_pins.json")))
-DIAGRAMS = ["1-power", "2-drive", "3a-turret-pi", "3b-turret-shield", "4-pi-sensors", "5-radars-usb", "6-csi"]
+DIAGRAMS = ["1-power", "2-drive", "3-turret", "4-pi-sensors", "5-radars-usb", "6-csi"]
 NET = {n: yaml.safe_load(open(os.path.join(WDIR, f"{n}.yml"))) for n in DIAGRAMS}
 
 HEX = {"RD": "#e03131", "BK": "#1e1e1e", "YE": "#f5c400", "BU": "#1c7ed6", "GN": "#2f9e44", "WH": "#f1f3f5", "OG": "#f76707", "BN": "#8b5a2b", "VT": "#7048e8", "GY": "#868e96"}
@@ -43,7 +43,7 @@ def own(cid, kind, x, y, label=None, pins=None, **kw):
     S[cid] = dict(own=kind, x=x, y=y, s=1.0, label=label if label is not None else cid, pins=pins or {}, **kw)
 
 
-pi_pins = {lab: f"connector{int(lab.split()[0]) - 1}" for d in ("4-pi-sensors", "3a-turret-pi") for lab in NET[d]["connectors"]["PI"]["pinlabels"]}
+pi_pins = {lab: f"connector{int(lab.split()[0]) - 1}" for lab in NET["4-pi-sensors"]["connectors"]["PI"]["pinlabels"]}
 MOT = {"coil A +": "connector0", "coil A −": "connector1", "coil B +": "connector2", "coil B −": "connector3"}
 LD = {"1 TX": "connector0", "2 RX": "connector1", "3 OUT": "connector2", "4 GND": "connector3", "5 VCC": "connector4"}
 BUCK = {"IN+": "connector0", "IN−": "connector1", "OUT+": "connector2", "OUT−": "connector3"}
@@ -67,13 +67,12 @@ own("CAM", "webcam", 2100, 400, "Webcam (turret)", {"USB-A": (0, 40)})
 own("HUB", "hub", 2100, 560, "4-port USB hub", {"upstream": (0, 30), "port 1: UNO R4": (150, 12), "port 2: CP2102 no.1": (150, 26), "port 3: CP2102 no.2": (150, 40), "port 4: CP2102 no.3": (150, 54)})
 own("CP1", "cp2102", 2350, 380, "CP2102 no.1", CPP); own("CP2", "cp2102", 2460, 380, "CP2102 no.2", CPP); own("CP3", "cp2102", 2570, 380, "CP2102 no.3", CPP)
 own("BANK", "bank", 1300, 690, "USB power bank 5 V / 3 A", {"USB-A out": (170, 35)})
-part("PCA", "pca9685", 330, 960, 1.25, "PCA9685 16-ch servo driver = the 5 V distribution board", {})
-own("FAN", "fan", 800, 1180, "40 mm 5 V fan", {"5V (red)": (0, 30), "GND (black)": (0, 50)})
+own("FAN", "fan", 420, 960, "40 mm 5 V fan", {"5V (red)": (0, 30), "GND (black)": (0, 50)})
 part("ESP3", "esp32c3", 2100, 830, 0.9, "ESP32-S3 no.3 csi_rx_udp (drawn as a C3 devkit)", {"USB-C": (60, 207)})
 own("BANK2", "bank2", 2250, 1080, "second power bank — ESP32 only", {"USB-A out": (0, 35)})
 part("ESP2", "esp32c3", 2350, 830, 0.9, "ESP32-S3 no.2 csi_tx — OFF the rover", {"USB-C from any 5 V charger": (60, 207)}, ghost=True)
-part("TILT", "servo", 60, 1180, 1.25, "MG996R TILT servo", {"signal (orange)": "connector2", "V+ (red)": "connector1", "GND (brown)": "connector0"})
-part("PAN", "servo", 60, 1360, 1.25, "MG996R PAN — NOT CONNECTED (locked)", {"signal": "connector2", "V+": "connector1", "GND": "connector0"}, ghost=True)
+part("TILT", "servo", 60, 980, 1.25, "MG996R TILT servo", {"signal (orange)": "connector2", "V+ (red)": "connector1", "GND (brown)": "connector0"})
+part("PAN", "servo", 60, 1160, 1.25, "MG996R PAN — NOT CONNECTED (locked)", {"signal": "connector2", "V+": "connector1", "GND": "connector0"}, ghost=True)
 part("LDL", "ld2410", 2350, 620, 1.25, "LD2410C LEFT (+30°)", LD); part("LDR", "ld2410", 2520, 620, 1.25, "LD2410C RIGHT (−30°)", LD)
 own("LD2450", "ld2450", 2690, 620, "LD2450 (3rd adapter)", {"5V": (30, 0), "GND": (50, 0), "TX": (70, 0), "RX": (90, 0)})
 own("PI_MINI", "pi_mini", 0, 0, "Raspberry Pi 4 (power in)", {"USB-C": (0, 34)})
@@ -90,20 +89,16 @@ HOSTPINS = {
     "R4_USB": ("R4", {"USB-C": (14, 44)}),
     "PI_USB": ("PI", {"USB 1: webcam": (410, 118), "USB 2: hub": (410, 150), "USB 3: free": (410, 208), "USB 4: free": (410, 242)}),
     "PI_PWR": ("PI", {"USB-C": (55, 268)}),
-    "PCA_LOGIC": ("PCA", {"GND": "connector42", "OE": "connector41", "SCL": "connector40", "SDA": "connector39", "VCC": "connector38", "V+": "connector37"}),
-    "PCA_PWR": ("PCA", {"V+": "connector7", "GND": "connector8"}),
-    "PCA_CH0": ("PCA", {"PWM": "connector34", "V+": "connector35", "GND": "connector36"}),
-    "PCA_CH15": ("PCA", {"PWM": "connector49", "V+": "connector50", "GND": "connector51"}),
+    "SHIELD_ZLIM": ("SHIELD", {"Z+ signal": "connector79", "GND": "connector80"}),
 }
 SUBST = {"1-power": {"PI_PWR": "PI_MINI"}, "5-radars-usb": {"R4_USB": "R4_MINI"}}
 DIR = {"X_MOT": (-1, 0), "Z_MOT": (-1, 0), "Y_MOT": (1, 0), "A_MOT": (1, 0), "SHIELD_PWR": (-1, 0), "SHIELD_I2C": (1, 0),
-       "PCA_LOGIC": (-1, 0), "PCA_PWR": (0, -1), "PCA_CH0": (0, 1), "PCA_CH15": (0, 1), "PI": (0, -1), "PI_USB": (1, 0), "PI_PWR": (0, 1)}
+       "SHIELD_ZLIM": (1, 0), "PI": (0, -1), "PI_USB": (1, 0), "PI_PWR": (0, 1)}
 
 LAYOUT = {
-    "1-power": {"PACK": (40, 60), "PLUG": (190, 80), "SHIELD": (380, 40), "R4": (392, 54), "XL4015": (60, 420), "PCA": (380, 460), "FAN": (790, 700), "BANK": (900, 60), "PI_MINI": (1160, 60)},
+    "1-power": {"PACK": (40, 60), "PLUG": (190, 80), "SHIELD": (380, 40), "R4": (392, 54), "XL4015": (60, 420), "BANK": (900, 60), "PI_MINI": (1160, 60)},
     "2-drive": {"M_BL": (60, 40), "M_BR": (60, 560), "SHIELD": (520, 300), "R4": (532, 314), "M_FL": (1120, 40), "M_FR": (1120, 560)},
-    "3a-turret-pi": {"PI": (40, 40), "PCA": (700, 140), "XL4015": (1140, 140), "TILT": (1140, 400), "PAN": (1140, 600)},
-    "3b-turret-shield": {"SHIELD": (40, 40), "R4": (52, 54), "PCA": (560, 140), "XL4015": (1000, 140), "TILT": (1000, 400), "PAN": (1000, 600)},
+    "3-turret": {"SHIELD": (40, 40), "R4": (52, 54), "XL4015": (620, 60), "TILT": (620, 340), "FAN": (960, 360), "PAN": (620, 540)},
     "4-pi-sensors": {"MLX": (60, 40), "TOF_F": (260, 40), "TOF_R": (460, 40), "MIC": (660, 60), "PI": (200, 340)},
     "5-radars-usb": {"R4_MINI": (40, 60), "PI": (40, 300), "CAM": (700, 60), "HUB": (700, 300), "CP1": (950, 60), "CP2": (1060, 60), "CP3": (1170, 60), "LDL": (950, 520), "LDR": (1120, 520), "LD2450": (1290, 520)},
     "6-csi": {"ESP3": (300, 40), "BANK2": (420, 300), "ESP2": (700, 40)},
@@ -379,10 +374,10 @@ if __name__ == "__main__":
     for dn in DIAGRAMS:
         p, nw, ns, cr, ov = render(f"art-{dn}", [dn], layout=LAYOUT[dn]); made.append(p); report[dn] = dict(wires=nw, parts=ns, crossings=cr, overlaps=ov)
         print(f"  art-{dn}: {ns} parts, {nw} wires, {cr} crossings, {ov} overlaps")
-    p, nw, ns, cr, ov = render("art-poster", [d for d in DIAGRAMS if d != "3b-turret-shield"], title="Hound — everything wired (as built; 3B alternative on its own sheet)"); made.append(p)
+    p, nw, ns, cr, ov = render("art-poster", DIAGRAMS, title="Hound — everything wired (as built)"); made.append(p)
     report["poster"] = dict(wires=nw, parts=ns, crossings=cr, overlaps=ov)
     print(f"  art-poster: {ns} parts, {nw} wires, {cr} crossings, {ov} overlaps")
-    render("art-poster-standalone", [d for d in DIAGRAMS if d != "3b-turret-shield"], embed=True, title="Hound — everything wired (as built)")
+    render("art-poster-standalone", DIAGRAMS, embed=True, title="Hound — everything wired (as built)")
     json.dump(report, open(os.path.join(WDIR, "art-metrics.json"), "w"), indent=1)
     for p in made:
         png = p[:-4] + ".png"

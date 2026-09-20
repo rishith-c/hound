@@ -1,37 +1,29 @@
 """
-turret.py — the Ceres pan/tilt turret from the Pi, via the PCA9685 on I2C address 0x40.
+turret.py — the tilt servo, driven by the UNO R4 over the same serial link as the wheels.
 
-Only TILT is driven (channel 0). The pan servo is continuous-rotation, cannot hold an
-angle, and stays unplugged; the rover rotates on its wheels to pan.
+No PCA9685 any more: the MG996R's signal lead sits on the CNC shield's Z+ end-stop pin (R4 D11, hardware PWM) and
+its power comes from the XL4015 5 V rail. The firmware clamps to 65–150° (Ceres mechanical floor ~62°).
 
-    from turret import Turret
-    t = Turret()
+    from r4 import R4; from turret import Turret
+    t = Turret(R4())
     t.tilt(90)      # level
-    t.tilt(75)      # look down a little (floor of the Ceres mechanism is ~62-70°)
-    t.relax()       # drop the PWM so the servo stops holding (no current, no heat)
+    t.tilt(75)      # look down a little
+    t.relax()       # stop the pulses so the servo stops holding (no current, no heat)
 """
-import board
-import busio
-from adafruit_pca9685 import PCA9685
-from adafruit_motor import servo
 
 
 class Turret:
-    TILT_CH = 0
-    TILT_MIN_DEG = 65          # Ceres mechanical floor; raise if the bracket touches
+    TILT_MIN_DEG = 65
     TILT_MAX_DEG = 150
     PARK_DEG = 90
 
-    def __init__(self, address=0x40):
-        i2c = busio.I2C(board.SCL, board.SDA)
-        self.pca = PCA9685(i2c, address=address)
-        self.pca.frequency = 50
-        self._tilt = servo.Servo(self.pca.channels[self.TILT_CH], min_pulse=500, max_pulse=2500)
+    def __init__(self, r4):
+        self.r4 = r4
         self.angle = None
 
     def tilt(self, deg):
-        deg = max(self.TILT_MIN_DEG, min(self.TILT_MAX_DEG, float(deg)))
-        self._tilt.angle = deg
+        deg = int(max(self.TILT_MIN_DEG, min(self.TILT_MAX_DEG, float(deg))))
+        self.r4.tilt(deg)
         self.angle = deg
         return deg
 
@@ -39,9 +31,7 @@ class Turret:
         return self.tilt(self.PARK_DEG)
 
     def relax(self):
-        """Stop driving the servo (0 % duty). It will sag under the camera's weight."""
-        self.pca.channels[self.TILT_CH].duty_cycle = 0
+        self.r4.tilt(-1)
 
     def close(self):
         self.relax()
-        self.pca.deinit()

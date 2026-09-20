@@ -24,6 +24,7 @@
 #include <WiFiS3.h>
 #include <EEPROM.h>
 #include "FspTimer.h"
+#include "pwm.h"                    // hardware PWM (GPT) for the tilt servo on D11 = the shield's Z+ end-stop pin
 
 // ───────────────────────── access point ─────────────────────────
 #define ENABLE_WIFI 0                        // 0 for the rover: the Pi drives it over USB and the radio would eat the Pi USB budget. 1 = bench GUI.
@@ -82,6 +83,14 @@ bool timerOk = false;
 static const uint32_t ACC_PER_STEP_PER_SEC = (uint32_t)(4294967296.0 / TICK_HZ);   // 214748
 
 FspTimer stepTimer;
+// ── tilt servo: MG996R signal on D11 (CNC shield "Z+" end-stop header), power from the XL4015 5 V rail ──
+const int TILT_PIN = 11; const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; mechanical floor ~62°
+PwmOut tiltPwm(TILT_PIN); int tiltDeg = TILT_PARK; bool tiltOn = false;
+void setTilt(int deg) {                       // 500–2500 µs over 0–180°, 50 Hz; -1 = release (no pulses, servo goes limp)
+  if (deg < 0) { tiltPwm.pulseWidth_us(0); tiltOn = false; return; }
+  tiltDeg = deg < TILT_MIN ? TILT_MIN : deg > TILT_MAX ? TILT_MAX : deg;
+  tiltPwm.pulseWidth_us(500 + (2000 * tiltDeg) / 180); tiltOn = true;
+}
 
 void stepIsr(timer_callback_args_t*) {
   static uint16_t slewDiv = 0;
@@ -231,12 +240,12 @@ const char* statusJson() {
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -370,6 +379,7 @@ void handleSerial() {
         case '-': speedPct = speedPct - 10 < 10 ? 10 : speedPct - 10; break;
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
+        case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
         case 'c': circleR = a > 0 ? a : 300.0f; circleT = b > 0 ? b : 8.0f; circleT0 = millis(); circleOn = true; kick(); break;
         case 'j': jog((int)a, (int)b, d); break;
@@ -389,6 +399,7 @@ void setup() {
   for (int i = 0; i < 4; i++) { pinMode(STEP_PIN[i], OUTPUT); pinMode(DIR_PIN[i], OUTPUT); digitalWrite(STEP_PIN[i], LOW); }
   pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH);          // drivers OFF until commanded
   pinMode(VBAT_PIN, INPUT);
+  tiltPwm.begin((uint32_t)20000, (uint32_t)0);                                       // 50 Hz frame, no pulse until 't' arrives (servo limp)
   Serial.begin(115200);
   loadSettings();
   updateAccel();

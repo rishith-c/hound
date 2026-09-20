@@ -104,6 +104,7 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
  <label>speed <input id=sp type=range min=20 max=530 value=415> <span id=spv>415</span> mm/s</label>
  <label>microsteps <select id=ms><option>16<option selected>32</select></label>
  <label><input id=hold type=checkbox> hold drivers</label>
+ <label>tilt <input id=tilt type=range min=65 max=150 value=90> <span id=tiltv>90</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
  <span id=lat></span>
 </div>
 <div class=pad>
@@ -156,6 +157,9 @@ document.getElementById('circle').addEventListener('click',()=>api(`circle?r=${d
 document.getElementById('sp').oninput=e=>document.getElementById('spv').textContent=e.target.value;
 document.getElementById('ms').onchange=e=>api('set?ms='+e.target.value);
 document.getElementById('hold').onchange=e=>api('set?hold='+(e.target.checked?1:0));
+document.getElementById('tilt').oninput=e=>{document.getElementById('tiltv').textContent=e.target.value;};
+document.getElementById('tilt').onchange=e=>api('set?tilt='+e.target.value);
+document.getElementById('tiltoff').onclick=()=>api('set?tilt=-1');
 const keys={w:[1,0,0],s:[-1,0,0],a:[0,1,0],d:[0,-1,0],q:[0,0,1],e:[0,0,-1],arrowup:[1,1,0],arrowright:[1,-1,0],arrowdown:[-1,-1,0],arrowleft:[-1,1,0]};
 let held=null;
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k===' '){e.preventDefault();held=null;stop();return;}
@@ -205,6 +209,8 @@ class H(BaseHTTPRequestHandler):
                     r4._send(f"m {q['ms']}")
                 if "hold" in q:
                     r4.hold_enable(q["hold"] == "1")
+                if "tilt" in q:
+                    r4.tilt(int(float(q["tilt"])))
                 if q.get("inv") in ("0", "1", "2", "3"):
                     r4._send(f"i {q['inv']}")
             elif ep == "jog":

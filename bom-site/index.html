@@ -4,7 +4,7 @@
 .lvl-FAIL{color:#b00020;font-weight:600}.lvl-WARN{color:#8a4b00;font-weight:600}.lvl-VERIFY{color:#1a5fb4;font-weight:600}.lvl-PROCEDURE{color:#333;font-weight:600}.lvl-PASS{color:#2a7a2a}
 input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}.have-cell{text-align:center;white-space:nowrap}tr.owned td{background:#eff8f0}#checklist-note{font-size:14px;color:#555}
 </style></head><body><main><h1>Hound — indoor search rover, practical BOM</h1>
-<p class="note"><a href="manual.html">Assembly manual</a> · <a href="wiring.html">Wiring diagrams</a> · <a href="sensing/report.html">Sensing simulation</a> · <a href="sensing/RESEARCH.md">Prior art</a> · <a href="CHATGPT-CHECK.md">Verification prompt</a> · <a href="bom.csv">bom.csv</a> · <a href="assembly.csv">assembly.csv</a></p>
+<p class="note"><a href="manual.html">Assembly manual</a> · <a href="wiring.html">Wiring diagrams</a> · <a href="rover3d/">3D rover</a> · <a href="sensing/report.html">Sensing simulation</a> · <a href="sensing/RESEARCH.md">Prior art</a> · <a href="CHATGPT-CHECK.md">Verification prompt</a> · <a href="bom.csv">bom.csv</a> · <a href="assembly.csv">assembly.csv</a></p>
 <p><strong>Buy: $261.37 USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): $179.27. Already owned: 19 items.</strong> The complete build: one list of everything on the rover including what you already own, each part tied to its position in millimetres and the fastener that holds it, the four-motor torque check, the wiring, the pin map, the build order, and a total. Owned rows are pre-ticked and cost $0; the buy list is only what the rover cannot work without, and every screw on it comes from two kits. Prices observed September 4–5, 2026. Physical validation is still outstanding.</p>
 <p><a href="bom.csv" download>Download the BOM as CSV</a> · <a href="assembly.csv" download>Download every placement as CSV</a> · <a href="drivetrain.txt">Read the full drivetrain calculation</a></p>
 <h2>The design I would build</h2>
@@ -145,15 +145,15 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">3</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">→ servos 6.0 V (-44, +110, 115)</td>
+<td class="where">→ servo + fan 5.0 V (-44, +110, 115)</td>
 <td class="where">printed bosses + 2 cable ties</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="LM2596" data-owned="1" aria-label="I have all required quantities of DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)"></td><td>DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)<div class="grp">Power</div><div class="note">One trimmed to 5.0 V feeds the fan and both radars, keeping them off the Pi&#x27;s USB budget. Trim with a multimeter before connecting — ships at a random output. Four spare; one at 5.10 V is the fallback Pi supply.</div></td>
 <td align="right">5</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">→ fan + radars 5.0 V (-44, +150, 113)</td>
-<td class="where">printed bosses + 2 cable ties</td>
+<td class="where">—</td>
+<td class="where">—</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="DMM" data-owned="1" aria-label="I have all required quantities of Multimeter (owned)"></td><td>Multimeter (owned)<div class="grp">Fasteners and assembly</div><div class="note">Sets the XL4015 to 6.0 V before anything is connected, and checks the pack: 12.6 V full, stop driving at 11.1 V (3.7 V/cell), never below 9.9 V. Check before and after every run — there is no alarm on the balance lead.</div></td>
 <td align="right">1</td>
@@ -222,15 +222,15 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">3</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">#1 radar bridge (-100, -17, 112); #3 CSI receiver (+60, +120, 112)</td>
+<td class="where">#3 CSI receiver (+60, +120, 112)</td>
 <td class="where">printed bosses + 2 cable ties through printed slots</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="CP2102" data-owned="1" aria-label="I have all required quantities of CP2102 USB-UART"></td><td>CP2102 USB-UART<div class="grp">Sensing and compute</div><div class="note">Bench setup only. Check it is 3.3 V logic before touching a radar.</div></td>
 <td align="right">1</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">—</td>
-<td class="where">—</td>
+<td class="where">×3 → radars (-30, -160, 111)</td>
+<td class="where">cable tie</td>
 </tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="THERM" data-owned="0" aria-label="I have all required quantities of MLX90640-D55 thermal camera, 32×24, 55° FoV"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0FQHVSX91">MLX90640-D55 thermal camera, 32×24, 55° FoV</a><div class="grp">Sensing and compute</div><div class="note">The biggest gap in the design. A body is ~10 °C above a room and unmistakable in 768 pixels, in darkness or smoke. Rides beside the camera on the tilt bracket so the turret sweeps thermal and visible together. Cannot see through walls — that stays the radar&#x27;s job. LISTING CHECK: I2C to 1 MHz, &#x27;3.3V/5V logic&#x27;, 20 × 18 mm, &lt; 23 mA confirmed. Still meter SDA at 3.3 V before it meets the Pi and confirm onboard pull-ups.</div></td>
 <td align="right">1</td>
@@ -257,8 +257,8 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">1</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">(-29, -98, 112)</td>
-<td class="where">printed bosses + 2× M2 + nut</td>
+<td class="where">—</td>
+<td class="where">—</td>
 </tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="M3KIT" data-owned="0" aria-label="I have all required quantities of Fgruh 750-piece M3 screw, nut and washer assortment"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0FGV5FCBN">Fgruh 750-piece M3 screw, nut and washer assortment</a><div class="grp">Fasteners and assembly</div><div class="note">16× M3×6 motor screws, turret base bolts, buck and fan-bridge screws. LISTING CHECK: lengths 6–30 mm; M3×6 (motors), ×12 (cradle), ×16 (turret), ×20 (R4 stack) all in the box.</div></td>
 <td align="right">1</td>
@@ -299,8 +299,8 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">1</td>
 <td align="right">$12.00</td>
 <td align="right">$12.00</td>
-<td class="where">pack split (-150, -165, 115)</td>
-<td class="where">printed clip + 1 cable tie</td>
+<td class="where">—</td>
+<td class="where">—</td>
 </tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="STEPCABLE" data-owned="0" aria-label="I have all required quantities of 4× stepper motor cables, 4-pin 2.54 mm Dupont female at the shield end"></td><td>4× stepper motor cables, 4-pin 2.54 mm Dupont female at the shield end <span class="tag">optional</span><div class="grp">Build-day consumables — check your parts box first</div><div class="note">The motor leads must land on the shield&#x27;s 4-pin male headers. If the motors came with bare wires, crimp Dupont housings; if with a JST-XH, buy XH-to-Dupont stepper cables. ~400 mm reach needed for the far corner.</div></td>
 <td align="right">1</td>
@@ -410,7 +410,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <tr><th colspan="4">Buy</th><th align="right">$261.37</th><th colspan="2">Optional $179.27 · 19 items already owned</th></tr>
 </tbody></table></div>
 <h2>Where every part goes</h2>
-<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 431 mm, wheelbase 250 mm. Centre of gravity at x -4.2, y +2.4, z 81.5 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 69° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
+<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 431 mm, wheelbase 250 mm. Centre of gravity at x -2.6, y +3.8, z 82.2 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 69° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -509,28 +509,25 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>PI</code></td><td>—</td><td>Raspberry Pi</td><td align="right">-107.5</td><td align="right">-88.0</td><td align="right">116.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right</td><td>printed 8 mm bosses on the deck tile (58×49 pattern) + 4× M2×20 + nut (bosses 8 + tile 5 + PCB 1.6 + nut 1.6 = 16.2; the M2×16 first specified had 1 mm left for board and nut)</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>PCA</code></td><td>—</td><td>PCA9685 servo driver (Ceres)</td><td align="right">-29.0</td><td align="right">-97.5</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, beside the Pi</td><td>printed bosses + 2× M2 + nut</td><td>hand-tight</td><td>—</td>
-</tr>
-<tr>
 <td><code>BANK</code></td><td>→ Pi</td><td>USB power bank, compact (owned)</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">113.5</td><td>flat on 10 mm standoffs</td><td>deck top, centre, over the LiPo cradle</td><td>printed lip on the deck tile + 2 cable ties through printed slots</td><td>hand-tight</td><td>WEIGH IT: ≤ 130 g, footprint</td>
 </tr>
 <tr>
-<td><code>XL4015</code></td><td>→ servos 6.0 V</td><td>XL4015 5 A buck (owned)</td><td align="right">-44.5</td><td align="right">+110.5</td><td align="right">115.0</td><td>flat on 10 mm standoffs</td><td>deck top, ahead of the R4</td><td>printed bosses + 2 cable ties</td><td>hand-tight</td><td>—</td>
+<td><code>XL4015</code></td><td>→ servo + fan 5.0 V</td><td>HiLetgo XL4015 5 A buck (owned)</td><td align="right">-44.5</td><td align="right">+110.5</td><td align="right">115.0</td><td>flat on 10 mm standoffs</td><td>deck top, ahead of the R4</td><td>printed bosses + 2 cable ties</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>LM2596</code></td><td>→ fan + radars 5.0 V</td><td>LM2596 buck (owned)</td><td align="right">-44.5</td><td align="right">+150.0</td><td align="right">113.0</td><td>flat on 10 mm standoffs</td><td>deck top, outboard of the XL4015</td><td>printed bosses + 2 cable ties</td><td>hand-tight</td><td>—</td>
-</tr>
-<tr>
-<td><code>WAGO</code></td><td>pack split</td><td>2× Wago 221-415 5-way lever nuts in a printed clip</td><td align="right">-150.0</td><td align="right">-165.0</td><td align="right">115.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right corner</td><td>printed clip + 1 cable tie</td><td>hand-tight</td><td>—</td>
-</tr>
-<tr>
-<td><code>T-plug</code></td><td>e-stop</td><td>T-plug mating pair on the deck top, rear edge</td><td align="right">-140.0</td><td align="right">-132.0</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, between the Pi and the Wago</td><td>printed saddle + 1 cable tie on the fixed half</td><td>hand-tight</td><td>—</td>
-</tr>
-<tr>
-<td><code>ESP32</code></td><td>#1 radar bridge</td><td>ESP32-S3 DevKitC</td><td align="right">-100.0</td><td align="right">-17.3</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-centre, just ahead of the radar post</td><td>printed bosses + 2 cable ties through printed slots</td><td>hand-tight</td><td>devkit hole positions</td>
+<td><code>T-plug</code></td><td>e-stop</td><td>T-plug mating pair on the deck top, rear edge</td><td align="right">-140.0</td><td align="right">-132.0</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear edge beside the Pi</td><td>printed saddle + 1 cable tie on the fixed half</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
 <td><code>ESP32</code></td><td>#3 CSI receiver</td><td>ESP32-S3 DevKitC</td><td align="right">+60.0</td><td align="right">+120.0</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, front-left, antenna toward +X, nothing metal within 20 mm</td><td>printed bosses + 2 cable ties through printed slots</td><td>hand-tight</td><td>devkit hole positions</td>
+</tr>
+<tr>
+<td><code>BANK2</code></td><td>→ ESP32 #3</td><td>small USB power bank (ESP32 only)</td><td align="right">+60.0</td><td align="right">+165.0</td><td align="right">119.0</td><td>flat on 10 mm standoffs</td><td>deck top, front-left, outboard of ESP32 #3</td><td>velcro strap</td><td>hand-tight</td><td>any ≥ 1 A bank; weigh it</td>
+</tr>
+<tr>
+<td><code>HUB</code></td><td>→ Pi USB</td><td>4-port USB hub</td><td align="right">-95.0</td><td align="right">-165.0</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right corner</td><td>velcro</td><td>hand-tight</td><td>—</td>
+</tr>
+<tr>
+<td><code>CP2102</code></td><td>×3 → radars</td><td>three CP2102 USB-UART sticks in the hub</td><td align="right">-30.0</td><td align="right">-160.0</td><td align="right">111.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear edge</td><td>cable tie</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
 <td><code>PT</code></td><td>base</td><td>Ceres pan/tilt turret base plate 100×60×6</td><td align="right">+110.0</td><td align="right">+0.0</td><td align="right">99.0</td><td>flat on deck; PAN STAGE LOCKED — the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3</td><td>front-left/right tiles across the seam</td><td>4× M3×16 through base (6 mm) + deck (5 mm) + 4× M3 nut (M3 kit)</td><td>1.0 N·m</td><td>hole positions on the actual Ceres base</td>
@@ -593,65 +590,63 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <p>Ground clearance is 18.9 mm at the motor bodies. A door threshold or rug edge above ~15 mm stops this rover; plan the demo route around them — the 80 mm mecanum wheels climb about 10 mm.</p>
 <p>Grounds, honestly: the USB cables to the R4 and ESP32 #1 are parallel ground paths whether we like it or not. Motor and servo return currents must go straight to the Wago negative bus — never through a board&#x27;s GND pin — so those USB grounds carry only signal reference.</p>
 <h2>Wiring, checked</h2>
-<p>wiring.py is the netlist as code: 19 loads on six rails, 12 wire segments and 14 signal links, checked for voltage windows, current budgets, wire ampacity and drop, connector ratings, logic levels, pin conflicts, I2C addresses, USB budget, the voltage chain from the bank to the webcam, and ground-loop drops. Result: 0 FAIL, 7 WARN, 5 VERIFY, 12 PROCEDURE, 64 PASS. Pack draw 2.5 A average, 6.3 A peak (42 min per 2200 mAh pack); bank 1.23 A average, 2.24 A peak; Pi USB 0.8 A of 1.2 A peak; Pi input 4.79 V and webcam 4.42 V worst case. The pin map and power sections above were corrected to match this file; where they disagree, this table wins.</p>
+<p>wiring.py is the netlist as code: 17 loads on six rails, 10 wire segments and 14 signal links, checked for voltage windows, current budgets, wire ampacity and drop, connector ratings, logic levels, pin conflicts, I2C addresses, USB budget, the voltage chain from the bank to the webcam, and ground-loop drops. Result: 0 FAIL, 9 WARN, 4 VERIFY, 13 PROCEDURE, 56 PASS. Pack draw 2.2 A average, 5.29 A peak (48 min per 2200 mAh pack); bank 1.48 A average, 2.43 A peak; Pi USB 1.0 A of 1.2 A peak; Pi input 4.78 V and webcam 4.53 V worst case. The pin map and power sections above were corrected to match this file; where they disagree, this table wins.</p>
 <div class="table-wrap"><table><thead><tr><th>Level</th><th>Check</th><th>Finding</th></tr></thead><tbody>
-<tr><td class="lvl-WARN">WARN</td><td><code>V-chain</code></td><td>webcam sees 4.42 V at its 500 mA descriptor (4.58 V at a typical 250 mA) through its own captive 1.5 m cable; USB floor 4.75 V, most cameras run to ~4.4 V. If it drops out at 1080p, run 720p — its cable cannot be shortened</td></tr>
-<tr><td class="lvl-WARN">WARN</td><td><code>V-chain</code></td><td>A 1 m 28 AWG phone cable to the Pi would drop 0.95 V → 3.95 V at the Pi = brownout. The bank cable is a spec: ≤ 0.3 m with ≥ 24 AWG power conductors (any &#x27;3 A fast-charge&#x27; cable)</td></tr>
+<tr><td class="lvl-WARN">WARN</td><td><code>V-chain</code></td><td>webcam sees 4.53 V at its 500 mA descriptor (4.57 V at a typical 250 mA) through its own captive 1.5 m cable; USB floor 4.75 V, most cameras run to ~4.4 V. If it drops out at 1080p, run 720p — its cable cannot be shortened</td></tr>
+<tr><td class="lvl-WARN">WARN</td><td><code>V-chain</code></td><td>A 1 m 28 AWG phone cable to the Pi would drop 1.03 V → 3.87 V at the Pi = brownout. The bank cable is a spec: ≤ 0.2 m with 22 AWG or heavier power conductors (a short &#x27;3 A fast-charge&#x27; cable)</td></tr>
 <tr><td class="lvl-WARN">WARN</td><td><code>connector</code></td><td>Motor phases run 1.5 A through Dupont 2.54 contacts rated 2.0 A — inside rating but the crimp quality is the margin. A contact that heats in the wheels-up test gets re-crimped or soldered.</td></tr>
-<tr><td class="lvl-WARN">WARN</td><td><code>connector</code></td><td>Tilt servo stall 2.5 A through the PCA9685&#x27;s 2.54 mm channel header (rated 2.0 A). Momentary, and how every servo board works; keep stalls short with tilt limits in software</td></tr>
-<tr><td class="lvl-WARN">WARN</td><td><code>enable</code></td><td>DRV8825 nENABLE has an internal pull-down: during the R4&#x27;s ~1 s reset window (boot, watchdog, sketch upload) D8 floats and all four drivers are ENABLED at full holding current. Add a 10 kΩ pull-up from the shield&#x27;s EN pin to its 5 V header (consumables). The R4-unpowered case is still the power-up order</td></tr>
-<tr><td class="lvl-WARN">WARN</td><td><code>protection</code></td><td>No fuse on the pack and no cell alarm (declined). A 2200 mAh 80C pack delivers &gt;70 A into a short; the T-plug is a disconnect, not protection. Listed under Safety as reviewer-recommended.</td></tr>
+<tr><td class="lvl-WARN">WARN</td><td><code>connector</code></td><td>Tilt servo stall 2.3 A on the servo&#x27;s own 2.54 mm lead contacts (rated 2.0 A). Momentary, and how every servo works; keep stalls short with the 65–150° limits in firmware</td></tr>
+<tr><td class="lvl-WARN">WARN</td><td><code>enable</code></td><td>No EN pull-up fitted: during an R4 reset (~1 s at boot, every sketch upload) all four drivers are ENABLED at full holding current. Harmless for a second; NOT harmless if you flash repeatedly with the pack plugged in (drivers heat). So: pack unplugged whenever the USB cable is doing anything but driving.</td></tr>
+<tr><td class="lvl-WARN">WARN</td><td><code>protection</code></td><td>No fuse, no cell alarm, no voltage divider (all declined for simplicity): nothing stops the pack from over-discharging. Rule: a full pack (12.6 V) gives ~45 min of driving — set a 30-minute timer, then meter the pack; stop at 11.1 V, never below 10.5 V. A pack that reads 6–7 V is dead (pack A).</td></tr>
 <tr><td class="lvl-WARN">WARN</td><td><code>usb</code></td><td>Pi 5 only: default 600 mA USB cap → set usb_max_current_enable=1, or use the Pi 4 this file assumes.</td></tr>
+<tr><td class="lvl-WARN">WARN</td><td><code>wire</code></td><td>bank → Pi USB-C cable (SPEC: ≤ 0.2 m, 22 AWG or heavier power conductors): 22 AWG × 0.2 m, peak 2.43 A (ampacity 7 A, USB-C 3.0 A), round-trip drop 51 mV = 1.0%</td></tr>
+<tr><td class="lvl-WARN">WARN</td><td><code>wire</code></td><td>Pi USB-A → webcam (captive cable, 1.5 m): 28 AWG × 1.5 m, peak 0.30 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 192 mV = 3.8%</td></tr>
 <tr><td class="lvl-VERIFY">VERIFY</td><td><code>bank</code></td><td>Load-test the bank at 2.5 A for 60 s with the meter on the Pi&#x27;s 5 V pin: below 4.8 V the bank is not a 3 A bank.</td></tr>
 <tr><td class="lvl-VERIFY">VERIFY</td><td><code>bank-cable</code></td><td>If the bank&#x27;s output is USB-C and the Pi 4 is an early board (pre-2020, rev 1.1), an e-marked C-to-C cable will not power it — use an A-to-C cable or a plain C-to-C. Later Pi 4s and all Pi 5s are fine</td></tr>
 <tr><td class="lvl-VERIFY">VERIFY</td><td><code>i2c</code></td><td>Before connecting SDA/SCL: power each I2C module alone and meter SDA to GND — it must read ≤ 3.3 V. A module whose pull-ups go to 5 V goes on 3.3 V power or not on the Pi.</td></tr>
-<tr><td class="lvl-VERIFY">VERIFY</td><td><code>i2c3</code></td><td>BCM 4/5 have NO on-board I2C pull-ups (BCM 2/3 have 1.8 kΩ). The MLX90640 module must carry its own, or add 4.7 kΩ from SDA and SCL to 3.3 V (consumables). And w1-gpio (1-Wire) defaults to BCM 4 — leave that overlay off</td></tr>
-<tr><td class="lvl-VERIFY">VERIFY</td><td><code>servo-pwm</code></td><td>PCA9685 VCC is 3.3 V, so the tilt servo gets 3.3 V PWM. MG996R clones normally accept it; if the servo jitters or ignores commands, that is the level. Do NOT raise VCC to 5 V — the board&#x27;s I2C pull-ups follow VCC and would put 5 V on the Pi&#x27;s SDA/SCL. A 74HCT125 buffer fixes it</td></tr>
+<tr><td class="lvl-VERIFY">VERIFY</td><td><code>i2c1</code></td><td>One I2C bus for everything: the Pi&#x27;s 1.8 kΩ pull-ups plus the boards&#x27; own 10 kΩ. i2cdetect -y 1 must show 0x33 (thermal) and 0x29 (rear ToF); the front ToF appears at 0x30 only after station.py re-addresses it. If the SCD41 is fitted the bus drops to 100 kHz — fine for 4 fps thermal.</td></tr>
 <tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>cap-polarity</code></td><td>1000 µF electrolytic across VMOT: stripe = negative, to the GND terminal. Reversed, it vents on the first power-up</td></tr>
-<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>csi-nodes</code></td><td>CSI v2: ESP32 #2 runs csi_tx OFF the rover (dropped as far along the wall as the room allows, any USB 5 V, channel 6, 100 Hz probes). ESP32 #3 runs csi_rx_udp ON the rover from the LM2596 5 V pin — USB never connected while the 5 V pin is fed — and streams the CSI of every probe to the Pi hotspot, which must be on channel 6, UDP port 5005. ESP32 #1 is the spare.</td></tr>
+<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>csi-nodes</code></td><td>CSI v2: ESP32 #2 runs csi_tx OFF the rover (dropped as far along the wall as the room allows, any USB 5 V, channel 6, 100 Hz probes). ESP32 #3 runs csi_rx_udp ON the rover from its OWN small power bank on its USB-C — nothing else plugs into it, no wire touches the rover&#x27;s electronics. It streams the CSI of every probe to the Pi hotspot (channel 6), UDP port 5005. ESP32 #1 is the spare.</td></tr>
 <tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>driver-orient</code></td><td>DRV8825 into the shield socket with its EN pin over the socket&#x27;s EN label (the trimpot ends up toward the shield&#x27;s power terminal on genuine Pololu layouts; clones vary — go by the label). Backwards = dead driver on power-up, no warning</td></tr>
-<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>fan-rail</code></td><td>The 40 mm fan must be a 5 V fan for the LM2596 rail. A 12 V fan goes on the pack side (Wago +/−, 11.1 V nominal) instead — check the label before it is wired</td></tr>
-<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>ground</code></td><td>Servo return: PCA9685 V+ GND terminal → XL4015 OUT− (its own wire). Motor return: shield GND terminal → Wago. Neither ever through a board GND pin or a USB cable.</td></tr>
-<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>lm-dist</code></td><td>LM2596 OUT feeds five loads (fan, two LD2410C, LD2450, ESP32 #3): six conductors per polarity. Fan straight off the LM2596 OUT terminals, the four sensors from a 5-way Wago pair. Never daisy-chain through a load&#x27;s connector</td></tr>
+<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>fan</code></td><td>The 40 mm 5 V fan plugs onto the PCA9685&#x27;s channel-15 header: red → the middle (V+) pin, black → the bottom (GND) pin. The XL4015 is set to 5.0 V for exactly this; the tilt servo is fine at 5 V.</td></tr>
+<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>ground</code></td><td>Servo/fan return: XL4015 OUT−, which is the same node as IN− (a buck shares its negative) and so the shield GND screw — the D11 signal is referenced to it automatically. Radars return through their adapters (USB side). Pack current never flows through a board GND pin or a USB cable.</td></tr>
+<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>i2c-chain</code></td><td>The Pi header has two 3V3 pins and one SDA/SCL pair, but four boards want 3V3 and three want SDA/SCL — one Dupont female per pin. Chain through the boards&#x27; second header/STEMMA port (Adafruit-pattern MLX/ToF boards have one), or use a mini breadboard as the 3V3/SDA/SCL splitter. Never force two females onto one pin.</td></tr>
 <tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>microstep</code></td><td>AS BUILT (v1.0 best drive): DRV8825 1/32 = M0 + M2 → caps on MS1 and MS3 under each driver, MS2 open (eight caps), plus the D12 and D13 jumpers on the A header = ten jumpers total. Caps go on before the drivers. 1/16 (one cap, MS3 only, firmware m 16) is the faster alternative — a drive-setting change, ask first.</td></tr>
+<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>pack-splice</code></td><td>The shield&#x27;s VMOT/GND screw terminal is the only pack splice: the 14 AWG pack lead and the 22 AWG XL4015 input wire share each screw (2.4 mm² total, inside the 5.08 mm terminal&#x27;s range). Strip 7 mm, twist the two conductors together before inserting, tug-test both.</td></tr>
 <tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>phases</code></td><td>Motor coil pairs by multimeter: the two leads that show ~2 Ω are one coil. A coil split across the 2B/2A–1A/1B header halves makes a motor buzz and not turn.</td></tr>
-<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>radar-gnd</code></td><td>Each radar&#x27;s GND gets TWO wires: one to the LM2596 OUT− Wago (its power return, 260 mA for the three) and one to its CP2102&#x27;s GND pin (signal reference). Never power a radar from the CP2102&#x27;s 5 V pin: that is the Pi USB budget, and the return would run through the Pi</td></tr>
-<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>sequence</code></td><td>Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. DRV8825 nENABLE floats LOW = enabled; with VMOT alone four motors sit at full holding current with nothing commanding them.</td></tr>
-<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>vbat</code></td><td>Pack-voltage sense: 47 kΩ from the Wago + to the shield CoolEn pin (A3), 10 kΩ from A3 to the shield GND pin. 12.6 V → 2.21 V at A3 (R4 ADC ref 5 V). Then enable the cutoff with V 10.5 over serial; until the divider exists vcut stays 0.</td></tr>
+<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>radar-power</code></td><td>Each radar is a 4-wire job to its own CP2102: VCC → the adapter&#x27;s 5V pin, GND → GND, TX → RXD, RX → TXD. The three radars add 260 mA to the Pi&#x27;s USB budget (checked above). The adapter must be a 3.3 V-logic type: meter its TXD pin at idle — 3.3 V, not 5 V</td></tr>
+<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>sequence</code></td><td>Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. Power-down and BEFORE every flash/reset of the R4: pull the pack plug first. Reason: DRV8825 nENABLE has a pull-down, so while the R4 is dead or resetting all four drivers sit at full holding current (no pull-up resistor fitted — by choice; the plug order replaces it).</td></tr>
+<tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>tilt</code></td><td>Tilt servo: orange (signal) → the shield&#x27;s Z+ end-stop header pin (= R4 D11, 5 V PWM from the firmware&#x27;s &#x27;t &lt;deg&gt;&#x27; command, 65–150°); red → XL4015 OUT+, brown → XL4015 OUT− (2 A at stall, never through the shield). The fan&#x27;s red/black share the same two OUT pads. No PCA9685 any more.</td></tr>
 <tr><td class="lvl-PROCEDURE">PROCEDURE</td><td><code>vref</code></td><td>Read the sense resistor on one driver: R100 → Vref = 0.75 V for 1.5 A; R200 → 1.50 V. Set all four with the multimeter, motors unplugged, before any motor is connected.</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>PACK (HOOVO 3S 2200 mAh 80C, T-plug): avg 2.50 A of 44.0 A (6%), peak 6.30 A of 100.0 A (6%)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V_SERVO (XL4015 trimmed to 6.0 V): avg 0.30 A of 4.0 A (8%), peak 2.50 A of 5.0 A (50%)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V5_LM (LM2596 trimmed to 5.0 V): avg 0.66 A of 2.0 A (33%), peak 1.10 A of 3.0 A (37%)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V5_BANK (USB power bank → Pi USB-C): avg 1.23 A of 3.0 A (41%), peak 2.24 A of 3.0 A (75%)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V5_PI_USB (Pi 4 downstream USB (4 ports, shared)): avg 0.46 A of 1.2 A (38%), peak 0.80 A of 1.2 A (67%)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V3_PI (Pi 3.3 V header pin): avg 0.09 A of 0.5 A (18%), peak 0.32 A of 0.8 A (40%)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-chain</code></td><td>Pi input 4.79 V from a bank holding 4.9 V under load through a 24 AWG × 0.3 m cable; the Pi&#x27;s under-voltage warning is 4.63 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>PACK (HOOVO 3S 2200 mAh 80C, T-plug): avg 2.20 A of 44.0 A (5%), peak 5.29 A of 100.0 A (5%)</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V_SERVO (XL4015 trimmed to 5.0 V (servo + fan rail, both soldered to its OUT pads)): avg 0.45 A of 4.0 A (11%), peak 2.30 A of 5.0 A (46%)</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V5_BANK2 (second USB power bank → ESP32-S3 #3 USB-C): avg 0.25 A of 1.0 A (25%), peak 0.50 A of 2.0 A (25%)</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V5_BANK (USB power bank → Pi USB-C): avg 1.48 A of 3.0 A (49%), peak 2.43 A of 3.0 A (81%)</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V5_PI_USB (Pi 4 downstream USB (4 ports, shared)): avg 0.72 A of 1.2 A (60%), peak 1.00 A of 1.2 A (83%)</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>I-budget</code></td><td>V3_PI (Pi 3.3 V header pin): avg 0.08 A of 0.5 A (16%), peak 0.31 A of 0.8 A (39%)</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>V-chain</code></td><td>Pi input 4.78 V from a bank holding 4.9 V under load through a 22 AWG × 0.2 m cable (+30 mΩ of USB contacts); the Pi&#x27;s under-voltage warning is 4.63 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>4× DRV8825 + JK42HS40 motors (bus side): 10.5–12.6 V inside 8.2–45.0 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>XL4015 input: 10.5–12.6 V inside 4.0–38.0 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>LM2596 input: 10.5–12.6 V inside 4.5–40.0 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>MG996R tilt servo via PCA9685 V+: 5.8–6.2 V inside 4.8–7.2 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>40 mm fan on the driver heatsinks: 4.9–5.1 V inside 4.5–5.5 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>LD2410C radar: 4.9–5.1 V inside 4.5–5.5 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>LD2450 radar: 4.9–5.1 V inside 4.5–5.5 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>LD2410C radar #2 (right, toed out): 4.9–5.1 V inside 4.5–5.5 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>ESP32-S3 #3 CSI receiver (5 V pin, WiFi on): 4.9–5.1 V inside 4.5–5.5 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>XL4015 input (second wires in the shield&#x27;s power screws): 10.5–12.6 V inside 4.0–38.0 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>MG996R tilt servo (power leads soldered to the XL4015 OUT pads): 4.85–5.15 V inside 4.8–7.2 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>40 mm 5 V fan on the driver heatsinks (leads soldered to the XL4015 OUT pads): 4.85–5.15 V inside 4.5–5.5 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>ESP32-S3 #3 CSI receiver (USB-C from its own power bank): 4.75–5.25 V inside 4.75–5.25 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>Raspberry Pi 4 itself: 4.75–5.25 V inside 4.75–5.25 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>Webcam (C920-class, 1080p): 4.75–5.25 V inside 4.75–5.25 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>UNO R4 WiFi + shield logic: 4.75–5.25 V inside 4.75–5.25 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>3× CP2102 USB-serial adapters + 4-port hub: 4.75–5.25 V inside 4.75–5.25 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>LD2410C radar LEFT (VCC from its CP2102&#x27;s 5V pin): 4.75–5.25 V inside 4.5–5.5 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>LD2410C radar RIGHT (VCC from its CP2102&#x27;s 5V pin): 4.75–5.25 V inside 4.5–5.5 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>LD2450 radar (5V from its CP2102&#x27;s 5V pin): 4.75–5.25 V inside 4.5–5.5 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>MLX90640 thermal array: 3.2–3.4 V inside 3.0–3.6 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>VL53L1X ToF front: 3.2–3.4 V inside 2.6–3.6 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>VL53L1X ToF rear: 3.2–3.4 V inside 2.6–3.6 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>PCA9685 logic (VCC): 3.2–3.4 V inside 2.3–5.5 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>INMP441 microphone: 3.2–3.4 V inside 1.8–3.6 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>V-window</code></td><td>SCD41 CO2 (optional): 3.2–3.4 V inside 2.4–5.5 V</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>bulk-cap</code></td><td>1000 µF 25 V across VMOT at the shield terminal (consumables) — protects the drivers from the pack lead&#x27;s inductance on connect.</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>dropout</code></td><td>LM2596 needs Vin ≥ 6.5 V; pack minimum 10.5 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>dropout</code></td><td>XL4015 needs Vin ≥ 7.0 V; pack minimum 10.5 V</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>endurance</code></td><td>pack draw avg 2.50 A, peak 6.30 A → 42 min per 2200 mAh pack (80 % usable)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>ground</code></td><td>star = Wago negative. Peak drop per branch: shield GND terminal (via R4 USB GND) 32 mV, PCA9685 GND (via XL4015 OUT− / IN−) 13 mV, radar GND (via LM2596 OUT− / IN−) 5 mV → ≤ 27 mV between attachment points, ~67 mA circulating through USB grounds (limit 100 mV)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>i2c</code></td><td>I2C1: PCA9685 0x40, VL53L1X front (re-addressed) 0x30, VL53L1X rear 0x29, SCD41 (optional) 0x62 — no clashes; bus speed limited to 100 kHz by the slowest part</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>i2c</code></td><td>I2C3: MLX90640 0x33 — no clashes; bus speed limited to 1000 kHz by the slowest part</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>dropout</code></td><td>XL4015 needs Vin ≥ 6.0 V; pack minimum 10.5 V</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>endurance</code></td><td>pack draw avg 2.20 A, peak 5.29 A → 48 min per 2200 mAh pack (80 % usable)</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>ground</code></td><td>star = the shield&#x27;s GND screw (pack −, XL4015 IN− and the motor return all land there). Peak drop per branch: shield GND screw (pack −; the R4&#x27;s USB GND ties it to the Pi) 0 mV, servo/fan return at the XL4015 OUT− pad (via IN− from the shield GND screw) 10 mV → ≤ 10 mV between attachment points, ~26 mA circulating through USB grounds (limit 100 mV)</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>i2c</code></td><td>I2C1: MLX90640 0x33, VL53L1X front (re-addressed) 0x30, VL53L1X rear 0x29, SCD41 (optional) 0x62 — no clashes; bus speed limited to 100 kHz by the slowest part</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>UNO R4 (5 V logic) D2/D5 D3/D6 D4/D7 D12/D13 STEP/DIR, D8 EN → DRV8825 ×4 STEP DIR nENABLE: 5.0 V out, 2.2–5.25 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>LD2410C left TX (3.3 V) TX → CP2102 #1 RXD (3.3 V logic): 3.3 V out, 2.0–3.6 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>CP2102 #1 TXD TXD → LD2410C left RX: 3.3 V out, 2.0–3.6 V accepted</td></tr>
@@ -659,65 +654,57 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>CP2102 #2 TXD TXD → LD2410C right RX: 3.3 V out, 2.0–3.6 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>LD2450 TX (3.3 V) TX → CP2102 #3 RXD: 3.3 V out, 2.0–3.6 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>CP2102 #3 TXD TXD → LD2450 RX: 3.3 V out, 2.0–3.6 V accepted</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi I2C-1 (BCM 2/3, pull-ups 3.3 V) SDA/SCL → PCA9685 0x40, VL53L1X 0x29→0x30, SCD41 0x62 SDA/SCL: 3.3 V out, 2.3–3.6 V accepted</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi i2c3 (BCM 4/5, pull-ups 3.3 V) SDA/SCL → MLX90640 0x33 SDA/SCL: 3.3 V out, 2.3–3.6 V accepted</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi I2C-1 (BCM 2/3, pull-ups 3.3 V) SDA/SCL → MLX90640 0x33, VL53L1X 0x29→0x30, SCD41 0x62 SDA/SCL: 3.3 V out, 2.3–3.6 V accepted</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>UNO R4 D11 (5 V PWM, the shield&#x27;s Z+ end-stop pin) D11 → MG996R tilt servo signal: 5.0 V out, 2.4–5.5 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi BCM 22 / 27 XSHUT out → VL53L1X front / rear XSHUT (pull-up to VIN = 3.3): 3.3 V out, 1.2–3.6 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi I2S (BCM 18/19/20) BCLK/LRCLK/DIN → INMP441 SCK/WS/SD: 3.3 V out, 2.3–3.6 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi ↔ UNO R4 USB CDC → UNO R4 USB: 5.0 V out, 0–5.25 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi ↔ 3× CP2102 USB → /dev/serial/by-id/*CP2102* → radars at 256000 baud USB: 5.0 V out, 0–5.25 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>ESP32-S3 #2 csi_tx, OFF the rover 3 m along the wall on any USB 5 V: 100 Hz ESP-NOW probes, channel 6 → ESP32-S3 #3 csi_rx_udp on the rover: CSI of every probe → UDP to the Pi hotspot (channel 6) port 5005: radio link, no wire</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>pins</code></td><td>Pi BCM: 9 pins, all distinct</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>pins</code></td><td>UNO R4 / shield: 10 pins, all distinct, none on [9, 10, 11, 14, 15, 16]</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>usb</code></td><td>Pi USB: 3 devices on 4 ports (Webcam, UNO R4 WiFi + shield logic, 3× CP2102 USB-serial adapters + 4-port hub)</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>usb</code></td><td>No ESP32 on the Pi USB any more: the radars come in on CP2102 adapters (~15 mA each) through a 4-port hub with the R4; the webcam keeps its own port</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wago</code></td><td>Wago 221-415 accepts 0.14–4 mm² (24–12 AWG), solid or fine-stranded: the 14 AWG pigtail and the 22 AWG branches both land in it without ferrules</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>pack lead: HOOVO T-plug → OliRC extension → e-stop pair: 14 AWG × 0.3 m, peak 6.30 A (ampacity 32 A, T-plug (Deans) 50 A), round-trip drop 31 mV = 0.3%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Deans pigtail → 5-way Wagos (+ and −): 14 AWG × 0.15 m, peak 6.30 A (ampacity 32 A, Wago 221-415 32 A), round-trip drop 16 mV = 0.1%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Wago → CNC Shield VMOT/GND terminal: 22 AWG × 0.15 m, peak 4.00 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 64 mV = 0.6%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Wago → XL4015 IN: 22 AWG × 0.15 m, peak 1.68 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 27 mV = 0.2%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Wago → LM2596 IN: 22 AWG × 0.15 m, peak 0.62 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 10 mV = 0.1%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>XL4015 OUT → PCA9685 V+ / GND terminal: 22 AWG × 0.12 m, peak 2.50 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 32 mV = 0.5%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>LM2596 OUT → 5-way Wagos → fan, LD2410C, LD2450: 22 AWG × 0.3 m, peak 1.10 A (ampacity 7 A, Wago 221-415 32 A), round-trip drop 35 mV = 0.7%</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>pins</code></td><td>Pi BCM: 7 pins, all distinct</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>pins</code></td><td>UNO R4 / shield: 10 pins, all distinct, none on [9, 10, 14, 15, 16, 17]</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>splice</code></td><td>No lever nuts, no resistor boards, no servo board, one buck at 5.0 V: pack → shield terminal → (second wires) XL4015 → servo + fan on its OUT pads; the servo signal comes from the shield&#x27;s own Z+ pin; the radars from their USB adapters; the ESP32 from its own bank; everything else from the Pi</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>usb</code></td><td>Pi USB: 3 plugs in 4 ports (Webcam, UNO R4 WiFi + shield logic, 3× CP2102 USB-serial adapters + 4-port hub); the radars ride the hub</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>usb</code></td><td>The radars are powered through their CP2102 adapters (80 + 80 + 200 mA on the hub); the webcam keeps its own port; ESP32 #3 is on its own bank, not on the Pi, the main bank or the servo rail</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>pack lead: HOOVO T-plug → OliRC extension (the pull-plug disconnect on the deck) → shield VMOT/GND terminal: 14 AWG × 0.45 m, peak 5.29 A (ampacity 32 A, screw terminal 5.08 10 A), round-trip drop 39 mV = 0.4%</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>shield VMOT/GND screws (second wire) → XL4015 IN: 22 AWG × 0.15 m, peak 1.29 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 20 mV = 0.2%</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>XL4015 OUT pads → tilt servo red/brown (+ fan red/black on the same pads): 22 AWG × 0.3 m, peak 2.30 A (ampacity 7 A, solder pad 10 A), round-trip drop 73 mV = 1.2%</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>shield driver socket → 4-pin motor cable → motor (per phase): 26 AWG × 0.4 m, peak 1.50 A (ampacity 2.2 A, Dupont 2.54 2.0 A), round-trip drop 161 mV = 1.4%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>bank → Pi USB-C cable: 24 AWG × 0.3 m, peak 2.24 A (ampacity 3.5 A, USB-C 3.0 A), round-trip drop 113 mV = 2.3%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Pi USB-A → webcam (captive cable, 1.5 m): 28 AWG × 1.5 m, peak 0.50 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 320 mV = 2.9%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Pi USB-A → UNO R4 USB-C: 28 AWG × 0.3 m, peak 0.20 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 26 mV = 0.2%</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Pi USB-A → hub → 3× CP2102 (TX/RX/GND only): 28 AWG × 0.3 m, peak 0.10 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 13 mV = 0.1%</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>bank 2 → ESP32-S3 #3 USB-C: 28 AWG × 0.3 m, peak 0.50 A (ampacity 1.4 A, USB-C 3.0 A), round-trip drop 64 mV = 1.3%</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Pi USB-A → UNO R4 USB-C: 28 AWG × 0.3 m, peak 0.20 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 26 mV = 0.5%</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>Pi USB-A → hub → 3× CP2102 (radar power rides on these): 28 AWG × 0.3 m, peak 0.50 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 64 mV = 1.3%</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>wire</code></td><td>CP2102 5V/GND/TXD/RXD → radar (4 wires, 0.25 m): 26 AWG × 0.25 m, peak 0.20 A (ampacity 2.2 A, Dupont 2.54 2.0 A), round-trip drop 13 mV = 0.3%</td></tr>
 </tbody></table></div>
 <p>Every wire segment, with the current it actually carries:</p>
 <div class="table-wrap"><table><thead><tr><th>Segment</th><th align="right">AWG</th><th align="right">m</th><th align="right">A avg</th><th align="right">A peak</th><th>Ends in</th></tr></thead><tbody>
-<tr><td>pack lead: HOOVO T-plug → OliRC extension → e-stop pair</td><td align="right">14</td><td align="right">0.30</td><td align="right">2.50</td><td align="right">6.30</td><td>T-plug (Deans)</td></tr>
-<tr><td>Deans pigtail → 5-way Wagos (+ and −)</td><td align="right">14</td><td align="right">0.15</td><td align="right">2.50</td><td align="right">6.30</td><td>Wago 221-415</td></tr>
-<tr><td>Wago → CNC Shield VMOT/GND terminal</td><td align="right">22</td><td align="right">0.15</td><td align="right">1.96</td><td align="right">4.00</td><td>screw terminal 5.08</td></tr>
-<tr><td>Wago → XL4015 IN</td><td align="right">22</td><td align="right">0.15</td><td align="right">0.19</td><td align="right">1.68</td><td>screw terminal 5.08</td></tr>
-<tr><td>Wago → LM2596 IN</td><td align="right">22</td><td align="right">0.15</td><td align="right">0.35</td><td align="right">0.62</td><td>screw terminal 5.08</td></tr>
-<tr><td>XL4015 OUT → PCA9685 V+ / GND terminal</td><td align="right">22</td><td align="right">0.12</td><td align="right">0.30</td><td align="right">2.50</td><td>screw terminal 5.08</td></tr>
-<tr><td>LM2596 OUT → 5-way Wagos → fan, LD2410C, LD2450</td><td align="right">22</td><td align="right">0.30</td><td align="right">0.66</td><td align="right">1.10</td><td>Wago 221-415</td></tr>
+<tr><td>pack lead: HOOVO T-plug → OliRC extension (the pull-plug disconnect on the deck) → shield VMOT/GND terminal</td><td align="right">14</td><td align="right">0.45</td><td align="right">2.20</td><td align="right">5.29</td><td>screw terminal 5.08</td></tr>
+<tr><td>shield VMOT/GND screws (second wire) → XL4015 IN</td><td align="right">22</td><td align="right">0.15</td><td align="right">0.24</td><td align="right">1.29</td><td>screw terminal 5.08</td></tr>
+<tr><td>XL4015 OUT pads → tilt servo red/brown (+ fan red/black on the same pads)</td><td align="right">22</td><td align="right">0.30</td><td align="right">0.45</td><td align="right">2.30</td><td>solder pad</td></tr>
 <tr><td>shield driver socket → 4-pin motor cable → motor (per phase)</td><td align="right">26</td><td align="right">0.40</td><td align="right">1.06</td><td align="right">1.50</td><td>Dupont 2.54</td></tr>
-<tr><td>bank → Pi USB-C cable</td><td align="right">24</td><td align="right">0.30</td><td align="right">1.23</td><td align="right">2.24</td><td>USB-C</td></tr>
-<tr><td>Pi USB-A → webcam (captive cable, 1.5 m)</td><td align="right">28</td><td align="right">1.50</td><td align="right">0.25</td><td align="right">0.50</td><td>USB-A</td></tr>
+<tr><td>bank → Pi USB-C cable (SPEC: ≤ 0.2 m, 22 AWG or heavier power conductors)</td><td align="right">22</td><td align="right">0.20</td><td align="right">1.48</td><td align="right">2.43</td><td>USB-C</td></tr>
+<tr><td>bank 2 → ESP32-S3 #3 USB-C</td><td align="right">28</td><td align="right">0.30</td><td align="right">0.25</td><td align="right">0.50</td><td>USB-C</td></tr>
+<tr><td>Pi USB-A → webcam (captive cable, 1.5 m)</td><td align="right">28</td><td align="right">1.50</td><td align="right">0.25</td><td align="right">0.30</td><td>USB-A</td></tr>
 <tr><td>Pi USB-A → UNO R4 USB-C</td><td align="right">28</td><td align="right">0.30</td><td align="right">0.15</td><td align="right">0.20</td><td>USB-A</td></tr>
-<tr><td>Pi USB-A → hub → 3× CP2102 (TX/RX/GND only)</td><td align="right">28</td><td align="right">0.30</td><td align="right">0.06</td><td align="right">0.10</td><td>USB-A</td></tr>
+<tr><td>Pi USB-A → hub → 3× CP2102 (radar power rides on these)</td><td align="right">28</td><td align="right">0.30</td><td align="right">0.32</td><td align="right">0.50</td><td>USB-A</td></tr>
+<tr><td>CP2102 5V/GND/TXD/RXD → radar (4 wires, 0.25 m)</td><td align="right">26</td><td align="right">0.25</td><td align="right">0.10</td><td align="right">0.20</td><td>Dupont 2.54</td></tr>
 </tbody></table></div>
 <p>Every load, the rail it hangs on, and where its numbers come from:</p>
 <div class="table-wrap"><table><thead><tr><th>Load</th><th>Rail</th><th align="right">Accepts</th><th align="right">A avg</th><th align="right">A peak</th><th>Source</th></tr></thead><tbody>
 <tr><td>4× DRV8825 + JK42HS40 motors (bus side)</td><td><code>PACK</code></td><td align="right">8.2–45.0 V</td><td align="right">1.960</td><td align="right">4.00</td><td class="note">DT: 20.5 W at 10.5 V cruise; 4 A allocated for a ramp burst</td></tr>
-<tr><td>XL4015 input</td><td><code>PACK</code></td><td align="right">4.0–38.0 V</td><td align="right"></td><td align="right"></td><td class="note">LISTING; current computed from its loads</td></tr>
-<tr><td>LM2596 input</td><td><code>PACK</code></td><td align="right">4.5–40.0 V</td><td align="right"></td><td align="right"></td><td class="note">LISTING; current computed from its loads; needs Vin ≥ Vout + 1.5</td></tr>
-<tr><td>MG996R tilt servo via PCA9685 V+</td><td><code>V_SERVO</code></td><td align="right">4.8–7.2 V</td><td align="right">0.300</td><td align="right">2.50</td><td class="note">DS: stall ≈ 2.5 A at 6 V; pan servo disconnected</td></tr>
-<tr><td>40 mm fan on the driver heatsinks</td><td><code>V5_LM</code></td><td align="right">4.5–5.5 V</td><td align="right">0.150</td><td align="right">0.20</td><td class="note">LISTING</td></tr>
-<tr><td>LD2410C radar</td><td><code>V5_LM</code></td><td align="right">4.5–5.5 V</td><td align="right">0.080</td><td align="right">0.10</td><td class="note">DS: ≤ 80 mA</td></tr>
-<tr><td>LD2450 radar</td><td><code>V5_LM</code></td><td align="right">4.5–5.5 V</td><td align="right">0.100</td><td align="right">0.20</td><td class="note">DS: ≤ 200 mA</td></tr>
-<tr><td>LD2410C radar #2 (right, toed out)</td><td><code>V5_LM</code></td><td align="right">4.5–5.5 V</td><td align="right">0.080</td><td align="right">0.10</td><td class="note">DS: ≤ 80 mA</td></tr>
-<tr><td>ESP32-S3 #3 CSI receiver (5 V pin, WiFi on)</td><td><code>V5_LM</code></td><td align="right">4.5–5.5 V</td><td align="right">0.250</td><td align="right">0.50</td><td class="note">DS: WiFi bursts to ~500 mA; csi_rx_udp firmware</td></tr>
+<tr><td>XL4015 input (second wires in the shield&#x27;s power screws)</td><td><code>PACK</code></td><td align="right">4.0–38.0 V</td><td align="right"></td><td align="right"></td><td class="note">LISTING; current computed from its load</td></tr>
+<tr><td>MG996R tilt servo (power leads soldered to the XL4015 OUT pads)</td><td><code>V_SERVO</code></td><td align="right">4.8–7.2 V</td><td align="right">0.300</td><td align="right">2.10</td><td class="note">DS: stall ≈ 2.5 A at 6 V → ~2.1 A at 5 V; pan servo disconnected</td></tr>
+<tr><td>40 mm 5 V fan on the driver heatsinks (leads soldered to the XL4015 OUT pads)</td><td><code>V_SERVO</code></td><td align="right">4.5–5.5 V</td><td align="right">0.150</td><td align="right">0.20</td><td class="note">LISTING: 5 V 0.15 A</td></tr>
+<tr><td>ESP32-S3 #3 CSI receiver (USB-C from its own power bank)</td><td><code>V5_BANK2</code></td><td align="right">4.75–5.25 V</td><td align="right">0.250</td><td align="right">0.50</td><td class="note">DS: WiFi bursts to ~500 mA; csi_rx_udp firmware</td></tr>
 <tr><td>Raspberry Pi 4 itself</td><td><code>V5_BANK</code></td><td align="right">4.75–5.25 V</td><td align="right">0.700</td><td align="right">1.20</td><td class="note">DS: idle 0.6 A, loaded 1.2 A without USB peripherals</td></tr>
-<tr><td>Webcam (C920-class, 1080p)</td><td><code>V5_PI_USB</code></td><td align="right">4.75–5.25 V</td><td align="right">0.250</td><td align="right">0.50</td><td class="note">DS: 500 mA descriptor, ~250 typical</td></tr>
+<tr><td>Webcam (C920-class, 1080p)</td><td><code>V5_PI_USB</code></td><td align="right">4.75–5.25 V</td><td align="right">0.250</td><td align="right">0.30</td><td class="note">MEASURED-class: a C920 draws ~240 mA; its 500 mA descriptor is the enumeration allowance, not draw (peak taken as 0.30 A)</td></tr>
 <tr><td>UNO R4 WiFi + shield logic</td><td><code>V5_PI_USB</code></td><td align="right">4.75–5.25 V</td><td align="right">0.150</td><td align="right">0.20</td><td class="note">DS: radio off</td></tr>
-<tr><td>3× CP2102 USB-serial adapters + 4-port hub</td><td><code>V5_PI_USB</code></td><td align="right">4.75–5.25 V</td><td align="right">0.060</td><td align="right">0.10</td><td class="note">DS: ~15 mA each + hub; radars are NOT powered from them</td></tr>
+<tr><td>3× CP2102 USB-serial adapters + 4-port hub</td><td><code>V5_PI_USB</code></td><td align="right">4.75–5.25 V</td><td align="right">0.060</td><td align="right">0.10</td><td class="note">DS: ~15 mA each + hub</td></tr>
+<tr><td>LD2410C radar LEFT (VCC from its CP2102&#x27;s 5V pin)</td><td><code>V5_PI_USB</code></td><td align="right">4.5–5.5 V</td><td align="right">0.080</td><td align="right">0.10</td><td class="note">DS: ≤ 80 mA</td></tr>
+<tr><td>LD2410C radar RIGHT (VCC from its CP2102&#x27;s 5V pin)</td><td><code>V5_PI_USB</code></td><td align="right">4.5–5.5 V</td><td align="right">0.080</td><td align="right">0.10</td><td class="note">DS: ≤ 80 mA</td></tr>
+<tr><td>LD2450 radar (5V from its CP2102&#x27;s 5V pin)</td><td><code>V5_PI_USB</code></td><td align="right">4.5–5.5 V</td><td align="right">0.100</td><td align="right">0.20</td><td class="note">DS: ≤ 200 mA</td></tr>
 <tr><td>MLX90640 thermal array</td><td><code>V3_PI</code></td><td align="right">3.0–3.6 V</td><td align="right">0.023</td><td align="right">0.03</td><td class="note">DS: 23 mA</td></tr>
 <tr><td>VL53L1X ToF front</td><td><code>V3_PI</code></td><td align="right">2.6–3.6 V</td><td align="right">0.020</td><td align="right">0.04</td><td class="note">DS</td></tr>
 <tr><td>VL53L1X ToF rear</td><td><code>V3_PI</code></td><td align="right">2.6–3.6 V</td><td align="right">0.020</td><td align="right">0.04</td><td class="note">DS</td></tr>
-<tr><td>PCA9685 logic (VCC)</td><td><code>V3_PI</code></td><td align="right">2.3–5.5 V</td><td align="right">0.010</td><td align="right">0.01</td><td class="note">DS</td></tr>
 <tr><td>INMP441 microphone</td><td><code>V3_PI</code></td><td align="right">1.8–3.6 V</td><td align="right">0.002</td><td align="right">0.00</td><td class="note">DS</td></tr>
 <tr><td>SCD41 CO2 (optional)</td><td><code>V3_PI</code></td><td align="right">2.4–5.5 V</td><td align="right">0.018</td><td align="right">0.20</td><td class="note">DS: 205 mA peak during a measurement</td></tr>
 </tbody></table></div>

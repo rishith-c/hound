@@ -2,8 +2,7 @@
  "diagrams": [
   "1-power",
   "2-drive",
-  "3a-turret-pi",
-  "3b-turret-shield",
+  "3-turret",
   "4-pi-sensors",
   "5-radars-usb",
   "6-csi"
@@ -43,32 +42,7 @@
     "OUT+",
     "OUT−"
    ],
-   "notes": "HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous derated. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V."
-  },
-  "PCA_PWR": {
-   "type": "PCA9685 servo-power screw terminal",
-   "pinlabels": [
-    "V+",
-    "GND"
-   ],
-   "notes": "The big 2-pin terminal at the end of the board = the 5.0 V rail in. Every channel header's middle (V+) and bottom (GND) pin is bussed to it — that is how the fan gets its 5 V."
-  },
-  "PCA_CH15": {
-   "type": "PCA9685 channel 15 header — used as a 5 V tap",
-   "pinlabels": [
-    "PWM",
-    "V+",
-    "GND"
-   ],
-   "notes": "Only V+ and GND are used: the fan's red to V+, black to GND. PWM pin stays empty."
-  },
-  "FAN": {
-   "type": "40 mm 5 V fan on the driver heatsinks",
-   "pinlabels": [
-    "5V (red)",
-    "GND (black)"
-   ],
-   "notes": "5 V 0.15 A (listing). Plugs onto the PCA9685's channel-15 V+/GND pins."
+   "notes": "HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous derated. Two wires per OUT pad: servo + fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V."
   },
   "BANK": {
    "type": "USB power bank 5 V / 3 A (logic island)",
@@ -96,8 +70,7 @@
     "D12 A STEP",
     "D13 A DIR",
     "D8 EN (all four)",
-    "A4 SDA (option B)",
-    "A5 SCL (option B)",
+    "D11 TILT PWM (Z+ end-stop pin)",
     "USB-C → Pi hub"
    ],
    "notes": "Stack the shield on the R4; the pins listed are what the shield takes. Firmware r4_drive v1.0-best-drive: 30 kHz step ISR, 1/32, 415 mm/s. Logic 5 V. USB from the Pi hub; ENABLE_WIFI 0."
@@ -202,49 +175,13 @@
    ],
    "notes": "Find the pairs with the meter: the two leads that read ~1.5–2 Ω are ONE coil. Lead colours vary between batches — the meter, not the colour, decides."
   },
-  "PI": {
-   "type": "Raspberry Pi 4 — 40-pin header (used pins only)",
+  "SHIELD_ZLIM": {
+   "type": "CNC Shield v3 — Z+ end-stop header (= R4 D11, hardware PWM)",
    "pinlabels": [
-    "1 3V3",
-    "3 SDA1 BCM2",
-    "5 SCL1 BCM3",
-    "6 GND",
-    "7 BCM4 i2c3-SDA",
-    "9 GND",
-    "12 BCM18 I2S-BCLK",
-    "13 BCM27 XSHUT-rear",
-    "14 GND",
-    "15 BCM22 XSHUT-front",
-    "17 3V3",
-    "20 GND",
-    "29 BCM5 i2c3-SCL",
-    "30 GND",
-    "35 BCM19 I2S-LRCLK",
-    "38 BCM20 I2S-DIN",
-    "39 GND"
-   ],
-   "notes": "Physical pin numbers (odd = inner row from the SD-card end). i2c3 on BCM 4/5 needs dtoverlay=i2c3 (setup_pi.sh does it) and has NO on-board pull-ups: the MLX breakout's own 10 kΩ do the job. w1-gpio must stay off."
-  },
-  "PCA_LOGIC": {
-   "type": "PCA9685 logic header (6 pins, either end)",
-   "pinlabels": [
-    "GND",
-    "OE",
-    "SCL",
-    "SDA",
-    "VCC",
-    "V+"
-   ],
-   "notes": "Adafruit-pattern silkscreen: GND OE SCL SDA VCC V+. OE left open (internal pull-down = outputs on). V+ pin unused; V+ enters at the terminal. Address 0x40 (no jumpers)."
-  },
-  "PCA_CH0": {
-   "type": "PCA9685 channel 0 (3-pin, at the board's channel 0 end)",
-   "pinlabels": [
-    "PWM",
-    "V+",
+    "Z+ signal",
     "GND"
    ],
-   "notes": "Rows on the board: PWM (top, yellow), V+ (middle, red), GND (bottom, black)."
+   "notes": "The 2-pin 'Z+' pair in the END STOPS column. Only the signal pin is used (5 V PWM, 50 Hz, 500–2500 µs); the servo's ground goes to the XL4015 instead. D11 is free because no limit switches are fitted."
   },
   "TILT": {
    "type": "MG996R TILT servo",
@@ -253,7 +190,15 @@
     "V+ (red)",
     "GND (brown)"
    ],
-   "notes": "Plugs straight onto channel 0, brown toward the board edge (GND row). Limits 65–150° in turret.py."
+   "notes": "Cut the 3-pin plug off or use a servo extension: orange to the shield's Z+ pin, red/brown soldered to the XL4015 OUT pads. Limits 65–150° in the firmware ('t 90')."
+  },
+  "FAN": {
+   "type": "40 mm 5 V fan on the driver heatsinks",
+   "pinlabels": [
+    "5V (red)",
+    "GND (black)"
+   ],
+   "notes": "5 V 0.15 A (listing). Leads soldered to the XL4015 OUT pads beside the servo's."
   },
   "PAN": {
    "type": "MG996R PAN servo — NOT CONNECTED",
@@ -264,15 +209,26 @@
    ],
    "notes": "Continuous-rotation unit: cannot hold an angle. Pinned with the printed lock; leave its lead unplugged."
   },
-  "SHIELD_I2C": {
-   "type": "CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)",
+  "PI": {
+   "type": "Raspberry Pi 4 — 40-pin header (used pins only)",
    "pinlabels": [
-    "A4 SDA",
-    "A5 SCL",
-    "5V",
-    "GND"
+    "1 3V3",
+    "3 SDA1 BCM2",
+    "5 SCL1 BCM3",
+    "6 GND",
+    "9 GND",
+    "12 BCM18 I2S-BCLK",
+    "13 BCM27 XSHUT-rear",
+    "14 GND",
+    "15 BCM22 XSHUT-front",
+    "17 3V3",
+    "20 GND",
+    "30 GND",
+    "35 BCM19 I2S-LRCLK",
+    "38 BCM20 I2S-DIN",
+    "39 GND"
    ],
-   "notes": "A4/A5 are the R4's primary I2C ('Wire'), 5 V logic, no on-board pull-ups: the PCA9685's 10 kΩ pull-ups to VCC=5 V do the job. NOT the R4's Qwiic socket (that is Wire1, 3.3 V)."
+   "notes": "Physical pin numbers (odd = inner row from the SD-card end). One I2C bus (pins 3/5) for thermal + both ToFs; three boards share it, so chain through their second headers or a mini breadboard — one female per Pi pin."
   },
   "MLX": {
    "type": "MLX90640 thermal array breakout (0x33)",
@@ -282,7 +238,7 @@
     "SCL",
     "SDA"
    ],
-   "notes": "On i2c3 (BCM 4/5) ALONE. The breakout's own 10 kΩ pull-ups set the bus speed: 400 kHz (8 fps) — station.py uses 4 fps. Rides beside the webcam on the tilt bracket."
+   "notes": "On I2C-1 with the two ToFs (no address clash: 0x33 / 0x29 / 0x30). 400 kHz gives 8 fps; station.py uses 4. Rides beside the webcam on the tilt bracket."
   },
   "TOF_F": {
    "type": "VL53L1X ToF FRONT (0x29 → re-addressed 0x30 by XSHUT)",
@@ -530,62 +486,6 @@
    ],
    [
     [
-     "XL4015",
-     "OUT+"
-    ],
-    [
-     "W_SERVO",
-     1
-    ],
-    [
-     "PCA_PWR",
-     "V+"
-    ]
-   ],
-   [
-    [
-     "XL4015",
-     "OUT−"
-    ],
-    [
-     "W_SERVO",
-     2
-    ],
-    [
-     "PCA_PWR",
-     "GND"
-    ]
-   ],
-   [
-    [
-     "PCA_CH15",
-     "V+"
-    ],
-    [
-     "W_FAN",
-     1
-    ],
-    [
-     "FAN",
-     "5V (red)"
-    ]
-   ],
-   [
-    [
-     "PCA_CH15",
-     "GND"
-    ],
-    [
-     "W_FAN",
-     2
-    ],
-    [
-     "FAN",
-     "GND (black)"
-    ]
-   ],
-   [
-    [
      "BANK",
      "USB-A out"
     ],
@@ -825,61 +725,19 @@
     ]
    ]
   ],
-  "3a-turret-pi": [
+  "3-turret": [
    [
     [
-     "PI",
-     "6 GND"
+     "SHIELD_ZLIM",
+     "Z+ signal"
     ],
     [
-     "W_I2C",
+     "W_SIG",
      1
     ],
     [
-     "PCA_LOGIC",
-     "GND"
-    ]
-   ],
-   [
-    [
-     "PI",
-     "5 SCL1 BCM3"
-    ],
-    [
-     "W_I2C",
-     2
-    ],
-    [
-     "PCA_LOGIC",
-     "SCL"
-    ]
-   ],
-   [
-    [
-     "PI",
-     "3 SDA1 BCM2"
-    ],
-    [
-     "W_I2C",
-     3
-    ],
-    [
-     "PCA_LOGIC",
-     "SDA"
-    ]
-   ],
-   [
-    [
-     "PI",
-     "1 3V3"
-    ],
-    [
-     "W_I2C",
-     4
-    ],
-    [
-     "PCA_LOGIC",
-     "VCC"
+     "TILT",
+     "signal (orange)"
     ]
    ],
    [
@@ -892,8 +750,8 @@
      1
     ],
     [
-     "PCA_PWR",
-     "V+"
+     "TILT",
+     "V+ (red)"
     ]
    ],
    [
@@ -906,108 +764,8 @@
      2
     ],
     [
-     "PCA_PWR",
-     "GND"
-    ]
-   ],
-   [
-    [
-     "PCA_CH0",
-     "PWM"
-    ],
-    [
-     "W_TILT",
-     1
-    ],
-    [
-     "TILT",
-     "signal (orange)"
-    ]
-   ],
-   [
-    [
-     "PCA_CH0",
-     "V+"
-    ],
-    [
-     "W_TILT",
-     2
-    ],
-    [
-     "TILT",
-     "V+ (red)"
-    ]
-   ],
-   [
-    [
-     "PCA_CH0",
-     "GND"
-    ],
-    [
-     "W_TILT",
-     3
-    ],
-    [
      "TILT",
      "GND (brown)"
-    ]
-   ]
-  ],
-  "3b-turret-shield": [
-   [
-    [
-     "SHIELD_I2C",
-     "GND"
-    ],
-    [
-     "W_I2C",
-     1
-    ],
-    [
-     "PCA_LOGIC",
-     "GND"
-    ]
-   ],
-   [
-    [
-     "SHIELD_I2C",
-     "A5 SCL"
-    ],
-    [
-     "W_I2C",
-     2
-    ],
-    [
-     "PCA_LOGIC",
-     "SCL"
-    ]
-   ],
-   [
-    [
-     "SHIELD_I2C",
-     "A4 SDA"
-    ],
-    [
-     "W_I2C",
-     3
-    ],
-    [
-     "PCA_LOGIC",
-     "SDA"
-    ]
-   ],
-   [
-    [
-     "SHIELD_I2C",
-     "5V"
-    ],
-    [
-     "W_I2C",
-     4
-    ],
-    [
-     "PCA_LOGIC",
-     "VCC"
     ]
    ],
    [
@@ -1016,12 +774,12 @@
      "OUT+"
     ],
     [
-     "W_SERVO",
+     "W_FAN",
      1
     ],
     [
-     "PCA_PWR",
-     "V+"
+     "FAN",
+     "5V (red)"
     ]
    ],
    [
@@ -1030,54 +788,12 @@
      "OUT−"
     ],
     [
-     "W_SERVO",
+     "W_FAN",
      2
     ],
     [
-     "PCA_PWR",
-     "GND"
-    ]
-   ],
-   [
-    [
-     "PCA_CH0",
-     "PWM"
-    ],
-    [
-     "W_TILT",
-     1
-    ],
-    [
-     "TILT",
-     "signal (orange)"
-    ]
-   ],
-   [
-    [
-     "PCA_CH0",
-     "V+"
-    ],
-    [
-     "W_TILT",
-     2
-    ],
-    [
-     "TILT",
-     "V+ (red)"
-    ]
-   ],
-   [
-    [
-     "PCA_CH0",
-     "GND"
-    ],
-    [
-     "W_TILT",
-     3
-    ],
-    [
-     "TILT",
-     "GND (brown)"
+     "FAN",
+     "GND (black)"
     ]
    ]
   ],
@@ -1113,7 +829,7 @@
    [
     [
      "PI",
-     "29 BCM5 i2c3-SCL"
+     "5 SCL1 BCM3"
     ],
     [
      "W_MLX",
@@ -1127,7 +843,7 @@
    [
     [
      "PI",
-     "7 BCM4 i2c3-SDA"
+     "3 SDA1 BCM2"
     ],
     [
      "W_MLX",

@@ -13,7 +13,7 @@
   },
   {
    "id": "V_SERVO",
-   "desc": "XL4015 trimmed to 5.0 V (servo + fan rail, distributed by the PCA9685's V+ terminal and a spare channel header)",
+   "desc": "XL4015 trimmed to 5.0 V (servo + fan rail, both soldered to its OUT pads)",
    "v_nom": 5.0,
    "v_min": 4.85,
    "v_max": 5.15,
@@ -93,7 +93,7 @@
    "source": "LISTING; current computed from its load"
   },
   {
-   "name": "MG996R tilt servo via PCA9685 V+",
+   "name": "MG996R tilt servo (power leads soldered to the XL4015 OUT pads)",
    "rail": "V_SERVO",
    "vin": [
     4.8,
@@ -101,11 +101,11 @@
    ],
    "i_avg": 0.3,
    "i_peak": 2.1,
-   "connector": "header 2.54",
+   "connector": "solder pad",
    "source": "DS: stall ≈ 2.5 A at 6 V → ~2.1 A at 5 V; pan servo disconnected"
   },
   {
-   "name": "40 mm 5 V fan on the driver heatsinks (PCA9685 channel 15 V+/GND pins)",
+   "name": "40 mm 5 V fan on the driver heatsinks (leads soldered to the XL4015 OUT pads)",
    "rail": "V_SERVO",
    "vin": [
     4.5,
@@ -113,7 +113,7 @@
    ],
    "i_avg": 0.15,
    "i_peak": 0.2,
-   "connector": "header 2.54",
+   "connector": "solder pad",
    "source": "LISTING: 5 V 0.15 A"
   },
   {
@@ -249,18 +249,6 @@
    "source": "DS"
   },
   {
-   "name": "PCA9685 logic (VCC)",
-   "rail": "V3_PI",
-   "vin": [
-    2.3,
-    5.5
-   ],
-   "i_avg": 0.01,
-   "i_peak": 0.01,
-   "connector": "header 2.54",
-   "source": "DS"
-  },
-  {
    "name": "INMP441 microphone",
    "rail": "V3_PI",
    "vin": [
@@ -303,10 +291,10 @@
    "i_peak": 1.29
   },
   {
-   "name": "XL4015 OUT → PCA9685 V+ / GND terminal",
+   "name": "XL4015 OUT pads → tilt servo red/brown (+ fan red/black on the same pads)",
    "awg": 22,
-   "length_m": 0.12,
-   "connector": "screw terminal 5.08",
+   "length_m": 0.3,
+   "connector": "solder pad",
    "i_avg": 0.45,
    "i_peak": 2.3
   },
@@ -323,16 +311,8 @@
    "awg": 22,
    "length_m": 0.2,
    "connector": "USB-C",
-   "i_avg": 1.49,
-   "i_peak": 2.44
-  },
-  {
-   "name": "PCA9685 channel 15 V+/GND pins → fan",
-   "awg": 24,
-   "length_m": 0.2,
-   "connector": "header 2.54",
-   "i_avg": 0.15,
-   "i_peak": 0.2
+   "i_avg": 1.48,
+   "i_peak": 2.43
   },
   {
    "name": "bank 2 → ESP32-S3 #3 USB-C",
@@ -450,21 +430,21 @@
    "driver": "Pi I2C-1 (BCM 2/3, pull-ups 3.3 V)",
    "pins": "SDA/SCL",
    "v_out": 3.3,
-   "receiver": "PCA9685 0x40, VL53L1X 0x29→0x30, SCD41 0x62",
+   "receiver": "MLX90640 0x33, VL53L1X 0x29→0x30, SCD41 0x62",
    "rpins": "SDA/SCL",
    "v_in_max": 3.6,
    "v_ih": 2.3,
    "bus": "I2C1"
   },
   {
-   "driver": "Pi i2c3 (BCM 4/5, pull-ups 3.3 V)",
-   "pins": "SDA/SCL",
-   "v_out": 3.3,
-   "receiver": "MLX90640 0x33",
-   "rpins": "SDA/SCL",
-   "v_in_max": 3.6,
-   "v_ih": 2.3,
-   "bus": "I2C3"
+   "driver": "UNO R4 D11 (5 V PWM, the shield's Z+ end-stop pin)",
+   "pins": "D11",
+   "v_out": 5.0,
+   "receiver": "MG996R tilt servo",
+   "rpins": "signal",
+   "v_in_max": 5.5,
+   "v_ih": 2.4,
+   "bus": "R4"
   },
   {
    "driver": "Pi BCM 22 / 27",
@@ -526,7 +506,7 @@
   {
    "level": "WARN",
    "id": "V-chain",
-   "text": "A 1 m 28 AWG phone cable to the Pi would drop 1.04 V → 3.86 V at the Pi = brownout. The bank cable is a spec: ≤ 0.2 m with 22 AWG or heavier power conductors (a short '3 A fast-charge' cable)"
+   "text": "A 1 m 28 AWG phone cable to the Pi would drop 1.03 V → 3.87 V at the Pi = brownout. The bank cable is a spec: ≤ 0.2 m with 22 AWG or heavier power conductors (a short '3 A fast-charge' cable)"
   },
   {
    "level": "WARN",
@@ -536,7 +516,7 @@
   {
    "level": "WARN",
    "id": "connector",
-   "text": "Tilt servo stall 2.3 A through the PCA9685's 2.54 mm channel header (rated 2.0 A). Momentary, and how every servo board works; keep stalls short with tilt limits in software"
+   "text": "Tilt servo stall 2.3 A on the servo's own 2.54 mm lead contacts (rated 2.0 A). Momentary, and how every servo works; keep stalls short with the 65–150° limits in firmware"
   },
   {
    "level": "WARN",
@@ -556,7 +536,7 @@
   {
    "level": "WARN",
    "id": "wire",
-   "text": "bank → Pi USB-C cable (SPEC: ≤ 0.2 m, 22 AWG or heavier power conductors): 22 AWG × 0.2 m, peak 2.44 A (ampacity 7 A, USB-C 3.0 A), round-trip drop 52 mV = 1.0%"
+   "text": "bank → Pi USB-C cable (SPEC: ≤ 0.2 m, 22 AWG or heavier power conductors): 22 AWG × 0.2 m, peak 2.43 A (ampacity 7 A, USB-C 3.0 A), round-trip drop 51 mV = 1.0%"
   },
   {
    "level": "WARN",
@@ -580,13 +560,8 @@
   },
   {
    "level": "VERIFY",
-   "id": "i2c3",
-   "text": "BCM 4/5 have NO on-board I2C pull-ups (BCM 2/3 have 1.8 kΩ). Adafruit-pattern MLX90640 breakouts carry 10 kΩ pull-ups, so no resistors are needed — check with i2cdetect -y 3 (expect 0x33); if it is absent, that module has none and needs 2.2–4.7 kΩ to 3.3 V. And w1-gpio (1-Wire) defaults to BCM 4 — leave that overlay off"
-  },
-  {
-   "level": "VERIFY",
-   "id": "servo-pwm",
-   "text": "PCA9685 VCC is 3.3 V, so the tilt servo gets 3.3 V PWM — the signal line only carries a logic level, and MG996R-class servos accept it (confirmed in use with Pi + PCA9685 builds). If the servo jitters or ignores commands, that is the level: diagram 3B (shield A4/A5, 5 V logic) fixes it. Do NOT raise VCC to 5 V while SDA/SCL touch the Pi"
+   "id": "i2c1",
+   "text": "One I2C bus for everything: the Pi's 1.8 kΩ pull-ups plus the boards' own 10 kΩ. i2cdetect -y 1 must show 0x33 (thermal) and 0x29 (rear ToF); the front ToF appears at 0x30 only after station.py re-addresses it. If the SCD41 is fitted the bus drops to 100 kHz — fine for 4 fps thermal."
   },
   {
    "level": "PROCEDURE",
@@ -611,12 +586,12 @@
   {
    "level": "PROCEDURE",
    "id": "ground",
-   "text": "Servo/fan/ESP32 return: PCA9685 V+ GND terminal → XL4015 OUT− (its own wire). Radars return through their adapters (USB side). Pack current never flows through a board GND pin or a USB cable."
+   "text": "Servo/fan return: XL4015 OUT−, which is the same node as IN− (a buck shares its negative) and so the shield GND screw — the D11 signal is referenced to it automatically. Radars return through their adapters (USB side). Pack current never flows through a board GND pin or a USB cable."
   },
   {
    "level": "PROCEDURE",
    "id": "i2c-chain",
-   "text": "The Pi header has only two 3V3 pins and one SDA/SCL pair, but five boards want 3V3 and three want SDA/SCL — one Dupont female per pin. Chain through the boards' second header/STEMMA port (Adafruit-pattern MLX/ToF/PCA boards have one), or use a mini breadboard as the 3V3/SDA/SCL splitter. Never force two females onto one pin."
+   "text": "The Pi header has two 3V3 pins and one SDA/SCL pair, but four boards want 3V3 and three want SDA/SCL — one Dupont female per pin. Chain through the boards' second header/STEMMA port (Adafruit-pattern MLX/ToF boards have one), or use a mini breadboard as the 3V3/SDA/SCL splitter. Never force two females onto one pin."
   },
   {
    "level": "PROCEDURE",
@@ -645,6 +620,11 @@
   },
   {
    "level": "PROCEDURE",
+   "id": "tilt",
+   "text": "Tilt servo: orange (signal) → the shield's Z+ end-stop header pin (= R4 D11, 5 V PWM from the firmware's 't <deg>' command, 65–150°); red → XL4015 OUT+, brown → XL4015 OUT− (2 A at stall, never through the shield). The fan's red/black share the same two OUT pads. No PCA9685 any more."
+  },
+  {
+   "level": "PROCEDURE",
    "id": "vref",
    "text": "Read the sense resistor on one driver: R100 → Vref = 0.75 V for 1.5 A; R200 → 1.50 V. Set all four with the multimeter, motors unplugged, before any motor is connected."
   },
@@ -656,7 +636,7 @@
   {
    "level": "PASS",
    "id": "I-budget",
-   "text": "V_SERVO (XL4015 trimmed to 5.0 V (servo + fan rail, distributed by the PCA9685's V+ terminal and a spare channel header)): avg 0.45 A of 4.0 A (11%), peak 2.30 A of 5.0 A (46%)"
+   "text": "V_SERVO (XL4015 trimmed to 5.0 V (servo + fan rail, both soldered to its OUT pads)): avg 0.45 A of 4.0 A (11%), peak 2.30 A of 5.0 A (46%)"
   },
   {
    "level": "PASS",
@@ -666,7 +646,7 @@
   {
    "level": "PASS",
    "id": "I-budget",
-   "text": "V5_BANK (USB power bank → Pi USB-C): avg 1.49 A of 3.0 A (50%), peak 2.44 A of 3.0 A (81%)"
+   "text": "V5_BANK (USB power bank → Pi USB-C): avg 1.48 A of 3.0 A (49%), peak 2.43 A of 3.0 A (81%)"
   },
   {
    "level": "PASS",
@@ -676,7 +656,7 @@
   {
    "level": "PASS",
    "id": "I-budget",
-   "text": "V3_PI (Pi 3.3 V header pin): avg 0.09 A of 0.5 A (18%), peak 0.32 A of 0.8 A (40%)"
+   "text": "V3_PI (Pi 3.3 V header pin): avg 0.08 A of 0.5 A (16%), peak 0.31 A of 0.8 A (39%)"
   },
   {
    "level": "PASS",
@@ -696,12 +676,12 @@
   {
    "level": "PASS",
    "id": "V-window",
-   "text": "MG996R tilt servo via PCA9685 V+: 4.85–5.15 V inside 4.8–7.2 V"
+   "text": "MG996R tilt servo (power leads soldered to the XL4015 OUT pads): 4.85–5.15 V inside 4.8–7.2 V"
   },
   {
    "level": "PASS",
    "id": "V-window",
-   "text": "40 mm 5 V fan on the driver heatsinks (PCA9685 channel 15 V+/GND pins): 4.85–5.15 V inside 4.5–5.5 V"
+   "text": "40 mm 5 V fan on the driver heatsinks (leads soldered to the XL4015 OUT pads): 4.85–5.15 V inside 4.5–5.5 V"
   },
   {
    "level": "PASS",
@@ -761,11 +741,6 @@
   {
    "level": "PASS",
    "id": "V-window",
-   "text": "PCA9685 logic (VCC): 3.2–3.4 V inside 2.3–5.5 V"
-  },
-  {
-   "level": "PASS",
-   "id": "V-window",
    "text": "INMP441 microphone: 3.2–3.4 V inside 1.8–3.6 V"
   },
   {
@@ -791,17 +766,12 @@
   {
    "level": "PASS",
    "id": "ground",
-   "text": "star = the shield's GND screw (pack −, XL4015 IN− and the motor return all land there). Peak drop per branch: shield GND screw (pack −; the R4's USB GND ties it to the Pi) 0 mV, PCA9685 GND terminal (via XL4015 OUT− / IN− from the shield GND screw) 10 mV → ≤ 10 mV between attachment points, ~26 mA circulating through USB grounds (limit 100 mV)"
+   "text": "star = the shield's GND screw (pack −, XL4015 IN− and the motor return all land there). Peak drop per branch: shield GND screw (pack −; the R4's USB GND ties it to the Pi) 0 mV, servo/fan return at the XL4015 OUT− pad (via IN− from the shield GND screw) 10 mV → ≤ 10 mV between attachment points, ~26 mA circulating through USB grounds (limit 100 mV)"
   },
   {
    "level": "PASS",
    "id": "i2c",
-   "text": "I2C1: PCA9685 0x40, VL53L1X front (re-addressed) 0x30, VL53L1X rear 0x29, SCD41 (optional) 0x62 — no clashes; bus speed limited to 100 kHz by the slowest part"
-  },
-  {
-   "level": "PASS",
-   "id": "i2c",
-   "text": "I2C3: MLX90640 0x33 — no clashes; bus speed limited to 1000 kHz by the slowest part"
+   "text": "I2C1: MLX90640 0x33, VL53L1X front (re-addressed) 0x30, VL53L1X rear 0x29, SCD41 (optional) 0x62 — no clashes; bus speed limited to 100 kHz by the slowest part"
   },
   {
    "level": "PASS",
@@ -841,12 +811,12 @@
   {
    "level": "PASS",
    "id": "level",
-   "text": "Pi I2C-1 (BCM 2/3, pull-ups 3.3 V) SDA/SCL → PCA9685 0x40, VL53L1X 0x29→0x30, SCD41 0x62 SDA/SCL: 3.3 V out, 2.3–3.6 V accepted"
+   "text": "Pi I2C-1 (BCM 2/3, pull-ups 3.3 V) SDA/SCL → MLX90640 0x33, VL53L1X 0x29→0x30, SCD41 0x62 SDA/SCL: 3.3 V out, 2.3–3.6 V accepted"
   },
   {
    "level": "PASS",
    "id": "level",
-   "text": "Pi i2c3 (BCM 4/5, pull-ups 3.3 V) SDA/SCL → MLX90640 0x33 SDA/SCL: 3.3 V out, 2.3–3.6 V accepted"
+   "text": "UNO R4 D11 (5 V PWM, the shield's Z+ end-stop pin) D11 → MG996R tilt servo signal: 5.0 V out, 2.4–5.5 V accepted"
   },
   {
    "level": "PASS",
@@ -876,17 +846,17 @@
   {
    "level": "PASS",
    "id": "pins",
-   "text": "Pi BCM: 9 pins, all distinct"
+   "text": "Pi BCM: 7 pins, all distinct"
   },
   {
    "level": "PASS",
    "id": "pins",
-   "text": "UNO R4 / shield: 9 pins, all distinct, none on [9, 10, 11, 14, 15, 16, 17]"
+   "text": "UNO R4 / shield: 10 pins, all distinct, none on [9, 10, 14, 15, 16, 17]"
   },
   {
    "level": "PASS",
    "id": "splice",
-   "text": "No lever nuts, no resistor boards, one buck at 5.0 V: pack → shield terminal → (second wires) XL4015 → PCA9685 V+ terminal; the fan picks up 5 V from a spare PCA9685 channel header; the radars from their USB adapters; the ESP32 from its own bank; everything else from the Pi"
+   "text": "No lever nuts, no resistor boards, no servo board, one buck at 5.0 V: pack → shield terminal → (second wires) XL4015 → servo + fan on its OUT pads; the servo signal comes from the shield's own Z+ pin; the radars from their USB adapters; the ESP32 from its own bank; everything else from the Pi"
   },
   {
    "level": "PASS",
@@ -911,17 +881,12 @@
   {
    "level": "PASS",
    "id": "wire",
-   "text": "XL4015 OUT → PCA9685 V+ / GND terminal: 22 AWG × 0.12 m, peak 2.30 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 29 mV = 0.5%"
+   "text": "XL4015 OUT pads → tilt servo red/brown (+ fan red/black on the same pads): 22 AWG × 0.3 m, peak 2.30 A (ampacity 7 A, solder pad 10 A), round-trip drop 73 mV = 1.2%"
   },
   {
    "level": "PASS",
    "id": "wire",
    "text": "shield driver socket → 4-pin motor cable → motor (per phase): 26 AWG × 0.4 m, peak 1.50 A (ampacity 2.2 A, Dupont 2.54 2.0 A), round-trip drop 161 mV = 1.4%"
-  },
-  {
-   "level": "PASS",
-   "id": "wire",
-   "text": "PCA9685 channel 15 V+/GND pins → fan: 24 AWG × 0.2 m, peak 0.20 A (ampacity 3.5 A, header 2.54 2.0 A), round-trip drop 7 mV = 0.1%"
   },
   {
    "level": "PASS",
@@ -947,21 +912,21 @@
  "summary": {
   "pack_avg": 2.2,
   "pack_peak": 5.29,
-  "bank_avg": 1.49,
-  "bank_peak": 2.44,
+  "bank_avg": 1.48,
+  "bank_peak": 2.43,
   "pi_usb_peak": 1.0,
   "minutes": 48,
   "v_pi": 4.78,
   "v_cam": 4.53,
-  "n_loads": 18,
-  "n_wires": 11,
+  "n_loads": 17,
+  "n_wires": 10,
   "n_signals": 14,
   "counts": {
    "FAIL": 0,
    "WARN": 9,
-   "VERIFY": 5,
-   "PROCEDURE": 12,
-   "PASS": 59
+   "VERIFY": 4,
+   "PROCEDURE": 13,
+   "PASS": 56
   }
  }
 }
