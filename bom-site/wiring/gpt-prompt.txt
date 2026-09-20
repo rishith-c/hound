@@ -103,7 +103,7 @@ CONNECTIONS (from → wire#/colour → to):
   A_MOT:1A  →  W_FR #3 green  →  M_FR:coil A +
   A_MOT:1B  →  W_FR #4 black  →  M_FR:coil A −
 
-=== DIAGRAM 3-turret: Hound 3 — turret: PCA9685 on the CNC Shield's I2C pins, tilt ch 0, pan ch 1, fan on ch 15, powered by the XL4015 ===
+=== DIAGRAM 3-turret: Hound 3 — turret: PCA9685 on the CNC Shield's I2C pins, tilt ch 0, pan ch 2, fan on ch 15, powered by the XL4015 ===
 
 CONNECTORS (pin order is the physical order on the part):
   SHIELD_I2C — CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)
@@ -121,15 +121,15 @@ CONNECTORS (pin order is the physical order on the part):
   PCA_CH0 — PCA9685 channel 0 — TILT
      pins: PWM | V+ | GND
      NOTES: Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row (as the Ceres turret was wired).
-  PAN — MG996R PAN servo (continuous-rotation)
-     pins: signal (orange) | V+ (red) | GND (brown)
-     NOTES: Plugs onto channel 1. It cannot hold an angle: the firmware only nudges it Ceres-style, 'n DIR MS' = 1250/1750 µs for 300 ms then pulse cut; 'p' stops.
-  PCA_CH1 — PCA9685 channel 1 — PAN
-     pins: PWM | V+ | GND
-     NOTES: Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row.
   TILT — MG996R TILT servo (positional)
      pins: signal (orange) | V+ (red) | GND (brown)
      NOTES: Plugs onto channel 0. Limits 65–150° in the firmware ('t 90'), Ceres mapping 600 + 10 µs/°.
+  PCA_CH2 — PCA9685 channel 2 — PAN
+     pins: PWM | V+ | GND
+     NOTES: Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row (channel 2, as the Ceres sketch had it).
+  PAN — MG996R PAN servo (continuous-rotation)
+     pins: signal (orange) | V+ (red) | GND (brown)
+     NOTES: Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it Ceres-style, 'n DIR MS' = 1250/1750 µs for 300 ms then pulse cut; 'p' stops.
   PCA_CH15 — PCA9685 channel 15 — used as a 5 V tap
      pins: PWM | V+ | GND
      NOTES: Only V+ and GND are used: the fan's red to V+, black to GND. PWM pin stays empty.
@@ -152,9 +152,9 @@ CONNECTIONS (from → wire#/colour → to):
   PCA_CH0:PWM  →  W_TILT #1 orange  →  TILT:signal (orange)
   PCA_CH0:V+  →  W_TILT #2 red  →  TILT:V+ (red)
   PCA_CH0:GND  →  W_TILT #3 brown  →  TILT:GND (brown)
-  PCA_CH1:PWM  →  W_PAN #1 orange  →  PAN:signal (orange)
-  PCA_CH1:V+  →  W_PAN #2 red  →  PAN:V+ (red)
-  PCA_CH1:GND  →  W_PAN #3 brown  →  PAN:GND (brown)
+  PCA_CH2:PWM  →  W_PAN #1 orange  →  PAN:signal (orange)
+  PCA_CH2:V+  →  W_PAN #2 red  →  PAN:V+ (red)
+  PCA_CH2:GND  →  W_PAN #3 brown  →  PAN:GND (brown)
   PCA_CH15:V+  →  W_FAN #1 red  →  FAN:5V (red)
   PCA_CH15:GND  →  W_FAN #2 black  →  FAN:GND (black)
 
@@ -283,7 +283,7 @@ CONNECTIONS (from → wire#/colour → to):
   BANK2:USB-A out  →  W_ESP #1 white  →  ESP3:USB-C
 
 === PROCEDURES AND WARNINGS (print these on the sheet; they come from the electrical model wiring.py) ===
-  [WARN] V_SERVO (XL4015 trimmed to 5.0 V → PCA9685 V+ terminal (tilt ch 0, pan ch 1, fan on ch 15's V+/GND pins)): avg 0.75 A of 4.0 A (19%), peak 4.40 A of 5.0 A (88%)
+  [WARN] V_SERVO (XL4015 trimmed to 5.0 V → PCA9685 V+ terminal (tilt ch 0, pan ch 2, fan on ch 15's V+/GND pins)): avg 0.75 A of 4.0 A (19%), peak 4.40 A of 5.0 A (88%)
   [WARN] webcam sees 4.53 V at its 500 mA descriptor (4.57 V at a typical 250 mA) through its own captive 1.5 m cable; USB floor 4.75 V, most cameras run to ~4.4 V. If it drops out at 1080p, run 720p — its cable cannot be shortened
   [WARN] A 1 m 28 AWG phone cable to the Pi would drop 1.04 V → 3.86 V at the Pi = brownout. The bank cable is a spec: ≤ 0.2 m with 22 AWG or heavier power conductors (a short '3 A fast-charge' cable)
   [WARN] Motor phases run 1.5 A through Dupont 2.54 contacts rated 2.0 A — inside rating but the crimp quality is the margin. A contact that heats in the wheels-up test gets re-crimped or soldered.
@@ -308,11 +308,11 @@ CONNECTIONS (from → wire#/colour → to):
   [PROCEDURE] Motor coil pairs by multimeter: the two leads that show ~2 Ω are one coil. A coil split across the 2B/2A–1A/1B header halves makes a motor buzz and not turn.
   [PROCEDURE] Each radar is a 4-wire job to its own CP2102: VCC → the adapter's 5V pin, GND → GND, TX → RXD, RX → TXD. The three radars add 260 mA to the Pi's USB budget (checked above). The adapter must be a 3.3 V-logic type: meter its TXD pin at idle — 3.3 V, not 5 V
   [PROCEDURE] Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. Power-down and BEFORE every flash/reset of the R4: pull the pack plug first. Reason: DRV8825 nENABLE has a pull-down, so while the R4 is dead or resetting all four drivers sit at full holding current (no pull-up resistor fitted — by choice; the plug order replaces it).
-  [PROCEDURE] PCA9685 on the CNC shield's comms header: shield SDA → PCA SDA, SCL → SCL, 5V → VCC, GND → GND (5 V I2C from the R4). XL4015 OUT+/OUT− → the PCA9685's V+/GND screw terminal. TILT servo on channel 0 (positional MG996R, floor ~62–70°), PAN servo on channel 1 (continuous-rotation) — as the Ceres turret is plugged; brown toward the board edge = GND row. Fan red/black onto channel 15's V+ and GND pins. Firmware, Ceres-style: tilt 't <deg>' 65–150 (600 + 10 µs/°); pan only by timed nudge 'n -1 300' / 'n 1 300' (1250/1750 µs for 300 ms, then pulse cut, ~20°), 'p' = stop; 'K 1' runs the Ceres kinematic show. Status 'pca' = 1 when the board answers.
+  [PROCEDURE] PCA9685 on the CNC shield's comms header: shield SDA → PCA SDA, SCL → SCL, 5V → VCC, GND → GND (5 V I2C from the R4). XL4015 OUT+/OUT− → the PCA9685's V+/GND screw terminal. TILT servo on channel 0 (positional MG996R, floor ~62–70°), PAN servo on channel 2 (continuous-rotation) — as the Ceres turret is plugged; brown toward the board edge = GND row. Fan red/black onto channel 15's V+ and GND pins. Firmware, Ceres-style: tilt 't <deg>' 65–150 (600 + 10 µs/°); pan only by timed nudge 'n -1 300' / 'n 1 300' (1250/1750 µs for 300 ms, then pulse cut, ~20°), 'p' = stop; 'K 1' runs the Ceres kinematic show. Status 'pca' = 1 when the board answers.
   [PROCEDURE] Read the sense resistor on one driver: R100 → Vref = 0.75 V for 1.5 A; R200 → 1.50 V. Set all four with the multimeter, motors unplugged, before any motor is connected.
 
 === DECISION ALREADY MADE: which bus drives the PCA9685 ===
-The PCA9685 hangs on the CNC shield's SDA/SCL comms header (R4 A4/A5, 5 V I2C, VCC from the shield's 5V pin) and is driven by the R4 (firmware 't <deg>' for tilt; pan is a continuous-rotation servo driven only by 'n dir ms' timed nudges, 1250/1750 µs for 300 ms then pulse off, as in Ceres's turret_duet.ino). XL4015 OUT → its V+ terminal. Tilt servo on channel 0, pan on channel 1, fan on channel 15's V+/GND pins. It must never also touch the Pi's SDA/SCL. Draw sheet 3 exactly so.
+The PCA9685 hangs on the CNC shield's SDA/SCL comms header (R4 A4/A5, 5 V I2C, VCC from the shield's 5V pin) and is driven by the R4 (firmware 't <deg>' for tilt; pan is a continuous-rotation servo driven only by 'n dir ms' timed nudges, 1250/1750 µs for 300 ms then pulse off, as in Ceres's turret_duet.ino). XL4015 OUT → its V+ terminal. Tilt servo on channel 0, pan on channel 2, fan on channel 15's V+/GND pins. It must never also touch the Pi's SDA/SCL. Draw sheet 3 exactly so.
 
 === SELF-CHECK (run it, print PASS/FAIL per line) ===
 1. Every CONNECTOR:pin used in CONNECTIONS exists in that connector's pin list.

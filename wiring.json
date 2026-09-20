@@ -13,7 +13,7 @@
   },
   {
    "id": "V_SERVO",
-   "desc": "XL4015 trimmed to 5.0 V → PCA9685 V+ terminal (tilt ch 0, pan ch 1, fan on ch 15's V+/GND pins)",
+   "desc": "XL4015 trimmed to 5.0 V → PCA9685 V+ terminal (tilt ch 0, pan ch 2, fan on ch 15's V+/GND pins)",
    "v_nom": 5.0,
    "v_min": 4.85,
    "v_max": 5.15,
@@ -105,7 +105,7 @@
    "source": "DS: stall ≈ 2.5 A at 6 V → ~2.1 A at 5 V"
   },
   {
-   "name": "MG996R pan servo on PCA9685 channel 1",
+   "name": "MG996R pan servo on PCA9685 channel 2",
    "rail": "V_SERVO",
    "vin": [
     4.8,
@@ -471,8 +471,8 @@
    "bus": "R4I2C"
   },
   {
-   "driver": "PCA9685 (VCC 5 V) channels 0 / 1",
-   "pins": "PWM0 PWM1",
+   "driver": "PCA9685 (VCC 5 V) channels 0 / 2",
+   "pins": "PWM0 PWM2",
    "v_out": 5.0,
    "receiver": "MG996R tilt / pan servos",
    "rpins": "signal",
@@ -535,7 +535,7 @@
   {
    "level": "WARN",
    "id": "I-budget",
-   "text": "V_SERVO (XL4015 trimmed to 5.0 V → PCA9685 V+ terminal (tilt ch 0, pan ch 1, fan on ch 15's V+/GND pins)): avg 0.75 A of 4.0 A (19%), peak 4.40 A of 5.0 A (88%)"
+   "text": "V_SERVO (XL4015 trimmed to 5.0 V → PCA9685 V+ terminal (tilt ch 0, pan ch 2, fan on ch 15's V+/GND pins)): avg 0.75 A of 4.0 A (19%), peak 4.40 A of 5.0 A (88%)"
   },
   {
    "level": "WARN",
@@ -660,7 +660,7 @@
   {
    "level": "PROCEDURE",
    "id": "servos",
-   "text": "PCA9685 on the CNC shield's comms header: shield SDA → PCA SDA, SCL → SCL, 5V → VCC, GND → GND (5 V I2C from the R4). XL4015 OUT+/OUT− → the PCA9685's V+/GND screw terminal. TILT servo on channel 0 (positional MG996R, floor ~62–70°), PAN servo on channel 1 (continuous-rotation) — as the Ceres turret is plugged; brown toward the board edge = GND row. Fan red/black onto channel 15's V+ and GND pins. Firmware, Ceres-style: tilt 't <deg>' 65–150 (600 + 10 µs/°); pan only by timed nudge 'n -1 300' / 'n 1 300' (1250/1750 µs for 300 ms, then pulse cut, ~20°), 'p' = stop; 'K 1' runs the Ceres kinematic show. Status 'pca' = 1 when the board answers."
+   "text": "PCA9685 on the CNC shield's comms header: shield SDA → PCA SDA, SCL → SCL, 5V → VCC, GND → GND (5 V I2C from the R4). XL4015 OUT+/OUT− → the PCA9685's V+/GND screw terminal. TILT servo on channel 0 (positional MG996R, floor ~62–70°), PAN servo on channel 2 (continuous-rotation) — as the Ceres turret is plugged; brown toward the board edge = GND row. Fan red/black onto channel 15's V+ and GND pins. Firmware, Ceres-style: tilt 't <deg>' 65–150 (600 + 10 µs/°); pan only by timed nudge 'n -1 300' / 'n 1 300' (1250/1750 µs for 300 ms, then pulse cut, ~20°), 'p' = stop; 'K 1' runs the Ceres kinematic show. Status 'pca' = 1 when the board answers."
   },
   {
    "level": "PROCEDURE",
@@ -715,7 +715,7 @@
   {
    "level": "PASS",
    "id": "V-window",
-   "text": "MG996R pan servo on PCA9685 channel 1: 4.85–5.15 V inside 4.8–7.2 V"
+   "text": "MG996R pan servo on PCA9685 channel 2: 4.85–5.15 V inside 4.8–7.2 V"
   },
   {
    "level": "PASS",
@@ -870,7 +870,7 @@
   {
    "level": "PASS",
    "id": "level",
-   "text": "PCA9685 (VCC 5 V) channels 0 / 1 PWM0 PWM1 → MG996R tilt / pan servos signal: 5.0 V out, 2.4–5.5 V accepted"
+   "text": "PCA9685 (VCC 5 V) channels 0 / 2 PWM0 PWM2 → MG996R tilt / pan servos signal: 5.0 V out, 2.4–5.5 V accepted"
   },
   {
    "level": "PASS",
