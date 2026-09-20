@@ -105,6 +105,7 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
  <label>microsteps <select id=ms><option>16<option selected>32</select></label>
  <label><input id=hold type=checkbox> hold drivers</label>
  <label>tilt <input id=tilt type=range min=65 max=150 value=90> <span id=tiltv>90</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
+ <label><button id=show style="padding:6px 12px">▶ Ceres show</button></label>
  <label>pan <button id=nudgeL style="padding:6px 12px">◀ left</button><button id=panStop style="padding:6px 12px">■</button><button id=nudgeR style="padding:6px 12px">right ▶</button> <span id=panv style="color:#93a1ae;font-size:12px">hold to keep turning · 300 ms nudges (Ceres)</span></label>
  <span id=lat></span>
 </div>
@@ -165,6 +166,7 @@ let panTimer=null;function panHold(b,dir){b.addEventListener('pointerdown',e=>{e
  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');clearInterval(panTimer);panTimer=null;}));}
 panHold(document.getElementById('nudgeL'),-1);panHold(document.getElementById('nudgeR'),1);
 document.getElementById('panStop').onclick=()=>{clearInterval(panTimer);api('set?pan=0');};
+let showOn=false;document.getElementById('show').onclick=()=>{showOn=!showOn;document.getElementById('show').textContent=showOn?'■ stop show':'▶ Ceres show';api('set?show='+(showOn?1:0));};
 const keys={w:[1,0,0],s:[-1,0,0],a:[0,1,0],d:[0,-1,0],q:[0,0,1],e:[0,0,-1],arrowup:[1,1,0],arrowright:[1,-1,0],arrowdown:[-1,-1,0],arrowleft:[-1,1,0]};
 let held=null;
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k===' '){e.preventDefault();held=null;stop();return;}
@@ -218,6 +220,8 @@ class H(BaseHTTPRequestHandler):
                     r4.tilt(int(float(q["tilt"])))
                 if "pan" in q:
                     r4.pan_stop()
+                if "show" in q:
+                    r4._send(f"K {1 if q['show'] == '1' else 0}")
                 if "nudge" in q:
                     r4.nudge_pan(int(q["nudge"]), int(float(q.get("ms", 300))))
                 if q.get("inv") in ("0", "1", "2", "3"):

@@ -207,40 +207,40 @@
    "notes": "The big 2-pin terminal = the 5.0 V rail in from the XL4015. Every channel header's middle (V+) and bottom (GND) pin is bussed to it."
   },
   "PCA_CH0": {
-   "type": "PCA9685 channel 0 — PAN",
+   "type": "PCA9685 channel 0 — TILT",
    "pinlabels": [
     "PWM",
     "V+",
     "GND"
    ],
-   "notes": "Rows: PWM (top), V+ (middle), GND (bottom). Pan servo plugs straight on, brown/black to the GND row."
+   "notes": "Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row (as the Ceres turret was wired)."
   },
   "PAN": {
-   "type": "MG996R PAN servo",
+   "type": "MG996R PAN servo (continuous-rotation)",
    "pinlabels": [
     "signal (orange)",
     "V+ (red)",
     "GND (brown)"
    ],
-   "notes": "Plugs onto channel 0. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit)."
+   "notes": "Plugs onto channel 1. It cannot hold an angle: the firmware only nudges it Ceres-style, 'n DIR MS' = 1250/1750 µs for 300 ms then pulse cut; 'p' stops."
   },
   "PCA_CH1": {
-   "type": "PCA9685 channel 1 — TILT",
+   "type": "PCA9685 channel 1 — PAN",
    "pinlabels": [
     "PWM",
     "V+",
     "GND"
    ],
-   "notes": "Tilt servo plugs straight on, brown/black to the GND row."
+   "notes": "Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row."
   },
   "TILT": {
-   "type": "MG996R TILT servo",
+   "type": "MG996R TILT servo (positional)",
    "pinlabels": [
     "signal (orange)",
     "V+ (red)",
     "GND (brown)"
    ],
-   "notes": "Plugs onto channel 1. Limits 65–150° in the firmware ('t 90')."
+   "notes": "Plugs onto channel 0. Limits 65–150° in the firmware ('t 90'), Ceres mapping 600 + 10 µs/°."
   },
   "PCA_CH15": {
    "type": "PCA9685 channel 15 — used as a 5 V tap",
@@ -866,11 +866,11 @@
      "PWM"
     ],
     [
-     "W_PAN",
+     "W_TILT",
      1
     ],
     [
-     "PAN",
+     "TILT",
      "signal (orange)"
     ]
    ],
@@ -880,11 +880,11 @@
      "V+"
     ],
     [
-     "W_PAN",
+     "W_TILT",
      2
     ],
     [
-     "PAN",
+     "TILT",
      "V+ (red)"
     ]
    ],
@@ -894,11 +894,11 @@
      "GND"
     ],
     [
-     "W_PAN",
+     "W_TILT",
      3
     ],
     [
-     "PAN",
+     "TILT",
      "GND (brown)"
     ]
    ],
@@ -908,11 +908,11 @@
      "PWM"
     ],
     [
-     "W_TILT",
+     "W_PAN",
      1
     ],
     [
-     "TILT",
+     "PAN",
      "signal (orange)"
     ]
    ],
@@ -922,11 +922,11 @@
      "V+"
     ],
     [
-     "W_TILT",
+     "W_PAN",
      2
     ],
     [
-     "TILT",
+     "PAN",
      "V+ (red)"
     ]
    ],
@@ -936,11 +936,11 @@
      "GND"
     ],
     [
-     "W_TILT",
+     "W_PAN",
      3
     ],
     [
-     "TILT",
+     "PAN",
      "GND (brown)"
     ]
    ],
