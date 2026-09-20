@@ -68,13 +68,17 @@ class R4:
         """Tilt servo on the shield's Z+ pin: 65–150°, or -1 to release the servo (no pulses)."""
         self._send(f"t {int(deg)}")
 
-    def pan(self, deg):
-        """Pan servo on the shield's X+ pin: 0–180° for a positional servo (90 = stop / centre for a continuous one), -1 releases."""
-        self._send(f"p {int(deg)}")
+    def pan_stop(self):
+        """Cut the pan pulse (the Ceres pan servo is continuous-rotation: no pulse = coast to a stop)."""
+        self._send("p 0")
 
     def nudge_pan(self, direction, ms=300):
-        """Continuous-rotation pan: turn one way (-1 left / +1 right) for ms milliseconds, then stop."""
+        """Ceres-style pan: 1250 µs left / 1750 µs right for ms milliseconds, then the pulse is cut. ~20° per 300 ms nudge."""
         self._send(f"n {1 if direction > 0 else -1} {int(ms)}")
+
+    def pan(self, deg=None):
+        """Kept for callers: any angle request just stops the pan (it cannot hold an angle)."""
+        self.pan_stop()
 
     def hold_enable(self, on):
         """Keep the drivers energised while stopped (holding torque, more heat)."""
