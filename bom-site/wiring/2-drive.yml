@@ -13,35 +13,25 @@ connectors:
     - D12 A STEP
     - D13 A DIR
     - D8 EN (all four)
-    - A3 VBAT sense
     - A4 SDA (option B)
     - A5 SCL (option B)
     - USB-C → Pi hub
     notes: 'Stack the shield on the R4; the pins listed are what the shield takes. Firmware r4_drive v1.0-best-drive: 30 kHz step ISR, 1/32, 415 mm/s. Logic 5 V. USB from the Pi hub; ENABLE_WIFI 0.'
   SHIELD_CTRL:
-    type: CNC Shield v3 — jumpers and control pins
+    type: CNC Shield v3 — jumpers (no wires)
     pinlabels:
-    - EN
-    - 5V
-    - GND
     - A-axis jumper D12
     - A-axis jumper D13
     - MS1 cap ×4
     - MS2 (open) ×4
     - MS3 cap ×4
-    notes: 'AS BUILT: caps on MS1 + MS3 under every driver = 1/32 (M0+M2), MS2 open. Two jumpers on the A header = D12/D13 drive the A axis. 10 kΩ from EN to 5V (pull-up) so the drivers stay OFF during
-      R4 resets. Caps on before the drivers.'
-  R_EN:
-    type: 10 kΩ resistor — EN pull-up
-    pinlabels:
-    - EN side
-    - 5V side
-    notes: Consumables. Without it, D8 floats LOW during the R4's ~1 s reset and all four drivers sit at full current uncommanded.
+    notes: 'AS BUILT: caps on MS1 + MS3 under every driver = 1/32 (M0+M2 high, M1 low — Pololu table), MS2 open. Two jumpers on the A header = D12/D13 drive the A axis. No EN pull-up: the pack is unplugged
+      whenever the R4 is being flashed or reset.'
   DRV:
     type: DRV8825 ×4 in sockets X Y Z A (plug-in, no wires)
     pinlabels:
     - EN pin over the socket's EN label
-    - Vref 0.75 V (R100) = 1.5 A
+    - Vref 0.75 V = 1.5 A (I = 2·Vref on Pololu-pattern carriers)
     - heatsink on
     notes: 'Orientation: the driver''s EN pin over the socket''s EN label; trimpot toward the power terminal on Pololu layouts, clones vary — go by the label. Backwards = dead driver. Set Vref with motors
       UNPLUGGED, meter black on the shield GND pin, red on the trimpot screw.'
@@ -150,27 +140,7 @@ cables:
     - BK
     category: bundle
     notes: '4-pin Dupont, 1.5 A per phase (2 A contacts): any pin that warms in the wheels-up test gets re-crimped'
-  W_PULL:
-    gauge: 24 AWG
-    length: 0.03
-    colors:
-    - OG
-    - OG
-    category: bundle
-    notes: resistor leads
 connections:
-- - SHIELD_CTRL:
-    - EN
-  - W_PULL:
-    - 1
-  - R_EN:
-    - EN side
-- - SHIELD_CTRL:
-    - 5V
-  - W_PULL:
-    - 2
-  - R_EN:
-    - 5V side
 - - X_MOT:
     - 2B
   - W_BL:

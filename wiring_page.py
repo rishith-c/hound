@@ -10,6 +10,8 @@ import os
 ROOT = os.path.dirname(os.path.abspath(__file__))
 D = json.load(open(os.path.join(ROOT, "wiring_diagrams.json")))
 Wj = json.load(open(os.path.join(ROOT, "wiring.json")))
+VP = json.load(open(os.path.join(ROOT, "verify_power.json")))
+AM = json.load(open(os.path.join(ROOT, "bom-site", "wiring", "art-metrics.json")))
 YML = {n: open(os.path.join(ROOT, "bom-site", "wiring", f"{n}.yml")).read() for n in D["diagrams"]}
 import yaml
 DOCS = {n: yaml.safe_load(YML[n]) for n in D["diagrams"]}
@@ -31,7 +33,7 @@ COL = {"RD": "red", "BK": "black", "YE": "yellow", "BU": "blue", "GN": "green", 
 
 # ── the GPT prompt, generated from the same data ─────────────────────────────────────────────────────────────
 P = []
-P.append("""You are an electronics documentation engineer. Produce the complete wiring diagram set for "Hound", an indoor search rover (Raspberry Pi 4 + Arduino UNO R4 WiFi + CNC Shield v3 + 4× DRV8825 + 4× NEMA 17 mecanum drive, 3S LiPo, two buck converters, PCA9685 tilt servo, MLX90640 thermal array, 2× VL53L1X ToF, INMP441 mic, 2–3 HLK radars on CP2102 USB-UART adapters, ESP32-S3 WiFi-CSI node, webcam).
+P.append("""You are an electronics documentation engineer. Produce the complete wiring diagram set for "Hound", an indoor search rover (Raspberry Pi 4 + Arduino UNO R4 WiFi + CNC Shield v3 + 4× DRV8825 + 4× NEMA 17 mecanum drive, 3S LiPo, ONE buck converter (XL4015 at 5.0 V) feeding the PCA9685 servo board which also powers the fan from a spare channel header, an ESP32-S3 on its own small power bank, MLX90640 thermal array, 2× VL53L1X ToF, INMP441 mic, 2–3 HLK radars on CP2102 USB-UART adapters, ESP32-S3 WiFi-CSI node, webcam).
 
 HARD RULES — read before drawing anything
 1. Use ONLY the connectors, pins and wires listed below. Every pin name is taken from a datasheet or the board silkscreen. Do not add, rename, merge or "helpfully" reroute anything. If something looks wrong, say so in a note; do not fix it silently.
@@ -127,6 +129,8 @@ for n in D["diagrams"]:
 <details><summary>Connections ({len(D['connections'][n])} wires)</summary>{table(n)}</details>
 <details><summary>Connector pin lists and notes</summary>{pins(n)}</details>""")
 
+vp_rows = "".join(f"<tr><td>{E(c['name'])}</td><td class=c>{c['value']} {c['unit']}</td><td class=c>{'≥' if c['name'].startswith(('VMOT','XL4015 input','Pi input','LD2450','webcam','fan')) else '≤'} {c['limit']} {c['unit']}</td><td>{'PASS' if c['ok'] else 'FAIL'}</td></tr>" for c in VP["checks"])
+am_rows = ", ".join(f"{k}: {v['wires']} wires, {v['crossings']} crossings, {v['overlaps']} overlaps" for k, v in AM.items())
 art_figs = "".join(f'<figure{" class=alt" if n.startswith("3b") else ""}><a href="wiring/art-{n}.png" target="_blank"><img src="wiring/art-{n}.png" alt="{E(TITLES[n])}"></a><figcaption>{E(TITLES[n])}</figcaption></figure>' for n in D["diagrams"])
 page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>Hound wiring</title><style>{CSS}</style></head><body><main>
@@ -135,10 +139,10 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 
 <div class="box ok"><b>Can the PCA9685 be wired straight to the CNC Shield's pins?</b> Yes. The shield breaks out the R4's A4 (SDA) and A5 (SCL) — the R4's primary <code>Wire</code> bus, 5 V logic — plus 5V and GND pins. That is diagram 3B. <b>But the rover is built the other way (3A):</b> the Raspberry Pi drives the PCA9685 over its I2C-1 (BCM 2/3) at 3.3 V, and turret.py / station.py already work that way. Keep 3A. Switch to 3B only if the MG996R jitters or ignores 3.3 V PWM — then the shield's 5 V logic fixes it, and the R4 firmware needs a tilt command (not written yet). Never wire both: a PCA9685 with 5 V pull-ups must not touch the Pi's SDA/SCL.</div>
 
-<div class=box><b>The sensors.</b> The two LD2410C radars each go through their own CP2102 adapter into the Pi's USB hub: only TX, RX and GND on the adapter; power from the 5 V Wagos. The LD2450 (the long one) is the third radar: it tracks up to three moving targets with x/y position and is what turns "someone is 2.1 m away" into "someone is 2.1 m away, 0.4 m to the left". It needs a third CP2102 (on order or skipped) and until then stays unplugged. Thermal array (MLX90640) rides on the tilt bracket beside the webcam and hangs on the Pi's second I2C bus alone, so it can run fast. ToF ×2, mic, PCA9685 on the Pi's first I2C/I2S. Pack side: e-stop → two Wagos → shield, XL4015 (6.0 V servo), LM2596 (5.0 V fan + radars + ESP32 no.3). Pi on its own USB bank.</div>
+<div class=box><b>The power scheme, simplified (v3.1).</b> No lever nuts, no resistor boards, one buck. Pack → Deans pull-plug on the deck (that plug is the e-stop) → the CNC shield's VMOT/GND screw terminal with the 1000 µF cap. The same two screws take a second, thinner wire each to the XL4015 (set to <b>5.0 V</b>), whose output goes into the PCA9685's V+/GND terminal. The tilt servo sits on channel 0; the fan plugs onto channel 15's V+ and GND pins, because every channel header carries the rail. The Pi runs on its 3 A bank and powers the R4, the hub, the webcam and, through the CP2102 adapters' 5V pins, the three radars (four wires each). The ESP32-S3 CSI node has its own small bank. Thermal, ToF ×2, mic and the PCA9685 logic hang on the Pi's 3.3 V header. No pack voltage divider and no alarm: 30-minute timer, then meter the pack.</div>
 
 <h2>Illustrated (Fritzing style)</h2>
-<p>The same net list drawn the way a Fritzing breadboard view looks: real part artwork from the open Fritzing libraries (<a href="https://github.com/fritzing/fritzing-parts">fritzing-parts</a>, <a href="https://github.com/adafruit/Fritzing-Library">Adafruit</a>, <a href="https://github.com/Protoneer/Fritzing_Parts">Protoneer's CNC Shield</a>, <a href="https://github.com/RafaGS/Fritzing">RafaGS's LD2410C</a>; CC-BY-SA), pin positions read from the parts' own connector definitions, wires routed by <code>wiring_art.py</code> from the net list. Parts no library has (Wagos, fan, hub, webcam, bank, LD2450, CP2102 sticks, the two perfboards) are drawn by hand. Stand-ins are labelled: the R4 is drawn as an Uno, both bucks as the LM2596 module, the ESP32-S3 as a C3 devkit, the INMP441 as Adafruit's I2S mic. Click any picture for full size.</p>
+<p>The same net list drawn the way a Fritzing breadboard view looks: real part artwork from the open Fritzing libraries (<a href="https://github.com/fritzing/fritzing-parts">fritzing-parts</a>, <a href="https://github.com/adafruit/Fritzing-Library">Adafruit</a>, <a href="https://github.com/Protoneer/Fritzing_Parts">Protoneer's CNC Shield</a>, <a href="https://github.com/RafaGS/Fritzing">RafaGS's LD2410C</a>; CC-BY-SA), pin positions read from the parts' own connector definitions, wires routed by <code>wiring_art.py</code> from the net list. Parts no library has (the Deans plug, fan, hub, webcam, banks, LD2450, CP2102 sticks) are drawn by hand. Wires run in separated parallel tracks with square corners; the router never lets two wires overlap and reports the crossings it could not avoid. Stand-ins are labelled: the R4 is drawn as an Uno, both bucks as the LM2596 module, the ESP32-S3 as a C3 devkit, the INMP441 as Adafruit's I2S mic. Click any picture for full size.</p>
 <figure><a href="wiring/art-poster.png" target="_blank"><img src="wiring/art-poster.png" alt="Hound — everything wired"></a><figcaption>Everything on one sheet (as built). <a href="wiring/art-poster-standalone.svg" download>Standalone SVG</a> (zoomable, all artwork embedded).</figcaption></figure>
 <div class=two>{art_figs}</div>
 
@@ -149,10 +153,46 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 <h2>Build procedures (from wiring.py)</h2><ul>{procs}</ul>
 <h2>Verify before power (VERIFY / WARN)</h2><ul>{verifs}</ul>
 
-<h2>Double-check results</h2>
-<div class="box ok">Script cross-check of the diagrams against wiring.py: <b>{'OK — ' + str(sum(len(v) for v in D['connections'].values())) + ' wires, every load fed, every signal wired, Pi BCM and R4 pins identical to the model' if not D['problems'] else 'PROBLEMS: ' + '; '.join(D['problems'])}</b>.</div>
-<div class="box warn"><b>Found and fixed while building this page:</b> (1) the pack-voltage divider on A3 was not in wiring.py — added (A3 = the shield's CoolEn pin). (2) wiring.py's microstep note still said 1/16; the frozen v1.0 drive is 1/32 with caps on MS1 + MS3 — corrected. (3) station.py opened the thermal array on I2C-1 while the wiring puts it on i2c3 (BCM 4/5) — station.py now opens bus 3 and falls back to I2C-1. (4) LD2410C pin order confirmed from the Hi-Link manual: 1 TX, 2 RX, 3 OUT, 4 GND, 5 VCC — the silkscreen reads TX RX OUT GND VCC left to right.</div>
-<div class="box warn"><b>Still to verify on the bench (cannot be checked from a desk):</b> each I2C module powered alone must show ≤ 3.3 V on SDA; the MG996R must accept 3.3 V PWM (else 3B); the USB bank must hold ≥ 4.8 V at 2.5 A; the CP2102 adapters' silkscreen order (varies by vendor — wire by label, not position).</div>
+<h2>Verification</h2>
+<div class="box ok"><b>Electrical model (wiring.py):</b> {cnt['FAIL']} FAIL · {cnt['WARN']} WARN · {cnt['VERIFY']} VERIFY · {cnt['PROCEDURE']} PROCEDURE · {cnt['PASS']} PASS. Pack {S['pack_avg']} A avg / {S['pack_peak']} A peak → {S['minutes']} min per pack; bank {S['bank_avg']} A avg / {S['bank_peak']} A peak of 3.0; Pi USB {S['pi_usb_peak']} A of 1.2. <b>Diagrams vs model:</b> {'every load fed from the rail the model names, every signal link wired, Pi and R4 pin sets identical' if not D['problems'] else 'PROBLEMS: ' + '; '.join(D['problems'])}.</div>
+<h3>DC simulation of the power tree at the worst instant (verify_power.py)</h3>
+<p>Nodal solve with the pack at its 10.5 V floor, a 4 A motor burst, the servo stalled and every Pi-side load at peak at the same moment. Wire, connector and pack resistances from copper tables and datasheets.</p>
+<table><tr><th>check</th><th>value</th><th>limit</th><th></th></tr>{vp_rows}</table>
+<p>I2C: the MLX90640 breakout's own 10 kΩ pull-ups give a {VP['i2c3']['10000']['t_rise_ns']:.0f} ns rise on i2c3 → 100 kHz only; station.py runs the array at 4 fps, which 100 kHz supports. For 400 kHz (8 fps) add 4.7 kΩ; for 1 MHz 2.2 kΩ. I2C-1 (Pi 1.8 kΩ in parallel with three boards) rises in {VP['i2c1']['t_rise_ns']:.0f} ns → 400 kHz fine, {VP['i2c1']['i_sink_mA']:.1f} mA sink.</p>
+<h3>Facts checked against sources</h3>
+<ul>
+<li>DRV8825 1/32 step = MODE0 high, MODE1 low, MODE2 high → caps on MS1 + MS3, as built. Current limit = 2 × Vref on Pololu-pattern carriers → 0.75 V = 1.5 A. Motor supply 8.2–45 V. <a href="https://www.pololu.com/product/2133">Pololu</a></li>
+<li>Raspberry Pi 4: 1.2 A shared across the four USB ports; the docs allot 0.6 A to header loads out of a 3 A supply. <a href="https://support.thepihut.com/hc/en-us/articles/360015272218-How-much-current-can-I-draw-from-a-Raspberry-Pi-USB-port">Pi Hut</a>, <a href="https://github.com/raspberrypi/documentation/blob/master/documentation/asciidoc/computers/raspberry-pi/usb-bus-on-raspberry-pi.adoc">Pi docs</a></li>
+<li>CP2102 adapters pass USB 5 V through their 5V pin (≤ 500 mA) and drive TX/RX at 3.3 V; 300 bps–1.5 Mbps covers 256000 baud. <a href="https://www.kiwi-electronics.com/en/usb-to-ttl-serial-cable-cp2102-381">Kiwi Electronics</a></li>
+<li>MG996R-class servos accept a 3.3 V PWM signal from a PCA9685 on a Pi; the signal line carries no power. <a href="https://forums.adafruit.com/viewtopic.php?t=202397">Adafruit forum</a>, <a href="https://componentindex.net/components/mg996r/">ComponentIndex</a></li>
+<li>UNO R4 WiFi: A4/A5 are the primary I2C (Wire), 5 V logic; the Qwiic socket is Wire1 at 3.3 V. <a href="https://www.hackster.io/sensirion-software/two-separate-i2c-buses-on-arduino-uno-r4-ae55fc">Hackster</a>, <a href="https://docs.arduino.cc/tutorials/uno-r4-wifi/cheat-sheet">Arduino docs</a></li>
+<li>HLK-LD2410C pins 1–5 = TX, RX, OUT, GND, VCC (5–12 V, 5 V advised), IO 3.3 V, 256000 baud. <a href="https://naylampmechatronics.com/img/cms/001080/HLK-LD2410C_datasheet.pdf">Hi-Link manual</a>. HLK-LD2450: 5V, GND, TX, RX. <a href="https://www.espboards.dev/sensors/ld2450/">espboards</a></li>
+</ul>
+<h3>Functional checks run today</h3>
+<ul>
+<li>Frozen drive firmware r4_drive v1.0 compiles for the UNO R4 WiFi (79 kB, 30 % of flash).</li>
+<li>drivetrain.py verdict unchanged: four motors carry the 5.13 kg rover at DRV8825 1.5 A; the 5° ramp is the governing case.</li>
+<li>The sensing sequencer runs end to end in simulation (station.py --sim) and produces its sentence.</li>
+<li>The remote GUI with the per-motor test panel was exercised through the Cloudflare tunnel earlier today; the Pi was powered down at the time of the last check.</li>
+<li>Illustrated sheets: wires per sheet, and the crossings the router could not avoid (no two wires overlap): {am_rows}.</li>
+</ul>
+<div class="box warn"><b>Still to verify on the bench:</b> each I2C board powered alone must show ≤ 3.3 V on SDA; the MG996R must accept 3.3 V PWM (else sheet 3B); the bank must hold ≥ 4.8 V at 2.5 A; the CP2102 adapters' silkscreen order (varies by vendor — wire by label, not position); which boards have a second header for chaining 3V3/SDA/SCL.</div>
+
+<h2>Finish checklist</h2>
+<ol>
+<li><b>Set the buck.</b> Solder 22 AWG leads to the HiLetgo XL4015 pads. Feed IN+/IN− from the pack (nothing on OUT), meter OUT, turn the pot counter-clockwise until it reads 5.00 V. Unplug.</li>
+<li><b>Set the four drivers.</b> Motors unplugged, R4 on USB, pack on. Meter black on the shield GND pin, red on each trimpot screw: 0.75 V. Caps under the drivers on MS1 and MS3 (1/32), D12/D13 jumpers on the A header.</li>
+<li><b>Pack side.</b> Pack → Deans plug → shield VMOT/GND, 1000 µF across the terminal (stripe to GND). Twist the XL4015's 22 AWG input wires with the pack leads in the same two screws, tug-test. XL4015 OUT → PCA9685 V+/GND terminal. Tilt servo on channel 0 (brown to the board edge). Fan red/black onto channel 15 V+/GND.</li>
+<li><b>Pi side.</b> Short 22 AWG cable bank → Pi USB-C. Webcam → Pi USB. Hub → Pi USB; R4 and the CP2102 adapters into the hub. Each radar: VCC → adapter 5V, GND → GND, TX → RXD, RX → TXD.</li>
+<li><b>Pi header.</b> PCA9685 logic: GND pin 6, SCL pin 5, SDA pin 3, VCC pin 1. MLX90640 on pins 7/29 (i2c3) with 3V3/GND. ToF ×2 on pins 3/5 with XSHUT on 15 and 13. Mic on 12/35/38. Chain 3V3, SDA and SCL through the boards' second headers or a mini breadboard: one female per Pi pin.</li>
+<li><b>ESP32 no.3</b> on its own small bank, USB-C only, velcroed next to it. ESP32 no.2 on any charger off the rover.</li>
+<li><b>Power-up order, every time:</b> bank → Pi → R4 (USB) → then the pack. Pack unplugged whenever the R4 is flashed or reset.</li>
+<li><b>First light.</b> On the Pi: <code>i2cdetect -y 1</code> shows 0x40 and 0x29 (0x30 after the front ToF is re-addressed); <code>i2cdetect -y 3</code> shows 0x33; <code>ls /dev/serial/by-id</code> lists the R4 and the adapters; the ESP32 joins the hotspot.</li>
+<li><b>Wheels up.</b> Open the remote, run "all four" in the motor test panel, then each wheel forward and back. Any motor pin that warms gets re-crimped.</li>
+<li><b>On the floor.</b> Forward, back, strafes, rotate, crab circle from the remote at 415 mm/s.</li>
+<li><b>First station.</b> <code>station.py --sim</code>, then a real station: stop, settle 5 s, listen 60 s, sweep, sentence.</li>
+<li><b>Pack rule.</b> 30-minute timer from a full pack, then meter: stop at 11.1 V. Never charge a pack that reads under 9 V.</li>
+</ol>
 
 <h2>Open-source tools for this kind of diagram</h2>
 <ul>

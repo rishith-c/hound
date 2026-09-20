@@ -1,57 +1,36 @@
 metadata:
-  title: Hound 6 — WiFi CSI nodes (ESP32-S3 ×2; no.1 is the spare)
+  title: 'Hound 6 — WiFi CSI nodes: ESP32-S3 no.3 on the rover on its own power bank, no.2 off the rover'
 connectors:
   ESP3:
-    type: ESP32-S3 DevKitC no.3 — csi_rx_udp, ON the rover at deck (60,120)
+    type: ESP32-S3 DevKitC no.3 — csi_rx_udp, ON the rover
     pinlabels:
-    - 5V (VIN)
-    - GND
-    - 'USB-C: NEVER while 5V is fed'
-    notes: Joins the Pi hotspot (channel 6) and streams the CSI of every probe to the Pi, UDP 5005. secrets.h holds the hotspot name and password (git-ignored).
+    - USB-C
+    notes: 'Powered by its own small bank strapped next to it: nothing else plugs into the devkit. Joins the Pi hotspot (channel 6) and streams the CSI of every probe to the Pi, UDP 5005. secrets.h holds
+      the hotspot name and password (git-ignored).'
+  BANK2:
+    type: Second USB power bank (any, ≥ 1 A) — ESP32 no.3 only
+    pinlabels:
+    - USB-A out
+    notes: Velcro it to the deck beside the devkit. It never touches the rover's electronics.
   ESP2:
     type: ESP32-S3 DevKitC no.2 — csi_tx, OFF the rover
     pinlabels:
     - USB-C from any 5 V charger
     notes: Dropped ~3 m along the wall. 100 Hz ESP-NOW probes on channel 6. Radio link only — no wire to the rover.
-  WAGO5_P:
-    type: Wago 221-415 5-way — 5 V rail +
-    pinlabels:
-    - LM2596 OUT+
-    - LD2410C LEFT VCC
-    - LD2410C RIGHT VCC
-    - LD2450 5V
-    - ESP32-S3 no.3 5V
-    notes: Feeds the four sensor loads; the fan takes its own wire straight off the LM2596 OUT terminal.
-  WAGO5_N:
-    type: Wago 221-415 5-way — 5 V rail −
-    pinlabels:
-    - LM2596 OUT−
-    - LD2410C LEFT GND
-    - LD2410C RIGHT GND
-    - LD2450 GND
-    - ESP32-S3 no.3 GND
-    notes: 'Power returns for the sensors. Each radar ALSO grounds to its CP2102 (signal reference): two GND wires per radar.'
 cables:
   W_ESP:
-    gauge: 24 AWG
-    length: 0.2
+    gauge: 28 AWG
+    length: 0.3
     colors:
-    - RD
-    - BK
+    - WH
     category: bundle
-    notes: 'WiFi bursts to 0.5 A: 24 AWG or heavier'
+    notes: any short USB-A → USB-C cable
 connections:
-- - WAGO5_P:
-    - ESP32-S3 no.3 5V
+- - BANK2:
+    - USB-A out
   - W_ESP:
     - 1
   - ESP3:
-    - 5V (VIN)
-- - WAGO5_N:
-    - ESP32-S3 no.3 GND
-  - W_ESP:
-    - 2
-  - ESP3:
-    - GND
+    - USB-C
 options:
   bgcolor: '#ffffff'
