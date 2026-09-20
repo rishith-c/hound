@@ -13,9 +13,9 @@ the X+ end-stop pin (R4 D9), both hardware PWM; their power comes from the XL401
 
 
 class Turret:
-    TILT_MIN_DEG = 65
+    TILT_MIN_DEG = 78
     TILT_MAX_DEG = 150
-    PARK_DEG = 90
+    PARK_DEG = 92
 
     def __init__(self, r4):
         self.r4 = r4

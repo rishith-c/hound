@@ -104,7 +104,7 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
  <label>speed <input id=sp type=range min=20 max=530 value=415> <span id=spv>415</span> mm/s</label>
  <label>microsteps <select id=ms><option>16<option selected>32</select></label>
  <label><input id=hold type=checkbox> hold drivers</label>
- <label>tilt <input id=tilt type=range min=65 max=150 value=90> <span id=tiltv>90</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
+ <label>tilt <input id=tilt type=range min=78 max=150 value=92> <span id=tiltv>90</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
  <label><button id=show style="padding:6px 12px">▶ Ceres show</button></label>
  <label>pan <button id=nudgeL style="padding:6px 12px">◀ left</button><button id=panStop style="padding:6px 12px">■</button><button id=nudgeR style="padding:6px 12px">right ▶</button> <span id=panv style="color:#93a1ae;font-size:12px">hold to keep turning · 300 ms nudges (Ceres)</span></label>
  <span id=lat></span>
