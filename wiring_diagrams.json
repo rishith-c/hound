@@ -1,0 +1,1952 @@
+{
+ "diagrams": [
+  "1-power",
+  "2-drive",
+  "3a-turret-pi",
+  "3b-turret-shield",
+  "4-pi-sensors",
+  "5-radars-usb",
+  "6-csi"
+ ],
+ "connectors": {
+  "PACK": {
+   "type": "HOOVO 3S 2200 mAh 80C LiPo — T-plug (Deans)",
+   "pinlabels": [
+    "V+",
+    "GND"
+   ],
+   "notes": "11.1 V nominal, 12.6 V full, 10.5 V floor (cutoff V 10.5 in firmware). A pack that reads 6.8 V is dead: never charge it."
+  },
+  "ESTOP": {
+   "type": "E-STOP — NC mushroom switch in the + lead",
+   "pinlabels": [
+    "IN",
+    "OUT"
+   ],
+   "notes": "Latching, twist-release, mounted at deck X −140 (assembly.py). Breaks EVERYTHING on the pack side; the Pi keeps running on the bank."
+  },
+  "WAGO_P": {
+   "type": "Wago 221-415 5-way — PACK + (11.1 V)",
+   "pinlabels": [
+    "pigtail +",
+    "shield VMOT",
+    "XL4015 IN+",
+    "LM2596 IN+",
+    "47k divider"
+   ],
+   "notes": "Lever nut, 24–12 AWG. Slot 1 takes the 14 AWG pigtail, the rest 22 AWG. This and its twin are the ONLY pack-side splices."
+  },
+  "WAGO_N": {
+   "type": "Wago 221-415 5-way — PACK − = STAR GROUND",
+   "pinlabels": [
+    "pigtail −",
+    "shield GND",
+    "XL4015 IN−",
+    "LM2596 IN−",
+    "10k divider"
+   ],
+   "notes": "Every return comes back here on its own wire. Never through a board GND pin, never through a USB cable."
+  },
+  "SHIELD_PWR": {
+   "type": "CNC Shield v3 — power screw terminal",
+   "pinlabels": [
+    "VMOT",
+    "GND"
+   ],
+   "notes": "1000 µF 25 V electrolytic across VMOT/GND at the terminal, stripe (−) to GND. Reversed = vents on first power-up."
+  },
+  "XL4015": {
+   "type": "XL4015 5 A buck — trim OUT to 6.0 V",
+   "pinlabels": [
+    "IN+",
+    "IN−",
+    "OUT+",
+    "OUT−"
+   ],
+   "notes": "Screw terminals. Set 6.00 V on the meter with nothing on OUT, then wire the PCA9685. Heatsink on. 4 A continuous derated."
+  },
+  "LM2596": {
+   "type": "LM2596 3 A buck — trim OUT to 5.0 V",
+   "pinlabels": [
+    "IN+",
+    "IN−",
+    "OUT+",
+    "OUT−"
+   ],
+   "notes": "Screw terminals. Set 5.00 V on the meter with nothing on OUT. 2 A continuous without a fan. Vin must stay ≥ 6.5 V (pack floor 10.5 V: fine)."
+  },
+  "PCA_PWR": {
+   "type": "PCA9685 servo-power screw terminal",
+   "pinlabels": [
+    "V+",
+    "GND"
+   ],
+   "notes": "The big 2-pin terminal at the end of the board = servo rail, NOT logic VCC."
+  },
+  "FAN": {
+   "type": "40 mm 5 V fan on the driver heatsinks",
+   "pinlabels": [
+    "5V (red)",
+    "GND (black)"
+   ],
+   "notes": "Must be a 5 V fan. A 12 V fan goes on the pack Wagos instead — read the label."
+  },
+  "WAGO5_P": {
+   "type": "Wago 221-415 5-way — 5 V rail +",
+   "pinlabels": [
+    "LM2596 OUT+",
+    "LD2410C LEFT VCC",
+    "LD2410C RIGHT VCC",
+    "LD2450 5V",
+    "ESP32-S3 no.3 5V"
+   ],
+   "notes": "Feeds the four sensor loads; the fan takes its own wire straight off the LM2596 OUT terminal."
+  },
+  "WAGO5_N": {
+   "type": "Wago 221-415 5-way — 5 V rail −",
+   "pinlabels": [
+    "LM2596 OUT−",
+    "LD2410C LEFT GND",
+    "LD2410C RIGHT GND",
+    "LD2450 GND",
+    "ESP32-S3 no.3 GND"
+   ],
+   "notes": "Power returns for the sensors. Each radar ALSO grounds to its CP2102 (signal reference): two GND wires per radar."
+  },
+  "DIV": {
+   "type": "Pack-voltage divider on perfboard — 47 kΩ / 10 kΩ",
+   "pinlabels": [
+    "PACK+",
+    "A3",
+    "GND"
+   ],
+   "notes": "47 kΩ between PACK+ and A3; 10 kΩ between A3 and GND. 12.6 V → 2.21 V at A3 (R4 ADC ref 5 V, VBAT_RATIO 57/10). A3 = the shield's CoolEn pin."
+  },
+  "SHIELD_A3": {
+   "type": "CNC Shield v3 — CoolEn header pin (= R4 A3)",
+   "pinlabels": [
+    "A3",
+    "GND"
+   ],
+   "notes": "The 4-pin block Abort/Hold/Resume/CoolEn on the shield's edge; CoolEn is A3. Its GND is the neighbouring GND pin."
+  },
+  "BANK": {
+   "type": "USB power bank 5 V / 3 A (logic island)",
+   "pinlabels": [
+    "USB-A out"
+   ],
+   "notes": "Genuine 3 A bank. Cable ≤ 0.3 m, ≥ 24 AWG power conductors. Powers ONLY the Pi; the Pi powers the R4, the hub, the adapters and the webcam."
+  },
+  "PI_PWR": {
+   "type": "Raspberry Pi 4 — USB-C power in",
+   "pinlabels": [
+    "USB-C"
+   ],
+   "notes": "Under-voltage warning at 4.63 V. Early Pi 4 (rev 1.1) needs an A-to-C or non-e-marked cable."
+  },
+  "R4": {
+   "type": "Arduino UNO R4 WiFi — under the shield (stacked, no wires)",
+   "pinlabels": [
+    "D2 X STEP",
+    "D5 X DIR",
+    "D3 Y STEP",
+    "D6 Y DIR",
+    "D4 Z STEP",
+    "D7 Z DIR",
+    "D12 A STEP",
+    "D13 A DIR",
+    "D8 EN (all four)",
+    "A3 VBAT sense",
+    "A4 SDA (option B)",
+    "A5 SCL (option B)",
+    "USB-C → Pi hub"
+   ],
+   "notes": "Stack the shield on the R4; the pins listed are what the shield takes. Firmware r4_drive v1.0-best-drive: 30 kHz step ISR, 1/32, 415 mm/s. Logic 5 V. USB from the Pi hub; ENABLE_WIFI 0."
+  },
+  "SHIELD_CTRL": {
+   "type": "CNC Shield v3 — jumpers and control pins",
+   "pinlabels": [
+    "EN",
+    "5V",
+    "GND",
+    "A-axis jumper D12",
+    "A-axis jumper D13",
+    "MS1 cap ×4",
+    "MS2 (open) ×4",
+    "MS3 cap ×4"
+   ],
+   "notes": "AS BUILT: caps on MS1 + MS3 under every driver = 1/32 (M0+M2), MS2 open. Two jumpers on the A header = D12/D13 drive the A axis. 10 kΩ from EN to 5V (pull-up) so the drivers stay OFF during R4 resets. Caps on before the drivers."
+  },
+  "R_EN": {
+   "type": "10 kΩ resistor — EN pull-up",
+   "pinlabels": [
+    "EN side",
+    "5V side"
+   ],
+   "notes": "Consumables. Without it, D8 floats LOW during the R4's ~1 s reset and all four drivers sit at full current uncommanded."
+  },
+  "DRV": {
+   "type": "DRV8825 ×4 in sockets X Y Z A (plug-in, no wires)",
+   "pinlabels": [
+    "EN pin over the socket's EN label",
+    "Vref 0.75 V (R100) = 1.5 A",
+    "heatsink on"
+   ],
+   "notes": "Orientation: the driver's EN pin over the socket's EN label; trimpot toward the power terminal on Pololu layouts, clones vary — go by the label. Backwards = dead driver. Set Vref with motors UNPLUGGED, meter black on the shield GND pin, red on the trimpot screw."
+  },
+  "X_MOT": {
+   "type": "CNC Shield v3 — X driver motor header (BL)",
+   "pinlabels": [
+    "2B",
+    "2A",
+    "1A",
+    "1B"
+   ],
+   "notes": "4-pin male header beside the X socket. Driver STEP = D2, DIR = D5, EN = D8 shared. Firmware map: BL = X."
+  },
+  "Y_MOT": {
+   "type": "CNC Shield v3 — Y driver motor header (FL)",
+   "pinlabels": [
+    "2B",
+    "2A",
+    "1A",
+    "1B"
+   ],
+   "notes": "4-pin male header beside the Y socket. Driver STEP = D3, DIR = D6, EN = D8 shared. Firmware map: FL = Y."
+  },
+  "Z_MOT": {
+   "type": "CNC Shield v3 — Z driver motor header (BR)",
+   "pinlabels": [
+    "2B",
+    "2A",
+    "1A",
+    "1B"
+   ],
+   "notes": "4-pin male header beside the Z socket. Driver STEP = D4, DIR = D7, EN = D8 shared. Firmware map: BR = Z."
+  },
+  "A_MOT": {
+   "type": "CNC Shield v3 — A driver motor header (FR)",
+   "pinlabels": [
+    "2B",
+    "2A",
+    "1A",
+    "1B"
+   ],
+   "notes": "4-pin male header beside the A socket. Driver STEP = D12, DIR = D13, EN = D8 shared. Firmware map: FR = A."
+  },
+  "M_BL": {
+   "type": "JK42HS40 NEMA 17 — BL back-left (axis X)",
+   "pinlabels": [
+    "coil A +",
+    "coil A −",
+    "coil B +",
+    "coil B −"
+   ],
+   "notes": "Find the pairs with the meter: the two leads that read ~1.5–2 Ω are ONE coil. Lead colours vary between batches — the meter, not the colour, decides."
+  },
+  "M_FL": {
+   "type": "JK42HS40 NEMA 17 — FL front-left (axis Y)",
+   "pinlabels": [
+    "coil A +",
+    "coil A −",
+    "coil B +",
+    "coil B −"
+   ],
+   "notes": "Find the pairs with the meter: the two leads that read ~1.5–2 Ω are ONE coil. Lead colours vary between batches — the meter, not the colour, decides."
+  },
+  "M_BR": {
+   "type": "JK42HS40 NEMA 17 — BR back-right (axis Z)",
+   "pinlabels": [
+    "coil A +",
+    "coil A −",
+    "coil B +",
+    "coil B −"
+   ],
+   "notes": "Find the pairs with the meter: the two leads that read ~1.5–2 Ω are ONE coil. Lead colours vary between batches — the meter, not the colour, decides."
+  },
+  "M_FR": {
+   "type": "JK42HS40 NEMA 17 — FR front-right (axis A)",
+   "pinlabels": [
+    "coil A +",
+    "coil A −",
+    "coil B +",
+    "coil B −"
+   ],
+   "notes": "Find the pairs with the meter: the two leads that read ~1.5–2 Ω are ONE coil. Lead colours vary between batches — the meter, not the colour, decides."
+  },
+  "PI": {
+   "type": "Raspberry Pi 4 — 40-pin header (used pins only)",
+   "pinlabels": [
+    "1 3V3",
+    "3 SDA1 BCM2",
+    "5 SCL1 BCM3",
+    "6 GND",
+    "7 BCM4 i2c3-SDA",
+    "9 GND",
+    "12 BCM18 I2S-BCLK",
+    "13 BCM27 XSHUT-rear",
+    "14 GND",
+    "15 BCM22 XSHUT-front",
+    "17 3V3",
+    "20 GND",
+    "29 BCM5 i2c3-SCL",
+    "30 GND",
+    "35 BCM19 I2S-LRCLK",
+    "38 BCM20 I2S-DIN",
+    "39 GND"
+   ],
+   "notes": "Physical pin numbers (odd = inner row from the SD-card end). i2c3 on BCM 4/5 needs dtoverlay=i2c3 in config.txt and has NO on-board pull-ups. w1-gpio must stay off (it defaults to BCM 4)."
+  },
+  "PCA_LOGIC": {
+   "type": "PCA9685 logic header (6 pins, either end)",
+   "pinlabels": [
+    "GND",
+    "OE",
+    "SCL",
+    "SDA",
+    "VCC",
+    "V+"
+   ],
+   "notes": "Adafruit-pattern silkscreen: GND OE SCL SDA VCC V+. OE left open (internal pull-down = outputs on). V+ pin unused; V+ enters at the terminal. Address 0x40 (no jumpers)."
+  },
+  "PCA_CH0": {
+   "type": "PCA9685 channel 0 (3-pin, at the board's channel 0 end)",
+   "pinlabels": [
+    "PWM",
+    "V+",
+    "GND"
+   ],
+   "notes": "Rows on the board: PWM (top, yellow), V+ (middle, red), GND (bottom, black). Channels 1–15 empty."
+  },
+  "TILT": {
+   "type": "MG996R TILT servo",
+   "pinlabels": [
+    "signal (orange)",
+    "V+ (red)",
+    "GND (brown)"
+   ],
+   "notes": "Plugs straight onto channel 0, brown toward the board edge (GND row). Limits 65–150° in turret.py."
+  },
+  "PAN": {
+   "type": "MG996R PAN servo — NOT CONNECTED",
+   "pinlabels": [
+    "signal",
+    "V+",
+    "GND"
+   ],
+   "notes": "Continuous-rotation unit: cannot hold an angle. Pinned with the printed lock; leave its lead unplugged."
+  },
+  "SHIELD_I2C": {
+   "type": "CNC Shield v3 — A4/A5 + 5V/GND pins (= R4 Wire bus, 5 V logic)",
+   "pinlabels": [
+    "A4 SDA",
+    "A5 SCL",
+    "5V",
+    "GND"
+   ],
+   "notes": "A4/A5 are the R4's primary I2C ('Wire'), 5 V logic, no on-board pull-ups: the PCA9685's 10 kΩ pull-ups to VCC=5 V do the job. NOT the R4's Qwiic socket (that is Wire1, 3.3 V)."
+  },
+  "MLX": {
+   "type": "MLX90640 thermal array breakout (0x33)",
+   "pinlabels": [
+    "VIN 3V3",
+    "GND",
+    "SCL",
+    "SDA"
+   ],
+   "notes": "On i2c3 (BCM 4/5) ALONE so it can run at 1 MHz. BCM 4/5 have no pull-ups: if the module has none either, add 4.7 kΩ SDA→3V3 and SCL→3V3. Rides beside the webcam on the tilt bracket."
+  },
+  "TOF_F": {
+   "type": "VL53L1X ToF FRONT (0x29 → re-addressed 0x30 by XSHUT)",
+   "pinlabels": [
+    "VIN 3V3",
+    "GND",
+    "SDA",
+    "SCL",
+    "XSHUT"
+   ],
+   "notes": "Both ToFs share I2C-1. At boot the Pi holds FRONT XSHUT low, gives REAR 0x29… then raises FRONT and moves it to 0x30."
+  },
+  "TOF_R": {
+   "type": "VL53L1X ToF REAR (0x29)",
+   "pinlabels": [
+    "VIN 3V3",
+    "GND",
+    "SDA",
+    "SCL",
+    "XSHUT"
+   ],
+   "notes": "XSHUT on BCM 27 so the Pi can reset it independently."
+  },
+  "MIC": {
+   "type": "INMP441 I2S microphone",
+   "pinlabels": [
+    "VDD 3V3",
+    "GND",
+    "SCK",
+    "WS",
+    "SD",
+    "L/R"
+   ],
+   "notes": "L/R tied to GND = left channel. On the post front face, 120 mm up (assembly.py)."
+  },
+  "PULL": {
+   "type": "2 × 4.7 kΩ i2c3 pull-ups (only if the MLX module has none)",
+   "pinlabels": [
+    "3V3",
+    "SDA",
+    "SCL"
+   ],
+   "notes": "Meter the module first: SDA to GND must read ≤ 3.3 V when powered alone."
+  },
+  "PI_USB": {
+   "type": "Raspberry Pi 4 — USB-A ports",
+   "pinlabels": [
+    "USB 1: webcam",
+    "USB 2: hub",
+    "USB 3: free",
+    "USB 4: free"
+   ],
+   "notes": "1.2 A shared across all four ports (peak here 0.80 A). Webcam on its own port, everything else through the hub."
+  },
+  "HUB": {
+   "type": "4-port USB hub (unpowered)",
+   "pinlabels": [
+    "upstream",
+    "port 1: UNO R4",
+    "port 2: CP2102 no.1",
+    "port 3: CP2102 no.2",
+    "port 4: CP2102 no.3"
+   ]
+  },
+  "CAM": {
+   "type": "Webcam (C920-class) — captive 1.5 m cable",
+   "pinlabels": [
+    "USB-A"
+   ],
+   "notes": "On the turret beside the thermal array. If it drops out at 1080p, run 720p."
+  },
+  "R4_USB": {
+   "type": "UNO R4 WiFi — USB-C",
+   "pinlabels": [
+    "USB-C"
+   ],
+   "notes": "USB CDC serial to the Pi: /dev/serial/by-id/*Arduino*"
+  },
+  "CP1": {
+   "type": "CP2102 USB-UART no.1 → LD2410C LEFT",
+   "pinlabels": [
+    "3V3",
+    "5V",
+    "GND",
+    "TXD",
+    "RXD",
+    "DTR"
+   ],
+   "notes": "Only GND, TXD, RXD are used. 5V and 3V3 pins stay EMPTY (the radar is powered from the LM2596 rail, not the Pi's USB budget). Jumper on 3.3 V logic if the adapter has one. Label the adapter body: LD2410C LEFT."
+  },
+  "CP2": {
+   "type": "CP2102 USB-UART no.2 → LD2410C RIGHT",
+   "pinlabels": [
+    "3V3",
+    "5V",
+    "GND",
+    "TXD",
+    "RXD",
+    "DTR"
+   ],
+   "notes": "Only GND, TXD, RXD are used. 5V and 3V3 pins stay EMPTY (the radar is powered from the LM2596 rail, not the Pi's USB budget). Jumper on 3.3 V logic if the adapter has one. Label the adapter body: LD2410C RIGHT."
+  },
+  "CP3": {
+   "type": "CP2102 USB-UART no.3 → LD2450 (when the third adapter arrives)",
+   "pinlabels": [
+    "3V3",
+    "5V",
+    "GND",
+    "TXD",
+    "RXD",
+    "DTR"
+   ],
+   "notes": "Only GND, TXD, RXD are used. 5V and 3V3 pins stay EMPTY (the radar is powered from the LM2596 rail, not the Pi's USB budget). Jumper on 3.3 V logic if the adapter has one. Label the adapter body: LD2450 (when the third adapter arrives)."
+  },
+  "LDL": {
+   "type": "HLK-LD2410C LEFT (toed +30° out, deck Y +50)",
+   "pinlabels": [
+    "1 TX",
+    "2 RX",
+    "3 OUT",
+    "4 GND",
+    "5 VCC"
+   ],
+   "notes": "Pins per Hi-Link manual table 1: 1 UART_Tx, 2 UART_Rx, 3 OUT, 4 GND, 5 VCC (5–12 V, 5 V advised). IO 3.3 V, 256000 baud. OUT unused."
+  },
+  "LDR": {
+   "type": "HLK-LD2410C RIGHT (toed −30° out, deck Y −50)",
+   "pinlabels": [
+    "1 TX",
+    "2 RX",
+    "3 OUT",
+    "4 GND",
+    "5 VCC"
+   ],
+   "notes": "Pins per Hi-Link manual table 1: 1 UART_Tx, 2 UART_Rx, 3 OUT, 4 GND, 5 VCC (5–12 V, 5 V advised). IO 3.3 V, 256000 baud. OUT unused."
+  },
+  "LD2450": {
+   "type": "HLK-LD2450 (centre, x/y tracker)",
+   "pinlabels": [
+    "5V",
+    "GND",
+    "TX",
+    "RX"
+   ],
+   "notes": "Silkscreen 5V GND TX RX; 5 V supply, 3.3 V UART, 256000 baud. Needs the THIRD CP2102 — until it arrives, leave power and data unplugged."
+  },
+  "ESP3": {
+   "type": "ESP32-S3 DevKitC no.3 — csi_rx_udp, ON the rover at deck (60,120)",
+   "pinlabels": [
+    "5V (VIN)",
+    "GND",
+    "USB-C: NEVER while 5V is fed"
+   ],
+   "notes": "Joins the Pi hotspot (channel 6) and streams the CSI of every probe to the Pi, UDP 5005. secrets.h holds the hotspot name and password (git-ignored)."
+  },
+  "ESP2": {
+   "type": "ESP32-S3 DevKitC no.2 — csi_tx, OFF the rover",
+   "pinlabels": [
+    "USB-C from any 5 V charger"
+   ],
+   "notes": "Dropped ~3 m along the wall. 100 Hz ESP-NOW probes on channel 6. Radio link only — no wire to the rover."
+  }
+ },
+ "connections": {
+  "1-power": [
+   [
+    [
+     "PACK",
+     "V+"
+    ],
+    [
+     "W_PACK",
+     1
+    ],
+    [
+     "ESTOP",
+     "IN"
+    ]
+   ],
+   [
+    [
+     "ESTOP",
+     "OUT"
+    ],
+    [
+     "W_ESTOP",
+     1
+    ],
+    [
+     "WAGO_P",
+     "pigtail +"
+    ]
+   ],
+   [
+    [
+     "PACK",
+     "GND"
+    ],
+    [
+     "W_PACK",
+     2
+    ],
+    [
+     "WAGO_N",
+     "pigtail −"
+    ]
+   ],
+   [
+    [
+     "WAGO_P",
+     "shield VMOT"
+    ],
+    [
+     "W_SHIELD",
+     1
+    ],
+    [
+     "SHIELD_PWR",
+     "VMOT"
+    ]
+   ],
+   [
+    [
+     "WAGO_N",
+     "shield GND"
+    ],
+    [
+     "W_SHIELD",
+     2
+    ],
+    [
+     "SHIELD_PWR",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "WAGO_P",
+     "XL4015 IN+"
+    ],
+    [
+     "W_XL_IN",
+     1
+    ],
+    [
+     "XL4015",
+     "IN+"
+    ]
+   ],
+   [
+    [
+     "WAGO_N",
+     "XL4015 IN−"
+    ],
+    [
+     "W_XL_IN",
+     2
+    ],
+    [
+     "XL4015",
+     "IN−"
+    ]
+   ],
+   [
+    [
+     "WAGO_P",
+     "LM2596 IN+"
+    ],
+    [
+     "W_LM_IN",
+     1
+    ],
+    [
+     "LM2596",
+     "IN+"
+    ]
+   ],
+   [
+    [
+     "WAGO_N",
+     "LM2596 IN−"
+    ],
+    [
+     "W_LM_IN",
+     2
+    ],
+    [
+     "LM2596",
+     "IN−"
+    ]
+   ],
+   [
+    [
+     "XL4015",
+     "OUT+"
+    ],
+    [
+     "W_SERVO",
+     1
+    ],
+    [
+     "PCA_PWR",
+     "V+"
+    ]
+   ],
+   [
+    [
+     "XL4015",
+     "OUT−"
+    ],
+    [
+     "W_SERVO",
+     2
+    ],
+    [
+     "PCA_PWR",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "LM2596",
+     "OUT+"
+    ],
+    [
+     "W_LM_OUT",
+     1
+    ],
+    [
+     "WAGO5_P",
+     "LM2596 OUT+"
+    ]
+   ],
+   [
+    [
+     "LM2596",
+     "OUT−"
+    ],
+    [
+     "W_LM_OUT",
+     2
+    ],
+    [
+     "WAGO5_N",
+     "LM2596 OUT−"
+    ]
+   ],
+   [
+    [
+     "LM2596",
+     "OUT+"
+    ],
+    [
+     "W_FAN",
+     1
+    ],
+    [
+     "FAN",
+     "5V (red)"
+    ]
+   ],
+   [
+    [
+     "LM2596",
+     "OUT−"
+    ],
+    [
+     "W_FAN",
+     2
+    ],
+    [
+     "FAN",
+     "GND (black)"
+    ]
+   ],
+   [
+    [
+     "WAGO_P",
+     "47k divider"
+    ],
+    [
+     "W_DIV",
+     1
+    ],
+    [
+     "DIV",
+     "PACK+"
+    ]
+   ],
+   [
+    [
+     "DIV",
+     "A3"
+    ],
+    [
+     "W_DIV",
+     2
+    ],
+    [
+     "SHIELD_A3",
+     "A3"
+    ]
+   ],
+   [
+    [
+     "WAGO_N",
+     "10k divider"
+    ],
+    [
+     "W_DIV",
+     3
+    ],
+    [
+     "DIV",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "BANK",
+     "USB-A out"
+    ],
+    [
+     "W_BANK",
+     1
+    ],
+    [
+     "PI_PWR",
+     "USB-C"
+    ]
+   ]
+  ],
+  "2-drive": [
+   [
+    [
+     "SHIELD_CTRL",
+     "EN"
+    ],
+    [
+     "W_PULL",
+     1
+    ],
+    [
+     "R_EN",
+     "EN side"
+    ]
+   ],
+   [
+    [
+     "SHIELD_CTRL",
+     "5V"
+    ],
+    [
+     "W_PULL",
+     2
+    ],
+    [
+     "R_EN",
+     "5V side"
+    ]
+   ],
+   [
+    [
+     "X_MOT",
+     "2B"
+    ],
+    [
+     "W_BL",
+     1
+    ],
+    [
+     "M_BL",
+     "coil B +"
+    ]
+   ],
+   [
+    [
+     "X_MOT",
+     "2A"
+    ],
+    [
+     "W_BL",
+     2
+    ],
+    [
+     "M_BL",
+     "coil B −"
+    ]
+   ],
+   [
+    [
+     "X_MOT",
+     "1A"
+    ],
+    [
+     "W_BL",
+     3
+    ],
+    [
+     "M_BL",
+     "coil A +"
+    ]
+   ],
+   [
+    [
+     "X_MOT",
+     "1B"
+    ],
+    [
+     "W_BL",
+     4
+    ],
+    [
+     "M_BL",
+     "coil A −"
+    ]
+   ],
+   [
+    [
+     "Y_MOT",
+     "2B"
+    ],
+    [
+     "W_FL",
+     1
+    ],
+    [
+     "M_FL",
+     "coil B +"
+    ]
+   ],
+   [
+    [
+     "Y_MOT",
+     "2A"
+    ],
+    [
+     "W_FL",
+     2
+    ],
+    [
+     "M_FL",
+     "coil B −"
+    ]
+   ],
+   [
+    [
+     "Y_MOT",
+     "1A"
+    ],
+    [
+     "W_FL",
+     3
+    ],
+    [
+     "M_FL",
+     "coil A +"
+    ]
+   ],
+   [
+    [
+     "Y_MOT",
+     "1B"
+    ],
+    [
+     "W_FL",
+     4
+    ],
+    [
+     "M_FL",
+     "coil A −"
+    ]
+   ],
+   [
+    [
+     "Z_MOT",
+     "2B"
+    ],
+    [
+     "W_BR",
+     1
+    ],
+    [
+     "M_BR",
+     "coil B +"
+    ]
+   ],
+   [
+    [
+     "Z_MOT",
+     "2A"
+    ],
+    [
+     "W_BR",
+     2
+    ],
+    [
+     "M_BR",
+     "coil B −"
+    ]
+   ],
+   [
+    [
+     "Z_MOT",
+     "1A"
+    ],
+    [
+     "W_BR",
+     3
+    ],
+    [
+     "M_BR",
+     "coil A +"
+    ]
+   ],
+   [
+    [
+     "Z_MOT",
+     "1B"
+    ],
+    [
+     "W_BR",
+     4
+    ],
+    [
+     "M_BR",
+     "coil A −"
+    ]
+   ],
+   [
+    [
+     "A_MOT",
+     "2B"
+    ],
+    [
+     "W_FR",
+     1
+    ],
+    [
+     "M_FR",
+     "coil B +"
+    ]
+   ],
+   [
+    [
+     "A_MOT",
+     "2A"
+    ],
+    [
+     "W_FR",
+     2
+    ],
+    [
+     "M_FR",
+     "coil B −"
+    ]
+   ],
+   [
+    [
+     "A_MOT",
+     "1A"
+    ],
+    [
+     "W_FR",
+     3
+    ],
+    [
+     "M_FR",
+     "coil A +"
+    ]
+   ],
+   [
+    [
+     "A_MOT",
+     "1B"
+    ],
+    [
+     "W_FR",
+     4
+    ],
+    [
+     "M_FR",
+     "coil A −"
+    ]
+   ]
+  ],
+  "3a-turret-pi": [
+   [
+    [
+     "PI",
+     "6 GND"
+    ],
+    [
+     "W_I2C",
+     1
+    ],
+    [
+     "PCA_LOGIC",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "5 SCL1 BCM3"
+    ],
+    [
+     "W_I2C",
+     2
+    ],
+    [
+     "PCA_LOGIC",
+     "SCL"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "3 SDA1 BCM2"
+    ],
+    [
+     "W_I2C",
+     3
+    ],
+    [
+     "PCA_LOGIC",
+     "SDA"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "1 3V3"
+    ],
+    [
+     "W_I2C",
+     4
+    ],
+    [
+     "PCA_LOGIC",
+     "VCC"
+    ]
+   ],
+   [
+    [
+     "XL4015",
+     "OUT+"
+    ],
+    [
+     "W_SERVO",
+     1
+    ],
+    [
+     "PCA_PWR",
+     "V+"
+    ]
+   ],
+   [
+    [
+     "XL4015",
+     "OUT−"
+    ],
+    [
+     "W_SERVO",
+     2
+    ],
+    [
+     "PCA_PWR",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "PCA_CH0",
+     "PWM"
+    ],
+    [
+     "W_TILT",
+     1
+    ],
+    [
+     "TILT",
+     "signal (orange)"
+    ]
+   ],
+   [
+    [
+     "PCA_CH0",
+     "V+"
+    ],
+    [
+     "W_TILT",
+     2
+    ],
+    [
+     "TILT",
+     "V+ (red)"
+    ]
+   ],
+   [
+    [
+     "PCA_CH0",
+     "GND"
+    ],
+    [
+     "W_TILT",
+     3
+    ],
+    [
+     "TILT",
+     "GND (brown)"
+    ]
+   ]
+  ],
+  "3b-turret-shield": [
+   [
+    [
+     "SHIELD_I2C",
+     "GND"
+    ],
+    [
+     "W_I2C",
+     1
+    ],
+    [
+     "PCA_LOGIC",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "SHIELD_I2C",
+     "A5 SCL"
+    ],
+    [
+     "W_I2C",
+     2
+    ],
+    [
+     "PCA_LOGIC",
+     "SCL"
+    ]
+   ],
+   [
+    [
+     "SHIELD_I2C",
+     "A4 SDA"
+    ],
+    [
+     "W_I2C",
+     3
+    ],
+    [
+     "PCA_LOGIC",
+     "SDA"
+    ]
+   ],
+   [
+    [
+     "SHIELD_I2C",
+     "5V"
+    ],
+    [
+     "W_I2C",
+     4
+    ],
+    [
+     "PCA_LOGIC",
+     "VCC"
+    ]
+   ],
+   [
+    [
+     "XL4015",
+     "OUT+"
+    ],
+    [
+     "W_SERVO",
+     1
+    ],
+    [
+     "PCA_PWR",
+     "V+"
+    ]
+   ],
+   [
+    [
+     "XL4015",
+     "OUT−"
+    ],
+    [
+     "W_SERVO",
+     2
+    ],
+    [
+     "PCA_PWR",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "PCA_CH0",
+     "PWM"
+    ],
+    [
+     "W_TILT",
+     1
+    ],
+    [
+     "TILT",
+     "signal (orange)"
+    ]
+   ],
+   [
+    [
+     "PCA_CH0",
+     "V+"
+    ],
+    [
+     "W_TILT",
+     2
+    ],
+    [
+     "TILT",
+     "V+ (red)"
+    ]
+   ],
+   [
+    [
+     "PCA_CH0",
+     "GND"
+    ],
+    [
+     "W_TILT",
+     3
+    ],
+    [
+     "TILT",
+     "GND (brown)"
+    ]
+   ]
+  ],
+  "4-pi-sensors": [
+   [
+    [
+     "PI",
+     "1 3V3"
+    ],
+    [
+     "W_MLX",
+     1
+    ],
+    [
+     "MLX",
+     "VIN 3V3"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "9 GND"
+    ],
+    [
+     "W_MLX",
+     2
+    ],
+    [
+     "MLX",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "29 BCM5 i2c3-SCL"
+    ],
+    [
+     "W_MLX",
+     3
+    ],
+    [
+     "MLX",
+     "SCL"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "7 BCM4 i2c3-SDA"
+    ],
+    [
+     "W_MLX",
+     4
+    ],
+    [
+     "MLX",
+     "SDA"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "17 3V3"
+    ],
+    [
+     "W_TOF_F",
+     1
+    ],
+    [
+     "TOF_F",
+     "VIN 3V3"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "14 GND"
+    ],
+    [
+     "W_TOF_F",
+     2
+    ],
+    [
+     "TOF_F",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "3 SDA1 BCM2"
+    ],
+    [
+     "W_TOF_F",
+     3
+    ],
+    [
+     "TOF_F",
+     "SDA"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "5 SCL1 BCM3"
+    ],
+    [
+     "W_TOF_F",
+     4
+    ],
+    [
+     "TOF_F",
+     "SCL"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "15 BCM22 XSHUT-front"
+    ],
+    [
+     "W_TOF_F",
+     5
+    ],
+    [
+     "TOF_F",
+     "XSHUT"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "17 3V3"
+    ],
+    [
+     "W_TOF_R",
+     1
+    ],
+    [
+     "TOF_R",
+     "VIN 3V3"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "20 GND"
+    ],
+    [
+     "W_TOF_R",
+     2
+    ],
+    [
+     "TOF_R",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "3 SDA1 BCM2"
+    ],
+    [
+     "W_TOF_R",
+     3
+    ],
+    [
+     "TOF_R",
+     "SDA"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "5 SCL1 BCM3"
+    ],
+    [
+     "W_TOF_R",
+     4
+    ],
+    [
+     "TOF_R",
+     "SCL"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "13 BCM27 XSHUT-rear"
+    ],
+    [
+     "W_TOF_R",
+     5
+    ],
+    [
+     "TOF_R",
+     "XSHUT"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "17 3V3"
+    ],
+    [
+     "W_MIC",
+     1
+    ],
+    [
+     "MIC",
+     "VDD 3V3"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "39 GND"
+    ],
+    [
+     "W_MIC",
+     2
+    ],
+    [
+     "MIC",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "12 BCM18 I2S-BCLK"
+    ],
+    [
+     "W_MIC",
+     3
+    ],
+    [
+     "MIC",
+     "SCK"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "35 BCM19 I2S-LRCLK"
+    ],
+    [
+     "W_MIC",
+     4
+    ],
+    [
+     "MIC",
+     "WS"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "38 BCM20 I2S-DIN"
+    ],
+    [
+     "W_MIC",
+     5
+    ],
+    [
+     "MIC",
+     "SD"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "30 GND"
+    ],
+    [
+     "W_MIC",
+     6
+    ],
+    [
+     "MIC",
+     "L/R"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "1 3V3"
+    ],
+    [
+     "W_PULL",
+     1
+    ],
+    [
+     "PULL",
+     "3V3"
+    ]
+   ],
+   [
+    [
+     "MLX",
+     "SDA"
+    ],
+    [
+     "W_PULL",
+     2
+    ],
+    [
+     "PULL",
+     "SDA"
+    ]
+   ],
+   [
+    [
+     "MLX",
+     "SCL"
+    ],
+    [
+     "W_PULL",
+     3
+    ],
+    [
+     "PULL",
+     "SCL"
+    ]
+   ]
+  ],
+  "5-radars-usb": [
+   [
+    [
+     "PI_USB",
+     "USB 1: webcam"
+    ],
+    [
+     "W_CAM",
+     1
+    ],
+    [
+     "CAM",
+     "USB-A"
+    ]
+   ],
+   [
+    [
+     "PI_USB",
+     "USB 2: hub"
+    ],
+    [
+     "W_HUB",
+     1
+    ],
+    [
+     "HUB",
+     "upstream"
+    ]
+   ],
+   [
+    [
+     "HUB",
+     "port 1: UNO R4"
+    ],
+    [
+     "W_R4",
+     1
+    ],
+    [
+     "R4_USB",
+     "USB-C"
+    ]
+   ],
+   [
+    [
+     "HUB",
+     "port 2: CP2102 no.1"
+    ],
+    [
+     "W_CPA",
+     1
+    ],
+    [
+     "CP1",
+     "5V"
+    ]
+   ],
+   [
+    [
+     "HUB",
+     "port 3: CP2102 no.2"
+    ],
+    [
+     "W_CPB",
+     1
+    ],
+    [
+     "CP2",
+     "5V"
+    ]
+   ],
+   [
+    [
+     "HUB",
+     "port 4: CP2102 no.3"
+    ],
+    [
+     "W_CPC",
+     1
+    ],
+    [
+     "CP3",
+     "5V"
+    ]
+   ],
+   [
+    [
+     "LDL",
+     "1 TX"
+    ],
+    [
+     "W_LDL",
+     1
+    ],
+    [
+     "CP1",
+     "RXD"
+    ]
+   ],
+   [
+    [
+     "LDL",
+     "2 RX"
+    ],
+    [
+     "W_LDL",
+     2
+    ],
+    [
+     "CP1",
+     "TXD"
+    ]
+   ],
+   [
+    [
+     "LDL",
+     "4 GND"
+    ],
+    [
+     "W_LDL",
+     3
+    ],
+    [
+     "CP1",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "WAGO5_P",
+     "LD2410C LEFT VCC"
+    ],
+    [
+     "W_LDL",
+     4
+    ],
+    [
+     "LDL",
+     "5 VCC"
+    ]
+   ],
+   [
+    [
+     "WAGO5_N",
+     "LD2410C LEFT GND"
+    ],
+    [
+     "W_LDL",
+     5
+    ],
+    [
+     "LDL",
+     "4 GND"
+    ]
+   ],
+   [
+    [
+     "LDR",
+     "1 TX"
+    ],
+    [
+     "W_LDR",
+     1
+    ],
+    [
+     "CP2",
+     "RXD"
+    ]
+   ],
+   [
+    [
+     "LDR",
+     "2 RX"
+    ],
+    [
+     "W_LDR",
+     2
+    ],
+    [
+     "CP2",
+     "TXD"
+    ]
+   ],
+   [
+    [
+     "LDR",
+     "4 GND"
+    ],
+    [
+     "W_LDR",
+     3
+    ],
+    [
+     "CP2",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "WAGO5_P",
+     "LD2410C RIGHT VCC"
+    ],
+    [
+     "W_LDR",
+     4
+    ],
+    [
+     "LDR",
+     "5 VCC"
+    ]
+   ],
+   [
+    [
+     "WAGO5_N",
+     "LD2410C RIGHT GND"
+    ],
+    [
+     "W_LDR",
+     5
+    ],
+    [
+     "LDR",
+     "4 GND"
+    ]
+   ],
+   [
+    [
+     "LD2450",
+     "TX"
+    ],
+    [
+     "W_LD2450",
+     1
+    ],
+    [
+     "CP3",
+     "RXD"
+    ]
+   ],
+   [
+    [
+     "LD2450",
+     "RX"
+    ],
+    [
+     "W_LD2450",
+     2
+    ],
+    [
+     "CP3",
+     "TXD"
+    ]
+   ],
+   [
+    [
+     "LD2450",
+     "GND"
+    ],
+    [
+     "W_LD2450",
+     3
+    ],
+    [
+     "CP3",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "WAGO5_P",
+     "LD2450 5V"
+    ],
+    [
+     "W_LD2450",
+     4
+    ],
+    [
+     "LD2450",
+     "5V"
+    ]
+   ],
+   [
+    [
+     "WAGO5_N",
+     "LD2450 GND"
+    ],
+    [
+     "W_LD2450",
+     5
+    ],
+    [
+     "LD2450",
+     "GND"
+    ]
+   ]
+  ],
+  "6-csi": [
+   [
+    [
+     "WAGO5_P",
+     "ESP32-S3 no.3 5V"
+    ],
+    [
+     "W_ESP",
+     1
+    ],
+    [
+     "ESP3",
+     "5V (VIN)"
+    ]
+   ],
+   [
+    [
+     "WAGO5_N",
+     "ESP32-S3 no.3 GND"
+    ],
+    [
+     "W_ESP",
+     2
+    ],
+    [
+     "ESP3",
+     "GND"
+    ]
+   ]
+  ]
+ },
+ "problems": []
+}
