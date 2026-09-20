@@ -106,14 +106,14 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">(-116, +87, 128)</td>
 <td class="where">printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4&#x27;s 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="SHIELD" data-owned="0" aria-label="I have all required quantities of CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0B24YS695">CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks</a><div class="grp">Motion control</div><div class="note">Required, not optional: A4988 fails the ramp case. SIX JUMPERS: D12 and D13 on the A-axis header (gives the fourth wheel its own STEP/DIR — bridging X/Y/Z there clones another wheel instead); MS3 only under each of the four drivers for 1/16 microstepping on DRV8825 (an A4988 needs all three — most tutorials show that, and it is wrong for these). Leave EN/GND OFF so D8 controls enable. Insert each driver with its EN pin on the shield&#x27;s EN mark — backwards destroys it; the trimpot sits on the opposite side from an A4988. Vref = 5 × Rsense × I — READ THE SENSE RESISTOR CODE on each carrier first: R100 → 0.75 V for 1.5 A; R200/R220 → 1.5/1.65 V. Setting 0.75 V on an R220 board gives 0.68 A and a rover that stalls. Check the kit includes jumper caps. LISTING CHECK: CNC Shield V3.0 + 4× DRV8825 + 4 heatsinks confirmed; 1/32-capable drivers with current limit and thermal protection. No jumper caps in the box — yours.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="SHIELD" data-owned="0" aria-label="I have all required quantities of CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0B24YS695">CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks</a><div class="grp">Motion control</div><div class="note">Required, not optional: A4988 fails the ramp case. TEN JUMPERS (D12 + D13 on the A header, caps on MS1 + MS3 under each driver = 1/32): D12 and D13 on the A-axis header (gives the fourth wheel its own STEP/DIR — bridging X/Y/Z there clones another wheel instead); MS3 only under each of the four drivers for 1/16 microstepping on DRV8825 (an A4988 needs all three — most tutorials show that, and it is wrong for these). Leave EN/GND OFF so D8 controls enable. Insert each driver with its EN pin on the shield&#x27;s EN mark — backwards destroys it; the trimpot sits on the opposite side from an A4988. Vref = 5 × Rsense × I — READ THE SENSE RESISTOR CODE on each carrier first: R100 → 0.75 V for 1.5 A; R200/R220 → 1.5/1.65 V. Setting 0.75 V on an R220 board gives 0.68 A and a rover that stalls. Check the kit includes jumper caps. LISTING CHECK: CNC Shield V3.0 + 4× DRV8825 + 4 heatsinks confirmed; 1/32-capable drivers with current limit and thermal protection. No jumper caps in the box — yours.</div></td>
 <td align="right">1</td>
 <td align="right">$15.99</td>
 <td align="right">$15.99</td>
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="FAN" data-owned="0" aria-label="I have all required quantities of SIXQJZML 2× 40 × 40 × 10 mm 5 V fans"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0DY6GQMJX">SIXQJZML 2× 40 × 40 × 10 mm 5 V fans</a><div class="grp">Motion control</div><div class="note">Listing confirms 5 V, 0.15 A, 2-pin. One over the drivers on a printed bridge, one spare. Powered from the LM2596 5 V rail through the Wagos — NOT the shield&#x27;s 5 V header, which is the R4&#x27;s USB 5 V.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="FAN" data-owned="0" aria-label="I have all required quantities of SIXQJZML 2× 40 × 40 × 10 mm 5 V fans"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0DY6GQMJX">SIXQJZML 2× 40 × 40 × 10 mm 5 V fans</a><div class="grp">Motion control</div><div class="note">Listing confirms 5 V, 0.15 A, 2-pin. One over the drivers on a printed bridge, one spare. Powered from the XL4015 5.0 V output pads beside the servo leads.</div></td>
 <td align="right">1</td>
 <td align="right">$5.99</td>
 <td align="right">$5.99</td>
@@ -141,14 +141,14 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">→ Pi (+0, +0, 114)</td>
 <td class="where">printed lip on the deck tile + 2 cable ties through printed slots</td>
 </tr><tr class=owned>
-<td class="have-cell"><input type="checkbox" data-item="XL4015" data-owned="1" aria-label="I have all required quantities of HiLetgo XL4015 5 A adjustable buck converters, 3 pcs (4–38 V in, 1.25–36 V out)"></td><td>HiLetgo XL4015 5 A adjustable buck converters, 3 pcs (4–38 V in, 1.25–36 V out)<div class="grp">Power</div><div class="note">One set to 6.0 V feeds the PCA9685 V+ for the tilt servo (one MG996R stalling ≈ 2.5 A; the locked pan servo is disconnected). 5 A rating is the listing&#x27;s, not a verified continuous figure at 6 V — heatsink it. TRIM WITH A MULTIMETER BEFORE CONNECTING. Two spare.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="XL4015" data-owned="1" aria-label="I have all required quantities of HiLetgo XL4015 5 A adjustable buck converters, 3 pcs (4–38 V in, 1.25–36 V out)"></td><td>HiLetgo XL4015 5 A adjustable buck converters, 3 pcs (4–38 V in, 1.25–36 V out)<div class="grp">Power</div><div class="note">One, trimmed to 5.0 V: tilt servo red/brown and fan leads soldered to its OUT pads; IN from the shield&#x27;s VMOT/GND screws (second wire in each). 5 A rating derated to 4 A; servo stall 2.1 A + fan 0.2 A.</div></td>
 <td align="right">3</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
 <td class="where">→ servo + fan 5.0 V (-44, +110, 115)</td>
 <td class="where">printed bosses + 2 cable ties</td>
 </tr><tr class=owned>
-<td class="have-cell"><input type="checkbox" data-item="LM2596" data-owned="1" aria-label="I have all required quantities of DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)"></td><td>DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)<div class="grp">Power</div><div class="note">One trimmed to 5.0 V feeds the fan and both radars, keeping them off the Pi&#x27;s USB budget. Trim with a multimeter before connecting — ships at a random output. Four spare; one at 5.10 V is the fallback Pi supply.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="LM2596" data-owned="1" aria-label="I have all required quantities of DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)"></td><td>DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)<div class="grp">Power</div><div class="note">Spare since v4: one XL4015 at 5.0 V now feeds the servo and the fan; radars are powered by their CP2102 adapters; the ESP32 has its own small bank.</div></td>
 <td align="right">5</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
@@ -225,7 +225,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">#3 CSI receiver (+60, +120, 112)</td>
 <td class="where">printed bosses + 2 cable ties through printed slots</td>
 </tr><tr class=owned>
-<td class="have-cell"><input type="checkbox" data-item="CP2102" data-owned="1" aria-label="I have all required quantities of CP2102 USB-UART"></td><td>CP2102 USB-UART<div class="grp">Sensing and compute</div><div class="note">Bench setup only. Check it is 3.3 V logic before touching a radar.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="CP2102" data-owned="1" aria-label="I have all required quantities of CP2102 USB-UART"></td><td>CP2102 USB-UART<div class="grp">Sensing and compute</div><div class="note">THREE needed (one per radar): 3.3 V logic. Each radar is a four-wire job to its adapter: 5V, GND, TXD → radar RX, RXD → radar TX. Adapters into a 4-port hub with the R4.</div></td>
 <td align="right">1</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
@@ -253,7 +253,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">base (+110, +0, 99)</td>
 <td class="where">4× M3×16 through base (6 mm) + deck (5 mm) + 4× M3 nut (M3 kit)</td>
 </tr><tr class=owned>
-<td class="have-cell"><input type="checkbox" data-item="PCA" data-owned="1" aria-label="I have all required quantities of PCA9685 16-channel servo driver (Ceres)"></td><td>PCA9685 16-channel servo driver (Ceres)<div class="grp">Turret (Ceres)</div><div class="note">I2C 0x40 from the Pi. Tilt ch 0, pan ch 2, as in turret_duet.ino.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="PCA" data-owned="1" aria-label="I have all required quantities of PCA9685 16-channel servo driver (Ceres)"></td><td>PCA9685 16-channel servo driver (Ceres)<div class="grp">Turret (Ceres)</div><div class="note">NOT USED since v4 (2026-09-20): the tilt servo is driven straight from the CNC shield&#x27;s Z+ end-stop pin (R4 D11, hardware PWM, firmware &#x27;t &lt;deg&gt;&#x27;). Keep it as a spare.</div></td>
 <td align="right">1</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
@@ -288,14 +288,14 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">power (-60, +40, 96); signals (-80, +0, 96)</td>
 <td class="where">cable ties every 60 mm to the deck; tape or heat-shrink every joint; cable mounts on deck underside for motor leads</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="LOCTITE" data-owned="0" aria-label="I have all required quantities of Blue threadlocker (Loctite 242/243 or equivalent)"></td><td>Blue threadlocker (Loctite 242/243 or equivalent) <span class="tag">optional</span><div class="grp">Build-day consumables — check your parts box first</div><div class="note">Four coupler grub screws carry the whole drivetrain. Parts box first. Plus two resistors from any parts drawer: one 10 kΩ (EN pull-up on the shield) and two 4.7 kΩ (I2C pull-ups for BCM 4/5 if the thermal module has none).</div></td>
+<td class="have-cell"><input type="checkbox" data-item="LOCTITE" data-owned="0" aria-label="I have all required quantities of Blue threadlocker (Loctite 242/243 or equivalent)"></td><td>Blue threadlocker (Loctite 242/243 or equivalent) <span class="tag">optional</span><div class="grp">Build-day consumables — check your parts box first</div><div class="note">Four coupler grub screws carry the whole drivetrain. Parts box first.</div></td>
 <td align="right">1</td>
 <td align="right">$6.00</td>
 <td align="right">$6.00</td>
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="WAGO" data-owned="0" aria-label="I have all required quantities of Wago 221-415 5-way lever nuts, pack of 10 (or solder + heat-shrink)"></td><td>Wago 221-415 5-way lever nuts, pack of 10 (or solder + heat-shrink) <span class="tag">optional</span><div class="grp">Build-day consumables — check your parts box first</div><div class="note">Four used: two for the pack (+ and −: pigtail plus three branches is four conductors each), two for the LM2596 output (+ and −: buck plus fan and two radars). A 3-way cannot do either job.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="WAGO" data-owned="0" aria-label="I have all required quantities of Wago 221-415 5-way lever nuts, pack of 10 (or solder + heat-shrink)"></td><td>Wago 221-415 5-way lever nuts, pack of 10 (or solder + heat-shrink) <span class="tag">optional</span><div class="grp">Build-day consumables — check your parts box first</div><div class="note">NOT NEEDED since v4: the shield&#x27;s power screw terminal is the only pack splice (pack lead + XL4015 input share each screw).</div></td>
 <td align="right">1</td>
 <td align="right">$12.00</td>
 <td align="right">$12.00</td>
