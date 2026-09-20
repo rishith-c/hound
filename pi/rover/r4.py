@@ -68,6 +68,14 @@ class R4:
         """Tilt servo on the shield's Z+ pin: 65–150°, or -1 to release the servo (no pulses)."""
         self._send(f"t {int(deg)}")
 
+    def pan(self, deg):
+        """Pan servo on the shield's X+ pin: 0–180° for a positional servo (90 = stop / centre for a continuous one), -1 releases."""
+        self._send(f"p {int(deg)}")
+
+    def nudge_pan(self, direction, ms=300):
+        """Continuous-rotation pan: turn one way (-1 left / +1 right) for ms milliseconds, then stop."""
+        self._send(f"n {1 if direction > 0 else -1} {int(ms)}")
+
     def hold_enable(self, on):
         """Keep the drivers energised while stopped (holding torque, more heat)."""
         self._send(f"e {1 if on else 0}")

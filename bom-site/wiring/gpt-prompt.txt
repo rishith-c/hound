@@ -23,7 +23,7 @@ CONNECTORS (pin order is the physical order on the part):
      NOTES: Two wires per screw: the 14 AWG pack lead and the 22 AWG XL4015 input wire, twisted together before insertion, tug-tested. 1000 µF 25 V electrolytic across VMOT/GND at the terminal, stripe (−) to GND.
   XL4015 — HiLetgo XL4015 5 A buck — trim OUT to 5.0 V
      pins: IN+ | IN− | OUT+ | OUT−
-     NOTES: HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous derated. Two wires per OUT pad: servo + fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.
+     NOTES: HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. Three wires per OUT pad: pan, tilt, fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.
   BANK — USB power bank 5 V / 3 A (logic island)
      pins: USB-A out
      NOTES: Genuine 3 A bank. Cable ≤ 0.2 m with 22 AWG or heavier power conductors (a short '3 A fast-charge' cable). Powers ONLY the Pi; the Pi powers the R4, the hub, the adapters, the radars and the webcam.
@@ -48,7 +48,7 @@ CONNECTIONS (from → wire#/colour → to):
 
 CONNECTORS (pin order is the physical order on the part):
   R4 — Arduino UNO R4 WiFi — under the shield (stacked, no wires)
-     pins: D2 X STEP | D5 X DIR | D3 Y STEP | D6 Y DIR | D4 Z STEP | D7 Z DIR | D12 A STEP | D13 A DIR | D8 EN (all four) | D11 TILT PWM (Z+ end-stop pin) | USB-C → Pi hub
+     pins: D2 X STEP | D5 X DIR | D3 Y STEP | D6 Y DIR | D4 Z STEP | D7 Z DIR | D12 A STEP | D13 A DIR | D8 EN (all four) | D11 TILT PWM (Z+ end-stop pin) | D9 PAN PWM (X+ end-stop pin) | USB-C → Pi hub
      NOTES: Stack the shield on the R4; the pins listed are what the shield takes. Firmware r4_drive v1.0-best-drive: 30 kHz step ISR, 1/32, 415 mm/s. Logic 5 V. USB from the Pi hub; ENABLE_WIFI 0.
   SHIELD_CTRL — CNC Shield v3 — jumpers (no wires)
      pins: A-axis jumper D12 | A-axis jumper D13 | MS1 cap ×4 | MS2 (open) ×4 | MS3 cap ×4
@@ -103,32 +103,40 @@ CONNECTIONS (from → wire#/colour → to):
   A_MOT:1A  →  W_FR #3 green  →  M_FR:coil A +
   A_MOT:1B  →  W_FR #4 black  →  M_FR:coil A −
 
-=== DIAGRAM 3-turret: Hound 3 — turret: tilt servo straight off the shield's Z+ pin, powered by the XL4015 (no servo board) ===
+=== DIAGRAM 3-turret: Hound 3 — turret: pan and tilt servos straight off the shield's X+ and Z+ pins, powered by the XL4015 (no servo board) ===
 
 CONNECTORS (pin order is the physical order on the part):
   SHIELD_ZLIM — CNC Shield v3 — Z+ end-stop header (= R4 D11, hardware PWM)
      pins: Z+ signal | GND
      NOTES: The 2-pin 'Z+' pair in the END STOPS column. Only the signal pin is used (5 V PWM, 50 Hz, 500–2500 µs); the servo's ground goes to the XL4015 instead. D11 is free because no limit switches are fitted.
+  SHIELD_XLIM — CNC Shield v3 — X+ end-stop header (= R4 D9, hardware PWM)
+     pins: X+ signal | GND
+     NOTES: The 2-pin 'X+' pair in the END STOPS column. Signal only; the servo's ground goes to the XL4015. D9 is free because no limit switches are fitted.
   XL4015 — HiLetgo XL4015 5 A buck — trim OUT to 5.0 V
      pins: IN+ | IN− | OUT+ | OUT−
-     NOTES: HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous derated. Two wires per OUT pad: servo + fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.
+     NOTES: HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. Three wires per OUT pad: pan, tilt, fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.
   TILT — MG996R TILT servo
      pins: signal (orange) | V+ (red) | GND (brown)
      NOTES: Cut the 3-pin plug off or use a servo extension: orange to the shield's Z+ pin, red/brown soldered to the XL4015 OUT pads. Limits 65–150° in the firmware ('t 90').
+  PAN — MG996R PAN servo
+     pins: signal (orange) | V+ (red) | GND (brown)
+     NOTES: Orange to the shield's X+ pin, red/brown soldered to the XL4015 OUT pads beside the tilt servo's. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit).
   FAN — 40 mm 5 V fan on the driver heatsinks
      pins: 5V (red) | GND (black)
      NOTES: 5 V 0.15 A (listing). Leads soldered to the XL4015 OUT pads beside the servo's.
-  PAN — MG996R PAN servo — NOT CONNECTED
-     pins: signal | V+ | GND
-     NOTES: Continuous-rotation unit: cannot hold an angle. Pinned with the printed lock; leave its lead unplugged.
 WIRES:
-  W_SIG: 24 AWG, 0.3 m, conductors orange — the servo's own orange lead (or a servo extension) to the Z+ pin
-  W_SERVO: 22 AWG, 0.3 m, conductors red, brown — red/brown to the XL4015 OUT+ / OUT− pads; 2 A at stall
+  W_SIG: 24 AWG, 0.3 m, conductors orange — tilt's orange lead (or a servo extension) to the Z+ pin
+  W_PSIG: 24 AWG, 0.3 m, conductors orange — pan's orange lead to the X+ pin
+  W_SERVO: 22 AWG, 0.3 m, conductors red, brown — tilt red/brown to the XL4015 OUT+ / OUT− pads; 2 A at stall
+  W_PAN: 22 AWG, 0.3 m, conductors red, brown — pan red/brown to the same pads
   W_FAN: 24 AWG, 0.2 m, conductors red, black — fan on the same two pads
 CONNECTIONS (from → wire#/colour → to):
   SHIELD_ZLIM:Z+ signal  →  W_SIG #1 orange  →  TILT:signal (orange)
+  SHIELD_XLIM:X+ signal  →  W_PSIG #1 orange  →  PAN:signal (orange)
   XL4015:OUT+  →  W_SERVO #1 red  →  TILT:V+ (red)
   XL4015:OUT−  →  W_SERVO #2 brown  →  TILT:GND (brown)
+  XL4015:OUT+  →  W_PAN #1 red  →  PAN:V+ (red)
+  XL4015:OUT−  →  W_PAN #2 brown  →  PAN:GND (brown)
   XL4015:OUT+  →  W_FAN #1 red  →  FAN:5V (red)
   XL4015:OUT−  →  W_FAN #2 black  →  FAN:GND (black)
 
@@ -257,10 +265,11 @@ CONNECTIONS (from → wire#/colour → to):
   BANK2:USB-A out  →  W_ESP #1 white  →  ESP3:USB-C
 
 === PROCEDURES AND WARNINGS (print these on the sheet; they come from the electrical model wiring.py) ===
+  [WARN] V_SERVO (XL4015 trimmed to 5.0 V (pan + tilt servos + fan, all soldered to its OUT pads)): avg 0.75 A of 4.0 A (19%), peak 4.40 A of 5.0 A (88%)
   [WARN] webcam sees 4.53 V at its 500 mA descriptor (4.57 V at a typical 250 mA) through its own captive 1.5 m cable; USB floor 4.75 V, most cameras run to ~4.4 V. If it drops out at 1080p, run 720p — its cable cannot be shortened
   [WARN] A 1 m 28 AWG phone cable to the Pi would drop 1.03 V → 3.87 V at the Pi = brownout. The bank cable is a spec: ≤ 0.2 m with 22 AWG or heavier power conductors (a short '3 A fast-charge' cable)
   [WARN] Motor phases run 1.5 A through Dupont 2.54 contacts rated 2.0 A — inside rating but the crimp quality is the margin. A contact that heats in the wheels-up test gets re-crimped or soldered.
-  [WARN] Tilt servo stall 2.3 A on the servo's own 2.54 mm lead contacts (rated 2.0 A). Momentary, and how every servo works; keep stalls short with the 65–150° limits in firmware
+  [WARN] Both servos stalling together = 4.4 A on the XL4015 (5 A peak, 4 A continuous): momentary by nature; keep stalls short with the firmware limits (tilt 65–150°) and release the servos ('t -1', 'p -1') between stations
   [WARN] No EN pull-up fitted: during an R4 reset (~1 s at boot, every sketch upload) all four drivers are ENABLED at full holding current. Harmless for a second; NOT harmless if you flash repeatedly with the pack plugged in (drivers heat). So: pack unplugged whenever the USB cable is doing anything but driving.
   [WARN] No fuse, no cell alarm, no voltage divider (all declined for simplicity): nothing stops the pack from over-discharging. Rule: a full pack (12.6 V) gives ~45 min of driving — set a 30-minute timer, then meter the pack; stop at 11.1 V, never below 10.5 V. A pack that reads 6–7 V is dead (pack A).
   [WARN] Pi 5 only: default 600 mA USB cap → set usb_max_current_enable=1, or use the Pi 4 this file assumes.
@@ -281,11 +290,11 @@ CONNECTIONS (from → wire#/colour → to):
   [PROCEDURE] Motor coil pairs by multimeter: the two leads that show ~2 Ω are one coil. A coil split across the 2B/2A–1A/1B header halves makes a motor buzz and not turn.
   [PROCEDURE] Each radar is a 4-wire job to its own CP2102: VCC → the adapter's 5V pin, GND → GND, TX → RXD, RX → TXD. The three radars add 260 mA to the Pi's USB budget (checked above). The adapter must be a 3.3 V-logic type: meter its TXD pin at idle — 3.3 V, not 5 V
   [PROCEDURE] Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. Power-down and BEFORE every flash/reset of the R4: pull the pack plug first. Reason: DRV8825 nENABLE has a pull-down, so while the R4 is dead or resetting all four drivers sit at full holding current (no pull-up resistor fitted — by choice; the plug order replaces it).
-  [PROCEDURE] Tilt servo: orange (signal) → the shield's Z+ end-stop header pin (= R4 D11, 5 V PWM from the firmware's 't <deg>' command, 65–150°); red → XL4015 OUT+, brown → XL4015 OUT− (2 A at stall, never through the shield). The fan's red/black share the same two OUT pads. No PCA9685 any more.
+  [PROCEDURE] Tilt: orange (signal) → the shield's Z+ end-stop pin (R4 D11); pan: orange → the X+ end-stop pin (R4 D9). Both 5 V hardware PWM from the firmware ('t <deg>', 'p <deg>', 'n dir ms' nudge for a continuous-rotation pan). Both reds → XL4015 OUT+, both browns → OUT−; the fan's red/black share the same two pads (four wires per pad — tin each, solder together). Never through the shield's 5V pin.
   [PROCEDURE] Read the sense resistor on one driver: R100 → Vref = 0.75 V for 1.5 A; R200 → 1.50 V. Set all four with the multimeter, motors unplugged, before any motor is connected.
 
 === DECISION ALREADY MADE: which bus drives the PCA9685 ===
-There is NO PCA9685: the tilt servo's signal comes from the CNC shield's Z+ end-stop pin (UNO R4 D11, 5 V hardware PWM, firmware command 't <deg>'), and its power from the XL4015's OUT pads, which the fan shares. Draw sheet 3 exactly so.
+There is NO PCA9685: the tilt servo's signal comes from the CNC shield's Z+ end-stop pin (UNO R4 D11) and the pan servo's from the X+ end-stop pin (D9), both 5 V hardware PWM (firmware 't <deg>' / 'p <deg>'); both servos and the fan take power from the XL4015's OUT pads. Draw sheet 3 exactly so.
 
 === SELF-CHECK (run it, print PASS/FAIL per line) ===
 1. Every CONNECTOR:pin used in CONNECTIONS exists in that connector's pin list.

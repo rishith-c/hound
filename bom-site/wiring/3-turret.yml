@@ -1,5 +1,5 @@
 metadata:
-  title: 'Hound 3 — turret: tilt servo straight off the shield''s Z+ pin, powered by the XL4015 (no servo board)'
+  title: 'Hound 3 — turret: pan and tilt servos straight off the shield''s X+ and Z+ pins, powered by the XL4015 (no servo board)'
 connectors:
   SHIELD_ZLIM:
     type: CNC Shield v3 — Z+ end-stop header (= R4 D11, hardware PWM)
@@ -8,6 +8,12 @@ connectors:
     - GND
     notes: The 2-pin 'Z+' pair in the END STOPS column. Only the signal pin is used (5 V PWM, 50 Hz, 500–2500 µs); the servo's ground goes to the XL4015 instead. D11 is free because no limit switches are
       fitted.
+  SHIELD_XLIM:
+    type: CNC Shield v3 — X+ end-stop header (= R4 D9, hardware PWM)
+    pinlabels:
+    - X+ signal
+    - GND
+    notes: The 2-pin 'X+' pair in the END STOPS column. Signal only; the servo's ground goes to the XL4015. D9 is free because no limit switches are fitted.
   XL4015:
     type: HiLetgo XL4015 5 A buck — trim OUT to 5.0 V
     pinlabels:
@@ -16,7 +22,7 @@ connectors:
     - OUT+
     - OUT−
     notes: 'HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT
-      (pot turns counter-clockwise to lower). 4 A continuous derated. Two wires per OUT pad: servo + fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.'
+      (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. Three wires per OUT pad: pan, tilt, fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.'
   TILT:
     type: MG996R TILT servo
     pinlabels:
@@ -24,19 +30,19 @@ connectors:
     - V+ (red)
     - GND (brown)
     notes: 'Cut the 3-pin plug off or use a servo extension: orange to the shield''s Z+ pin, red/brown soldered to the XL4015 OUT pads. Limits 65–150° in the firmware (''t 90'').'
+  PAN:
+    type: MG996R PAN servo
+    pinlabels:
+    - signal (orange)
+    - V+ (red)
+    - GND (brown)
+    notes: Orange to the shield's X+ pin, red/brown soldered to the XL4015 OUT pads beside the tilt servo's. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit).
   FAN:
     type: 40 mm 5 V fan on the driver heatsinks
     pinlabels:
     - 5V (red)
     - GND (black)
     notes: 5 V 0.15 A (listing). Leads soldered to the XL4015 OUT pads beside the servo's.
-  PAN:
-    type: MG996R PAN servo — NOT CONNECTED
-    pinlabels:
-    - signal
-    - V+
-    - GND
-    notes: 'Continuous-rotation unit: cannot hold an angle. Pinned with the printed lock; leave its lead unplugged.'
 cables:
   W_SIG:
     gauge: 24 AWG
@@ -44,7 +50,14 @@ cables:
     colors:
     - OG
     category: bundle
-    notes: the servo's own orange lead (or a servo extension) to the Z+ pin
+    notes: tilt's orange lead (or a servo extension) to the Z+ pin
+  W_PSIG:
+    gauge: 24 AWG
+    length: 0.3
+    colors:
+    - OG
+    category: bundle
+    notes: pan's orange lead to the X+ pin
   W_SERVO:
     gauge: 22 AWG
     length: 0.3
@@ -52,7 +65,15 @@ cables:
     - RD
     - BN
     category: bundle
-    notes: red/brown to the XL4015 OUT+ / OUT− pads; 2 A at stall
+    notes: tilt red/brown to the XL4015 OUT+ / OUT− pads; 2 A at stall
+  W_PAN:
+    gauge: 22 AWG
+    length: 0.3
+    colors:
+    - RD
+    - BN
+    category: bundle
+    notes: pan red/brown to the same pads
   W_FAN:
     gauge: 24 AWG
     length: 0.2
@@ -68,6 +89,12 @@ connections:
     - 1
   - TILT:
     - signal (orange)
+- - SHIELD_XLIM:
+    - X+ signal
+  - W_PSIG:
+    - 1
+  - PAN:
+    - signal (orange)
 - - XL4015:
     - OUT+
   - W_SERVO:
@@ -79,6 +106,18 @@ connections:
   - W_SERVO:
     - 2
   - TILT:
+    - GND (brown)
+- - XL4015:
+    - OUT+
+  - W_PAN:
+    - 1
+  - PAN:
+    - V+ (red)
+- - XL4015:
+    - OUT−
+  - W_PAN:
+    - 2
+  - PAN:
     - GND (brown)
 - - XL4015:
     - OUT+

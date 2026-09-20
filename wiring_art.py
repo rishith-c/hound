@@ -72,7 +72,7 @@ part("ESP3", "esp32c3", 2100, 830, 0.9, "ESP32-S3 no.3 csi_rx_udp (drawn as a C3
 own("BANK2", "bank2", 2250, 1080, "second power bank — ESP32 only", {"USB-A out": (0, 35)})
 part("ESP2", "esp32c3", 2350, 830, 0.9, "ESP32-S3 no.2 csi_tx — OFF the rover", {"USB-C from any 5 V charger": (60, 207)}, ghost=True)
 part("TILT", "servo", 60, 980, 1.25, "MG996R TILT servo", {"signal (orange)": "connector2", "V+ (red)": "connector1", "GND (brown)": "connector0"})
-part("PAN", "servo", 60, 1160, 1.25, "MG996R PAN — NOT CONNECTED (locked)", {"signal": "connector2", "V+": "connector1", "GND": "connector0"}, ghost=True)
+part("PAN", "servo", 60, 1160, 1.25, "MG996R PAN servo", {"signal (orange)": "connector2", "V+ (red)": "connector1", "GND (brown)": "connector0"})
 part("LDL", "ld2410", 2350, 620, 1.25, "LD2410C LEFT (+30°)", LD); part("LDR", "ld2410", 2520, 620, 1.25, "LD2410C RIGHT (−30°)", LD)
 own("LD2450", "ld2450", 2690, 620, "LD2450 (3rd adapter)", {"5V": (30, 0), "GND": (50, 0), "TX": (70, 0), "RX": (90, 0)})
 own("PI_MINI", "pi_mini", 0, 0, "Raspberry Pi 4 (power in)", {"USB-C": (0, 34)})
@@ -90,10 +90,11 @@ HOSTPINS = {
     "PI_USB": ("PI", {"USB 1: webcam": (410, 118), "USB 2: hub": (410, 150), "USB 3: free": (410, 208), "USB 4: free": (410, 242)}),
     "PI_PWR": ("PI", {"USB-C": (55, 268)}),
     "SHIELD_ZLIM": ("SHIELD", {"Z+ signal": "connector79", "GND": "connector80"}),
+    "SHIELD_XLIM": ("SHIELD", {"X+ signal": "connector87", "GND": "connector88"}),
 }
 SUBST = {"1-power": {"PI_PWR": "PI_MINI"}, "5-radars-usb": {"R4_USB": "R4_MINI"}}
 DIR = {"X_MOT": (-1, 0), "Z_MOT": (-1, 0), "Y_MOT": (1, 0), "A_MOT": (1, 0), "SHIELD_PWR": (-1, 0), "SHIELD_I2C": (1, 0),
-       "SHIELD_ZLIM": (1, 0), "PI": (0, -1), "PI_USB": (1, 0), "PI_PWR": (0, 1)}
+       "SHIELD_ZLIM": (1, 0), "SHIELD_XLIM": (1, 0), "PI": (0, -1), "PI_USB": (1, 0), "PI_PWR": (0, 1)}
 
 LAYOUT = {
     "1-power": {"PACK": (40, 60), "PLUG": (190, 80), "SHIELD": (380, 40), "R4": (392, 54), "XL4015": (60, 420), "BANK": (900, 60), "PI_MINI": (1160, 60)},

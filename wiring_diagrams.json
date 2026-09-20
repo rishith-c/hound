@@ -42,7 +42,7 @@
     "OUT+",
     "OUT−"
    ],
-   "notes": "HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous derated. Two wires per OUT pad: servo + fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V."
+   "notes": "HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. Three wires per OUT pad: pan, tilt, fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V."
   },
   "BANK": {
    "type": "USB power bank 5 V / 3 A (logic island)",
@@ -71,6 +71,7 @@
     "D13 A DIR",
     "D8 EN (all four)",
     "D11 TILT PWM (Z+ end-stop pin)",
+    "D9 PAN PWM (X+ end-stop pin)",
     "USB-C → Pi hub"
    ],
    "notes": "Stack the shield on the R4; the pins listed are what the shield takes. Firmware r4_drive v1.0-best-drive: 30 kHz step ISR, 1/32, 415 mm/s. Logic 5 V. USB from the Pi hub; ENABLE_WIFI 0."
@@ -183,6 +184,14 @@
    ],
    "notes": "The 2-pin 'Z+' pair in the END STOPS column. Only the signal pin is used (5 V PWM, 50 Hz, 500–2500 µs); the servo's ground goes to the XL4015 instead. D11 is free because no limit switches are fitted."
   },
+  "SHIELD_XLIM": {
+   "type": "CNC Shield v3 — X+ end-stop header (= R4 D9, hardware PWM)",
+   "pinlabels": [
+    "X+ signal",
+    "GND"
+   ],
+   "notes": "The 2-pin 'X+' pair in the END STOPS column. Signal only; the servo's ground goes to the XL4015. D9 is free because no limit switches are fitted."
+  },
   "TILT": {
    "type": "MG996R TILT servo",
    "pinlabels": [
@@ -192,6 +201,15 @@
    ],
    "notes": "Cut the 3-pin plug off or use a servo extension: orange to the shield's Z+ pin, red/brown soldered to the XL4015 OUT pads. Limits 65–150° in the firmware ('t 90')."
   },
+  "PAN": {
+   "type": "MG996R PAN servo",
+   "pinlabels": [
+    "signal (orange)",
+    "V+ (red)",
+    "GND (brown)"
+   ],
+   "notes": "Orange to the shield's X+ pin, red/brown soldered to the XL4015 OUT pads beside the tilt servo's. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit)."
+  },
   "FAN": {
    "type": "40 mm 5 V fan on the driver heatsinks",
    "pinlabels": [
@@ -199,15 +217,6 @@
     "GND (black)"
    ],
    "notes": "5 V 0.15 A (listing). Leads soldered to the XL4015 OUT pads beside the servo's."
-  },
-  "PAN": {
-   "type": "MG996R PAN servo — NOT CONNECTED",
-   "pinlabels": [
-    "signal",
-    "V+",
-    "GND"
-   ],
-   "notes": "Continuous-rotation unit: cannot hold an angle. Pinned with the printed lock; leave its lead unplugged."
   },
   "PI": {
    "type": "Raspberry Pi 4 — 40-pin header (used pins only)",
@@ -742,6 +751,20 @@
    ],
    [
     [
+     "SHIELD_XLIM",
+     "X+ signal"
+    ],
+    [
+     "W_PSIG",
+     1
+    ],
+    [
+     "PAN",
+     "signal (orange)"
+    ]
+   ],
+   [
+    [
      "XL4015",
      "OUT+"
     ],
@@ -765,6 +788,34 @@
     ],
     [
      "TILT",
+     "GND (brown)"
+    ]
+   ],
+   [
+    [
+     "XL4015",
+     "OUT+"
+    ],
+    [
+     "W_PAN",
+     1
+    ],
+    [
+     "PAN",
+     "V+ (red)"
+    ]
+   ],
+   [
+    [
+     "XL4015",
+     "OUT−"
+    ],
+    [
+     "W_PAN",
+     2
+    ],
+    [
+     "PAN",
      "GND (brown)"
     ]
    ],

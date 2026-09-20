@@ -12,10 +12,10 @@
   "overlaps": 0
  },
  "3-turret": {
-  "wires": 5,
+  "wires": 8,
   "parts": 6,
-  "crossings": 6,
-  "overlaps": 4
+  "crossings": 12,
+  "overlaps": 12
  },
  "4-pi-sensors": {
   "wires": 20,
@@ -36,9 +36,9 @@
   "overlaps": 0
  },
  "poster": {
-  "wires": 67,
+  "wires": 70,
   "parts": 29,
-  "crossings": 291,
-  "overlaps": 25
+  "crossings": 311,
+  "overlaps": 37
  }
 }

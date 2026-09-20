@@ -11,8 +11,8 @@ Protocol (per station, ~65 s):
     1. SETTLE 5 s: radar static gates re-converge; CSI baseline window starts.
     2. DWELL 2 × 30 s: radar gate energies (all gates, 10 Hz, timestamped) + CSI packets (UDP) logged.
        Best gate = the one with the highest breathing-like confidence, as Walleye's VitalsTracker did.
-    3. SWEEP: the rover rotates in 20° steps (commanded heading, ±20° true) taking thermal frames and camera
-       frames at each; the optical track is associated by bearing.  Skipped in --sim (no motion model).
+    3. SWEEP: the pan servo steps the camera + thermal array 50→130° in 20° steps (rover stays still) taking thermal
+       and camera frames at each; the optical track is associated by bearing.  Skipped in --sim.
     4. FUSE and REPORT: two-track log-odds → label → sentence; everything logged to stations.jsonl.
 
 Drivers are thin and swappable; each one raises at import if its hardware library is missing, and the
@@ -178,11 +178,22 @@ def run_station(name: str, drivers: dict, sim: bool, rng=None, scenario=None, r4
         if "csi" in drivers:
             tc, A = drivers["csi"].collect(30.0)
             feats["csi"] = csi_features(tc, A, baseline_var=baseline_var) if len(tc) > 200 else None
-        if "thermal" in drivers:
-            frames = [drivers["thermal"].frame() for _ in range(3)]
+        # optical sweep: the pan servo steps the camera + thermal array across the scene (the rover stays still)
+        pans = (50, 70, 90, 110, 130) if r4 else (None,)
+        frames, scores = [], []
+        for p in pans:
+            if p is not None:
+                r4.pan(p); time.sleep(0.7)
+            if "thermal" in drivers:
+                frames += [drivers["thermal"].frame() for _ in range(2)]
+            if "camera" in drivers:
+                scores += [drivers["camera"].score() for _ in range(2)]
+        if r4:
+            r4.pan(90)
+        if frames:
             feats["thermal"] = max((thermal_features(f) for f in frames), key=lambda d: d["score"])
-        if "camera" in drivers:
-            feats["camera"] = camera_features([drivers["camera"].score() for _ in range(6)])
+        if scores:
+            feats["camera"] = camera_features(scores)
 
     cal = Calibration()
     res = fuse(feats["radar"], feats["csi"], feats["thermal"], feats["camera"], cal)

@@ -1,12 +1,12 @@
 {
  "pack": {
   "v_open": 10.5,
-  "i_lead": 5.309276234310488,
-  "v_shield_vmot": 10.35955902505002,
-  "v_xl4015_in": 10.333504427987242,
-  "i_xl4015_in": 1.3092762343104876,
-  "drop_lead_mV": 140.44097494998022,
-  "drop_xl_branch_mV": 26.05459706277813
+  "i_lead": 6.518360621454724,
+  "v_shield_vmot": 10.32757632484128,
+  "v_xl4015_in": 10.277460948474332,
+  "i_xl4015_in": 2.5183606214547236,
+  "drop_lead_mV": 172.42367515872024,
+  "drop_xl_branch_mV": 50.11537636694818
  },
  "bank": {
   "i_bank": 2.3000000000000003,
@@ -16,35 +16,35 @@
   "v_hub_in": 4.64984,
   "v_ld2450": 4.63044,
   "v_webcam": 4.52804,
-  "v_fan": 4.964008,
+  "v_fan": 4.937296,
   "i_pi_usb": 1.0,
   "i_header": 0.0
  },
  "checks": [
   {
    "name": "VMOT at the shield terminal vs DRV8825 UVLO 8.2 V (DS) + 1 V margin",
-   "value": 10.36,
+   "value": 10.328,
    "limit": 9.2,
    "unit": "V",
    "ok": true
   },
   {
    "name": "XL4015 input vs 5.0 V out + 1.0 V dropout (DS)",
-   "value": 10.334,
+   "value": 10.277,
    "limit": 6.0,
    "unit": "V",
    "ok": true
   },
   {
    "name": "pack lead current vs 14 AWG / Deans 50 A",
-   "value": 5.309,
+   "value": 6.518,
    "limit": 20.0,
    "unit": "A",
    "ok": true
   },
   {
    "name": "lead drop (pack \u2192 shield) as a fraction of 10.5 V",
-   "value": 0.013,
+   "value": 0.016,
    "limit": 0.03,
    "unit": "",
    "ok": true
@@ -71,9 +71,9 @@
    "ok": true
   },
   {
-   "name": "XL4015 output (servo stall + fan) vs its 4 A continuous derating",
-   "value": 2.3,
-   "limit": 4.0,
+   "name": "XL4015 output (both servos stalled + fan, momentary) vs its 5 A peak rating",
+   "value": 4.4,
+   "limit": 5.0,
    "unit": "A",
    "ok": true
   },
@@ -93,7 +93,7 @@
   },
   {
    "name": "fan supply on the XL4015 rail during a servo stall vs 4.5 V",
-   "value": 4.964,
+   "value": 4.937,
    "limit": 4.5,
    "unit": "V",
    "ok": true

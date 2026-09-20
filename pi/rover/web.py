@@ -105,6 +105,7 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
  <label>microsteps <select id=ms><option>16<option selected>32</select></label>
  <label><input id=hold type=checkbox> hold drivers</label>
  <label>tilt <input id=tilt type=range min=65 max=150 value=90> <span id=tiltv>90</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
+ <label>pan <input id=pan type=range min=0 max=180 value=90> <span id=panv>90</span>° <button id=nudgeL style="padding:4px 8px;font-size:12px">◀ nudge</button><button id=nudgeR style="padding:4px 8px;font-size:12px">nudge ▶</button></label>
  <span id=lat></span>
 </div>
 <div class=pad>
@@ -160,6 +161,10 @@ document.getElementById('hold').onchange=e=>api('set?hold='+(e.target.checked?1:
 document.getElementById('tilt').oninput=e=>{document.getElementById('tiltv').textContent=e.target.value;};
 document.getElementById('tilt').onchange=e=>api('set?tilt='+e.target.value);
 document.getElementById('tiltoff').onclick=()=>api('set?tilt=-1');
+document.getElementById('pan').oninput=e=>{document.getElementById('panv').textContent=e.target.value;};
+document.getElementById('pan').onchange=e=>api('set?pan='+e.target.value);
+document.getElementById('nudgeL').onclick=()=>api('set?nudge=-1&ms=300');
+document.getElementById('nudgeR').onclick=()=>api('set?nudge=1&ms=300');
 const keys={w:[1,0,0],s:[-1,0,0],a:[0,1,0],d:[0,-1,0],q:[0,0,1],e:[0,0,-1],arrowup:[1,1,0],arrowright:[1,-1,0],arrowdown:[-1,-1,0],arrowleft:[-1,1,0]};
 let held=null;
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k===' '){e.preventDefault();held=null;stop();return;}
@@ -211,6 +216,10 @@ class H(BaseHTTPRequestHandler):
                     r4.hold_enable(q["hold"] == "1")
                 if "tilt" in q:
                     r4.tilt(int(float(q["tilt"])))
+                if "pan" in q:
+                    r4.pan(int(float(q["pan"])))
+                if "nudge" in q:
+                    r4.nudge_pan(int(q["nudge"]), int(float(q.get("ms", 300))))
                 if q.get("inv") in ("0", "1", "2", "3"):
                     r4._send(f"i {q['inv']}")
             elif ep == "jog":
