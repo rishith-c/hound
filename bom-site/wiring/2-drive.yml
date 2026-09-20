@@ -13,8 +13,8 @@ connectors:
     - D12 A STEP
     - D13 A DIR
     - D8 EN (all four)
-    - D11 TILT PWM (Z+ end-stop pin)
-    - D9 PAN PWM (X+ end-stop pin)
+    - A4 SDA → PCA9685
+    - A5 SCL → PCA9685
     - USB-C → Pi hub
     notes: 'Stack the shield on the R4; the pins listed are what the shield takes. Firmware r4_drive v1.0-best-drive: 30 kHz step ISR, 1/32, 415 mm/s. Logic 5 V. USB from the Pi hub; ENABLE_WIFI 0.'
   SHIELD_CTRL:

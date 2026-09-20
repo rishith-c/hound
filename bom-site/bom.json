@@ -416,7 +416,7 @@
    "group": "Turret (Ceres)",
    "item": "PCA9685 16-channel servo driver (Ceres)",
    "qty": 1,
-   "note": "NOT USED since v4 (2026-09-20): the tilt servo is driven straight from the CNC shield's Z+ end-stop pin (R4 D11, hardware PWM, firmware 't <deg>'). Keep it as a spare."
+   "note": "USED (v4.1): on the CNC shield's SDA/SCL comms header (5 V I2C from the R4), V+ from the XL4015 at 5.0 V. Pan ch 0, tilt ch 1, fan on ch 15's V+/GND pins. Never also on the Pi's I2C."
   },
   {
    "id": "M3KIT",

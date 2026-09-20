@@ -24,7 +24,7 @@
 #include <WiFiS3.h>
 #include <EEPROM.h>
 #include "FspTimer.h"
-#include "pwm.h"                    // hardware PWM (GPT) for the tilt servo on D11 = the shield's Z+ end-stop pin
+#include <Wire.h>                  // PCA9685 servo board on the shield's SDA/SCL (A4/A5, 5 V I2C)
 
 // ───────────────────────── access point ─────────────────────────
 #define ENABLE_WIFI 0                        // 0 for the rover: the Pi drives it over USB and the radio would eat the Pi USB budget. 1 = bench GUI.
@@ -83,23 +83,40 @@ bool timerOk = false;
 static const uint32_t ACC_PER_STEP_PER_SEC = (uint32_t)(4294967296.0 / TICK_HZ);   // 214748
 
 FspTimer stepTimer;
-// ── tilt servo: MG996R signal on D11 (CNC shield "Z+" end-stop header), power from the XL4015 5 V rail ──
-const int TILT_PIN = 11; const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; mechanical floor ~62°
-const int PAN_PIN = 9;   const int PAN_MIN = 0,   PAN_MAX = 180,  PAN_PARK = 90;    // pan on the shield's X+ end-stop pin (D9)
-PwmOut tiltPwm(TILT_PIN); int tiltDeg = TILT_PARK; bool tiltOn = false;
-PwmOut panPwm(PAN_PIN);   int panDeg = PAN_PARK;   bool panOn = false; uint32_t panStopAt = 0;
+// ── pan/tilt: PCA9685 (0x40) on the CNC shield's SDA/SCL comms header, driven by the R4. Pan = channel 0, tilt = channel 1.
+// Servo power (V+ terminal) comes from the XL4015 at 5.0 V; the fan sits on channel 15's V+/GND pins. 50 Hz, 500–2500 µs.
+const uint8_t PCA = 0x40; const uint8_t PAN_CH = 0, TILT_CH = 1;
+const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; Ceres mechanical floor ~62°
+const int PAN_MIN = 0,   PAN_MAX = 180,  PAN_PARK = 90;
+int tiltDeg = TILT_PARK, panDeg = PAN_PARK; bool tiltOn = false, panOn = false, pcaOk = false; uint32_t panStopAt = 0;
+void pcaWrite(uint8_t reg, uint8_t val) { Wire.beginTransmission(PCA); Wire.write(reg); Wire.write(val); Wire.endTransmission(); }
+bool pcaInit() {
+  Wire.begin(); Wire.setClock(400000);
+  Wire.beginTransmission(PCA); if (Wire.endTransmission() != 0) return false;
+  pcaWrite(0x00, 0x10);            // MODE1: sleep (prescale is only writable asleep)
+  pcaWrite(0xFE, 121);             // prescale: 25 MHz / (4096 × 50 Hz) − 1
+  pcaWrite(0x00, 0x00); delay(5);
+  pcaWrite(0x00, 0xA1);            // restart, auto-increment, all-call
+  return true;
+}
+void pcaPulse(uint8_t ch, int us) {           // us = 0 → channel fully off (servo limp)
+  uint16_t off = us <= 0 ? 0 : (uint16_t)((uint32_t)us * 4096UL / 20000UL);
+  Wire.beginTransmission(PCA); Wire.write(0x06 + 4 * ch);
+  Wire.write(0); Wire.write(0); Wire.write(off & 0xFF); Wire.write(us <= 0 ? 0x10 : (off >> 8));   // ON=0, OFF=count (or full-off bit)
+  Wire.endTransmission();
+}
 static int usFor(int deg) { return 500 + (2000 * deg) / 180; }
-void setTilt(int deg) {                       // 500–2500 µs over 0–180°, 50 Hz; -1 = release (no pulses, servo goes limp)
-  if (deg < 0) { tiltPwm.pulseWidth_us(0); tiltOn = false; return; }
+void setTilt(int deg) {                       // -1 = release
+  if (deg < 0) { pcaPulse(TILT_CH, 0); tiltOn = false; return; }
   tiltDeg = deg < TILT_MIN ? TILT_MIN : deg > TILT_MAX ? TILT_MAX : deg;
-  tiltPwm.pulseWidth_us(usFor(tiltDeg)); tiltOn = true;
+  pcaPulse(TILT_CH, usFor(tiltDeg)); tiltOn = true;
 }
 void setPan(int deg) {                        // positional servo: angle. Continuous-rotation servo: 90 = stop, <90 / >90 = turn
-  if (deg < 0) { panPwm.pulseWidth_us(0); panOn = false; panStopAt = 0; return; }
+  if (deg < 0) { pcaPulse(PAN_CH, 0); panOn = false; panStopAt = 0; return; }
   panDeg = deg < PAN_MIN ? PAN_MIN : deg > PAN_MAX ? PAN_MAX : deg;
-  panPwm.pulseWidth_us(usFor(panDeg)); panOn = true;
+  pcaPulse(PAN_CH, usFor(panDeg)); panOn = true;
 }
-void nudgePan(int dir, int ms) {              // for a continuous-rotation pan: run one way for ms milliseconds, then stop (90)
+void nudgePan(int dir, int ms) {              // continuous-rotation pan: run one way for ms milliseconds, then stop (90)
   setPan(dir < 0 ? 60 : 120); panStopAt = millis() + (ms > 0 && ms < 5000 ? ms : 300);
 }
 
@@ -251,12 +268,12 @@ const char* statusJson() {
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"pca\":%d,\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, pcaOk ? 1 : 0, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -412,8 +429,7 @@ void setup() {
   for (int i = 0; i < 4; i++) { pinMode(STEP_PIN[i], OUTPUT); pinMode(DIR_PIN[i], OUTPUT); digitalWrite(STEP_PIN[i], LOW); }
   pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH);          // drivers OFF until commanded
   pinMode(VBAT_PIN, INPUT);
-  tiltPwm.begin((uint32_t)20000, (uint32_t)0);
-  panPwm.begin((uint32_t)20000, (uint32_t)0);                                       // 50 Hz frame, no pulse until 't' arrives (servo limp)
+  pcaOk = pcaInit();                                             // servo board present? (status 'pca')                                       // 50 Hz frame, no pulse until 't' arrives (servo limp)
   Serial.begin(115200);
   loadSettings();
   updateAccel();
