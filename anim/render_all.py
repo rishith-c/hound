@@ -37,19 +37,24 @@ if __name__ == "__main__":
         out = os.path.join(CHUNKS, "chunk_%04d.mp4" % c0)
         if os.path.exists(out): continue
         t0 = time.time()
-        step = -(-(c1 - c0) // a.procs)
-        procs = []
-        for k in range(a.procs):
-            s, e = c0 + k * step, min(c1, c0 + (k + 1) * step)
-            if s >= e: continue
-            log = open(os.path.join(LOGS, "blender_%04d_%d.log" % (c0, k)), "w")
-            procs.append(subprocess.Popen([BLENDER, "-b", "-P", os.path.join(HERE, "build_render.py"), "--", str(s), str(e)], stdout=log, stderr=subprocess.STDOUT))
-        for p in procs: p.wait()
-        missing = [f for f in range(c0, c1) if not os.path.exists(os.path.join(C.FRAMES, "f_%05d.png" % f))]
-        if missing: raise SystemExit("frames missing after render: %s" % missing[:10])
+        for attempt in range(5):                             # Blender 2.80 under Rosetta crashes now and then: re-run what is missing
+            todo = [f for f in range(c0, c1) if f % 2 == 0 and not os.path.exists(os.path.join(C.FRAMES, "f_%05d.png" % f))]
+            if not todo: break
+            n = min(a.procs, len(todo))
+            groups = [todo[i * len(todo) // n:(i + 1) * len(todo) // n] for i in range(n)]
+            procs = []
+            for k, gr in enumerate(groups):
+                if not gr: continue
+                log = open(os.path.join(LOGS, "blender_%04d_%d_try%d.log" % (c0, k, attempt)), "w")
+                procs.append(subprocess.Popen([BLENDER, "-b", "-P", os.path.join(HERE, "build_render.py"), "--", str(gr[0]), str(gr[-1] + 1)], stdout=log, stderr=subprocess.STDOUT))
+            for p in procs: p.wait()
+        missing = [f for f in range(c0, c1) if f % 2 == 0 and not os.path.exists(os.path.join(C.FRAMES, "f_%05d.png" % f))]
+        if missing: raise SystemExit("frames missing after 5 attempts: %s" % missing[:10])
         t1 = time.time()
         encode(range(c0, c1), out)
-        for f in range(c0, c1): os.remove(os.path.join(C.FRAMES, "f_%05d.png" % f))
+        for f in range(c0, c1):
+            p = os.path.join(C.FRAMES, "f_%05d.png" % f)
+            if os.path.exists(p): os.remove(p)
         done = c1 / TL.NFRAMES
         el = time.time() - t_start
         print("chunk %4d-%4d  render %.0fs  compose %.0fs  |  %.0f%% done, ~%.0f min left" % (c0, c1, t1 - t0, time.time() - t1, done * 100, el / done * (1 - done) / 60), flush=True)

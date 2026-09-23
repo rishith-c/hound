@@ -372,14 +372,14 @@ def compose(frame, src=None):
         rc, ra = r[..., :3], r[..., 3:4]
         if m is not None: ra = ra * m
         out = out * (1 - ra) + rc * GRAIN * ra
-    e = TL.end_card(t)
-    if e > 0.01: out = out * (1 - WASH * e) + PAPER * WASH * e      # paper wash behind the closing lettering
+    e = max(TL.end_card(t), TL.title(t)[0])
+    if e > 0.01: out = out * (1 - WASH * e) + PAPER * WASH * e      # paper wash behind the opening and closing lettering
     oc, oa = pen.flat("over"); out = out * (1 - oa) + oc * oa
     return (np.clip(out, 0, 1) * 255).astype(np.uint8)
 
 
 def _job(frame):
-    return compose(frame).tobytes()
+    return compose(frame - frame % 2).tobytes()             # on twos, overlays included, so labels never drift off their parts
 
 
 if __name__ == "__main__":
