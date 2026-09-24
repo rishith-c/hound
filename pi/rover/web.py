@@ -31,7 +31,10 @@ else:
     open(KEY_FILE, "w").write(KEY)
 
 r4 = R4()
-state = {"last_cmd": 0.0, "mode": "idle", "cmd": "stop", "circle": None, "t0": time.time()}
+TRIM_FILE = os.path.expanduser("~/rover/pan_trim")   # the pan's stop-pulse trim: the R4 forgets it on reset, so it lives here
+if os.path.exists(TRIM_FILE):
+    r4._send(f"T {int(open(TRIM_FILE).read().strip() or 0)}")
+state ={"last_cmd": 0.0, "mode": "idle", "cmd": "stop", "circle": None, "t0": time.time()}
 lock = threading.Lock()
 
 
@@ -107,6 +110,7 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
  <label>tilt <input id=tilt type=range min=78 max=150 value=92> <span id=tiltv>90</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
  <label><button id=show style="padding:6px 12px">▶ Ceres show</button></label>
  <label>pan <button id=nudgeL style="padding:6px 12px">◀ left</button><button id=panStop style="padding:6px 12px">■</button><button id=nudgeR style="padding:6px 12px">right ▶</button> <span id=panv style="color:#93a1ae;font-size:12px">hold to keep turning · 300 ms nudges (Ceres)</span></label>
+ <label>pan trim <button id=trm style="padding:4px 10px">−</button> <span id=ptv>0</span> µs <button id=trp style="padding:4px 10px">+</button> <button id=still style="padding:4px 8px;font-size:12px">test: hold still 3 s</button> <span style="color:#93a1ae;font-size:12px">creeps right → −, creeps left → +</span></label>
  <span id=lat></span>
 </div>
 <div class=pad>
@@ -166,6 +170,9 @@ let panTimer=null;function panHold(b,dir){b.addEventListener('pointerdown',e=>{e
  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');clearInterval(panTimer);panTimer=null;}));}
 panHold(document.getElementById('nudgeL'),-1);panHold(document.getElementById('nudgeR'),1);
 document.getElementById('panStop').onclick=()=>{clearInterval(panTimer);api('set?pan=0');};
+let ptrim=0,ptrimSeen=false;const setTrim=v=>{ptrim=Math.max(-150,Math.min(150,v));document.getElementById('ptv').textContent=ptrim;api('set?ptrim='+ptrim);};
+document.getElementById('trm').onclick=()=>setTrim(ptrim-5);document.getElementById('trp').onclick=()=>setTrim(ptrim+5);
+document.getElementById('still').onclick=()=>api('set?still=3000');
 let showOn=false;document.getElementById('show').onclick=()=>{showOn=!showOn;document.getElementById('show').textContent=showOn?'■ stop show':'▶ Ceres show';api('set?show='+(showOn?1:0));};
 const keys={w:[1,0,0],s:[-1,0,0],a:[0,1,0],d:[0,-1,0],q:[0,0,1],e:[0,0,-1],arrowup:[1,1,0],arrowright:[1,-1,0],arrowdown:[-1,-1,0],arrowleft:[-1,1,0]};
 let held=null;
@@ -175,6 +182,7 @@ window.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(held===k){hel
 const wh=document.getElementById('wheels');W.forEach((n,i)=>{const d=document.createElement('div');d.innerHTML='<b>'+n+' · '+DRV[i]+'</b><span id=r'+i+'>0</span>';wh.append(d);});
 function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];document.getElementById('r'+i).textContent=(r>0?'▲ ':r<0?'▼ ':'· ')+Math.abs(r);document.getElementById('mi'+i).textContent=s.inv&&s.inv[i]?'· flipped':'';});
  document.getElementById('ms').value=s.ms;document.getElementById('sp').max=Math.floor(s.maxmm||190);
+ if(s.ptrim!=null&&!ptrimSeen){ptrimSeen=true;ptrim=s.ptrim;document.getElementById('ptv').textContent=ptrim;}
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';}
 setInterval(()=>{if(!cur&&!curJ)api('status');},700);api('status');
@@ -224,6 +232,12 @@ class H(BaseHTTPRequestHandler):
                     r4._send(f"K {1 if q['show'] == '1' else 0}")
                 if "nudge" in q:
                     r4.nudge_pan(int(q["nudge"]), int(float(q.get("ms", 300))))
+                if "ptrim" in q:
+                    v = max(-150, min(150, int(float(q["ptrim"]))))
+                    r4._send(f"T {v}")
+                    open(TRIM_FILE, "w").write(str(v))
+                if "still" in q:
+                    r4._send(f"H {int(float(q['still']))}")
                 if q.get("inv") in ("0", "1", "2", "3"):
                     r4._send(f"i {q['inv']}")
             elif ep == "jog":

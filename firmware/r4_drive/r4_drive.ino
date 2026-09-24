@@ -88,6 +88,11 @@ FspTimer stepTimer;
 // Servo power (V+ terminal) comes from the XL4015 at 5.0 V; the fan sits on channel 15's V+/GND pins. 50 Hz, 500–2500 µs.
 const uint8_t PCA = 0x40; const uint8_t TILT_CH = 0, PAN_CH = 2;   // Ceres: tilt ch 0, pan ch 2
 bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; uint8_t showStep = 0;   // Ceres turret_duet "kinematic show"
+// The turret's zero is wherever it was hand-set: no pose is forced at boot, and a show comes back to where it began.
+int panTrim = 0;                  // µs added to the pan's stop pulse (1500): trims out a left/right imbalance so timed turns net to zero
+float panPos = 0, showPanStart = 0;   // net pan travel since boot in eased-nudge ms (+ = right); 0 = the hand-set start
+int showTiltStart = -1;           // tilt before the show (-1 = limp), put back when it stops
+uint32_t panHoldUntil = 0;        // 'H' test: hold the stop pulse; a pan that creeps now needs trim
 const int SHOW_U_MS = 250, SHOW_TURNS = 4;   // expanding pan sweep: each turn ends SHOW_U_MS of travel further out than the last, on the other side
 int panDir = 1; uint32_t panT0 = 0, panMs = 300;                 // current nudge, eased: pulse = 1500 ± 250·sin(π·t/T), then cut
 const int TILT_MIN = 78, TILT_MAX = 150, TILT_PARK = 92;   // degrees; the head hammers the platform below ~75° on this build
@@ -121,17 +126,21 @@ void setTilt(int deg) {                       // -1 = release
   tiltDeg = deg < TILT_MIN ? TILT_MIN : deg > TILT_MAX ? TILT_MAX : deg;
   pcaPulse(TILT_CH, usFor(tiltDeg)); tiltOn = true;
 }
-void panStop() { pcaPulse(PAN_CH, 0); panOn = false; panStopAt = 0; }   // no pulse = the continuous servo coasts to a stop
+void panStop() {                              // no pulse = the continuous servo coasts to a stop
+  if (panStopAt) { float f = (millis() - panT0) / (float)panMs; if (f > 1) f = 1; panPos += panDir * panMs * 0.5f * (1 - cosf(PI * f)); }   // share of the eased nudge done
+  pcaPulse(PAN_CH, 0); panOn = false; panStopAt = 0; panHoldUntil = 0;
+}
 void nudgePan(int dir, int ms) {              // Ceres-style nudge, eased (kinematic): ramps up to 1250/1750 µs and back over ms, then pulse off
+  if (panStopAt || panHoldUntil) panStop();   // book the travel of a nudge cut short
   panDir = dir < 0 ? -1 : 1; panMs = (ms > 0 && ms < 3000) ? ms : PAN_NUDGE_MS; panT0 = millis();
   panOn = true; panDeg += panDir;                              // panDeg counts net nudges
   panStopAt = panT0 + panMs;
-  pcaPulse(PAN_CH, 1500);
+  pcaPulse(PAN_CH, 1500 + panTrim);
 }
 void panTick() {                              // called every 20 ms while a nudge runs
   if (!panStopAt) return;
   float f = (millis() - panT0) / (float)panMs; if (f > 1) f = 1;
-  pcaPulse(PAN_CH, 1500 + panDir * (int)(250.0f * sinf(PI * f)));
+  pcaPulse(PAN_CH, 1500 + panTrim + panDir * (int)(250.0f * sinf(PI * f)));
 }
 void setPan(int) { panStop(); }               // any 'p' just stops the pan — angles mean nothing to a continuous servo
 
@@ -277,19 +286,19 @@ void saveSettings() {
 }
 
 // ───────────────────────── status JSON ───────────────────────────
-char jsonBuf[400];
+char jsonBuf[480];
 const char* i2cList() { static char b[40]; int n = 0; b[0] = 0; for (uint8_t i = 0; i < i2cN && n < 34; i++) n += snprintf(b + n, sizeof(b) - n, "%s0x%02X", i ? " " : "", i2cFound[i]); return b; }
 const char* statusJson() {
   int en = digitalRead(EN_PIN) == LOW;
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"pca\":%d,\"show\":%d,\"i2c\":\"%s\",\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"ptrim\":%d,\"ppos\":%.0f,\"pca\":%d,\"show\":%d,\"i2c\":\"%s\",\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, pcaOk ? 1 : 0, showOn ? 1 : 0, i2cList(), ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, panTrim, panPos, pcaOk ? 1 : 0, showOn ? 1 : 0, i2cList(), ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -424,8 +433,17 @@ void handleSerial() {
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
-        case 'I': pcaOk = pcaInit(); if (pcaOk) setTilt(tiltOn ? tiltDeg : TILT_PARK); break;   // re-probe the servo board now
-        case 'K': showOn = a > 0.5f; if (showOn) { showT0 = millis(); showLastNudge = 0; showStep = 0; } else { panStop(); setTilt(TILT_PARK); } break;   // 'K 1' Ceres kinematic show, 'K 0' stop
+        case 'I': pcaOk = pcaInit(); if (pcaOk && tiltOn) setTilt(tiltDeg); break;   // re-probe the servo board now (re-asserts only a commanded tilt)
+        case 'K':                                                               // 'K 1' Ceres kinematic show, 'K 0' stop: back to the pose it started from
+          if (a > 0.5f && !showOn) { showOn = true; showT0 = millis(); showLastNudge = 0; showStep = 0; showPanStart = panPos; showTiltStart = tiltOn ? tiltDeg : -1; }
+          else if (a <= 0.5f && showOn) {
+            showOn = false; panStop();
+            float back = showPanStart - panPos; if (fabsf(back) > 20) nudgePan(back > 0 ? 1 : -1, (int)fminf(fabsf(back), 2999));
+            setTilt(showTiltStart);
+          }
+          break;
+        case 'T': panTrim = a < -150 ? -150 : a > 150 ? 150 : (int)a; break;   // 'T <µs>' pan stop-pulse trim
+        case 'H': panStop(); pcaPulse(PAN_CH, 1500 + panTrim); panOn = true; panHoldUntil = millis() + ((a > 0 && a < 10000) ? (uint32_t)a : 3000); break;   // 'H <ms>' hold the stop pulse: does it creep?
         case 'p': setPan(0); break;                                                // any 'p' = stop the pan (continuous servo)      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
         case 'n': nudgePan((int)a, (int)b); break;                              // 'n -1 300' / 'n 1 300': continuous-rotation nudge left/right for ms
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
@@ -447,7 +465,7 @@ void setup() {
   for (int i = 0; i < 4; i++) { pinMode(STEP_PIN[i], OUTPUT); pinMode(DIR_PIN[i], OUTPUT); digitalWrite(STEP_PIN[i], LOW); }
   pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH);          // drivers OFF until commanded
   pinMode(VBAT_PIN, INPUT);
-  pcaOk = pcaInit(); if (pcaOk) setTilt(TILT_PARK);              // servo board present? then hold the head LEVEL at once (Ceres: writeUs(tilt, 1500) in setup) so it never sags                                       // 50 Hz frame, no pulse until 't' arrives (servo limp)
+  pcaOk = pcaInit();                                            // 50 Hz frame, no pulse until a command: both servos stay where they were hand-set
   Serial.begin(115200);
   loadSettings();
   updateAccel();
@@ -479,14 +497,17 @@ void runCircle() {
 void loop() {
   { static uint32_t lastPan = 0; if (panStopAt && millis() - lastPan >= 20) { lastPan = millis(); panTick(); } }
   if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) panStop();                   // end of a nudge: cut the pulse
-  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk) setTilt(tiltOn ? tiltDeg : TILT_PARK); }   // hot-plugged board: keep probing, then hold level
-  if (showOn && pcaOk) {                                     // Ceres show: tilt sine 80–116°, a pan turn each time the tilt passes centre
+  if (panHoldUntil && (int32_t)(millis() - panHoldUntil) >= 0) panStop();             // end of an 'H' hold test
+  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk && tiltOn) setTilt(tiltDeg); }   // hot-plugged board: keep probing; re-assert only a commanded tilt
+  if (showOn && pcaOk) {                                     // Ceres show: tilt swings about where it started, a pan turn each time the tilt passes its middle
     static uint32_t lastStep = 0; uint32_t now = millis();
     if (now - lastStep >= 20) { lastStep = now;
       float t = (now - showT0) / 1000.0f; float sn = sinf(2 * PI * t / 5.0f);
-      float tilt = 96.0f + (sn > 0 ? 20.0f : 16.0f) * sn;                    // 80..116: more up, less down — it hammered the platform at 70
+      float mid = showTiltStart >= 0 ? showTiltStart : 96.0f;                 // a limp tilt can't report its hand-set angle: 96° only then
+      float swing = mid + (sn > 0 ? 20.0f : 16.0f) * sn;                     // +20 / −16° about the middle: more up, less down
+      float tilt = swing < TILT_MIN ? TILT_MIN : swing > TILT_MAX ? TILT_MAX : swing;   // never below the floor — it hammered the platform at 70
       pcaPulse(TILT_CH, (int)(600.0f + tilt * 10.0f)); tiltDeg = (int)tilt; tiltOn = true;
-      if (!panStopAt && fabsf(tilt - 96.0f) < 8.0f && now - showLastNudge > 1500) {   // expanding sweep: out to +1U, −2U, +3U, −4U (turns of 1, 3, 5, 7 U), then back to centre
+      if (!panStopAt && fabsf(swing - mid) < 8.0f && now - showLastNudge > 1500) {   // expanding sweep: out to +1U, −2U, +3U, −4U (turns of 1, 3, 5, 7 U), then back to the start
         int k = showStep + 1;
         if (k <= SHOW_TURNS) nudgePan(k % 2 ? 1 : -1, (2 * k - 1) * SHOW_U_MS);
         else { nudgePan(SHOW_TURNS % 2 ? -1 : 1, SHOW_TURNS * SHOW_U_MS); k = 0; }
