@@ -110,7 +110,7 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
  <label>tilt <input id=tilt type=range min=78 max=150 value=92> <span id=tiltv>90</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
  <label><button id=show style="padding:6px 12px">▶ Ceres show</button></label>
  <label>pan <button id=nudgeL style="padding:6px 12px">◀ left</button><button id=panStop style="padding:6px 12px">■</button><button id=nudgeR style="padding:6px 12px">right ▶</button> <span id=panv style="color:#93a1ae;font-size:12px">hold to keep turning · 300 ms nudges (Ceres)</span></label>
- <label>pan trim <button id=trm style="padding:4px 10px">−</button> <span id=ptv>0</span> µs <button id=trp style="padding:4px 10px">+</button> <button id=still style="padding:4px 8px;font-size:12px">test: hold still 3 s</button> <span style="color:#93a1ae;font-size:12px">creeps right → −, creeps left → +</span></label>
+ <label>pan trim <button id=trm style="padding:4px 10px">−</button> <span id=ptv>0</span> µs <button id=trp style="padding:4px 10px">+</button> <button id=still style="padding:4px 8px;font-size:12px">test: hold still 3 s</button> <span style="color:#93a1ae;font-size:12px">creeps right → +, creeps left → −</span></label>
  <span id=lat></span>
 </div>
 <div class=pad>
