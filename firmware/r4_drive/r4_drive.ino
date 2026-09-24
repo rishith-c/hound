@@ -87,7 +87,8 @@ FspTimer stepTimer;
 // Channels as the Ceres turret is plugged: TILT = channel 0 (positional MG996R, floor ~62–70°), PAN = channel 2 (continuous).
 // Servo power (V+ terminal) comes from the XL4015 at 5.0 V; the fan sits on channel 15's V+/GND pins. 50 Hz, 500–2500 µs.
 const uint8_t PCA = 0x40; const uint8_t TILT_CH = 0, PAN_CH = 2;   // Ceres: tilt ch 0, pan ch 2
-bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; bool showRight = true; uint8_t showCount = 0;   // Ceres turret_duet "kinematic show"
+bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; uint8_t showStep = 0;   // Ceres turret_duet "kinematic show"
+const int SHOW_U_MS = 250, SHOW_TURNS = 4;   // expanding pan sweep: each turn ends SHOW_U_MS of travel further out than the last, on the other side
 int panDir = 1; uint32_t panT0 = 0, panMs = 300;                 // current nudge, eased: pulse = 1500 ± 250·sin(π·t/T), then cut
 const int TILT_MIN = 78, TILT_MAX = 150, TILT_PARK = 92;   // degrees; the head hammers the platform below ~75° on this build
 const int PAN_L_US = 1250, PAN_R_US = 1750, PAN_NUDGE_MS = 300;   // Ceres turret_duet.ino: the pan is CONTINUOUS-ROTATION — timed nudges only, then cut the pulse (coast to stop)
@@ -424,7 +425,7 @@ void handleSerial() {
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
         case 'I': pcaOk = pcaInit(); if (pcaOk) setTilt(tiltOn ? tiltDeg : TILT_PARK); break;   // re-probe the servo board now
-        case 'K': showOn = a > 0.5f; if (showOn) { showT0 = millis(); showLastNudge = 0; showCount = 0; } else { panStop(); setTilt(TILT_PARK); } break;   // 'K 1' Ceres kinematic show, 'K 0' stop
+        case 'K': showOn = a > 0.5f; if (showOn) { showT0 = millis(); showLastNudge = 0; showStep = 0; } else { panStop(); setTilt(TILT_PARK); } break;   // 'K 1' Ceres kinematic show, 'K 0' stop
         case 'p': setPan(0); break;                                                // any 'p' = stop the pan (continuous servo)      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
         case 'n': nudgePan((int)a, (int)b); break;                              // 'n -1 300' / 'n 1 300': continuous-rotation nudge left/right for ms
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
@@ -479,14 +480,17 @@ void loop() {
   { static uint32_t lastPan = 0; if (panStopAt && millis() - lastPan >= 20) { lastPan = millis(); panTick(); } }
   if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) panStop();                   // end of a nudge: cut the pulse
   if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk) setTilt(tiltOn ? tiltDeg : TILT_PARK); }   // hot-plugged board: keep probing, then hold level
-  if (showOn && pcaOk) {                                     // Ceres turret_duet.ino, verbatim behaviour: tilt sine 74–118°, pan nudge as tilt passes centre
+  if (showOn && pcaOk) {                                     // Ceres show: tilt sine 80–116°, a pan turn each time the tilt passes centre
     static uint32_t lastStep = 0; uint32_t now = millis();
     if (now - lastStep >= 20) { lastStep = now;
       float t = (now - showT0) / 1000.0f; float sn = sinf(2 * PI * t / 5.0f);
       float tilt = 96.0f + (sn > 0 ? 20.0f : 16.0f) * sn;                    // 80..116: more up, less down — it hammered the platform at 70
       pcaPulse(TILT_CH, (int)(600.0f + tilt * 10.0f)); tiltDeg = (int)tilt; tiltOn = true;
-      if (!panStopAt && fabsf(tilt - 96.0f) < 8.0f && now - showLastNudge > 1500) {   // pan turns more: 500 ms eased nudges, two the same way, then two back
-        nudgePan(showRight ? 1 : -1, 500); if (++showCount >= 2) { showCount = 0; showRight = !showRight; } showLastNudge = now; }
+      if (!panStopAt && fabsf(tilt - 96.0f) < 8.0f && now - showLastNudge > 1500) {   // expanding sweep: out to +1U, −2U, +3U, −4U (turns of 1, 3, 5, 7 U), then back to centre
+        int k = showStep + 1;
+        if (k <= SHOW_TURNS) nudgePan(k % 2 ? 1 : -1, (2 * k - 1) * SHOW_U_MS);
+        else { nudgePan(SHOW_TURNS % 2 ? -1 : 1, SHOW_TURNS * SHOW_U_MS); k = 0; }
+        showStep = k; showLastNudge = now; }
     }
   }
   static uint32_t lastMotionMs = 0;
