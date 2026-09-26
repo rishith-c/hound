@@ -273,3 +273,19 @@ def test_station_csi_sink_reads_real_packets(monkeypatch):
     sink = object.__new__(station.CsiSink); sink.sock = Sock()
     t, A = sink.collect(0.05)
     assert A.shape == (5, 52)
+
+
+def _ld2410_eng_payload(light=True):
+    """An LD2410C engineering payload per the protocol: 8 gates each, optional light + OUT bytes, then the 55 00 tail."""
+    import struct
+    body = bytes([0x01, 0xAA, 3]) + struct.pack("<HBHBH", 120, 40, 150, 70, 150) + bytes([8, 8])
+    body += bytes(range(10, 19)) + bytes(range(20, 29))
+    return body + (bytes([77, 1]) if light else b"") + b"\x55\x00"
+
+
+def test_ld2410_engineering_payload_with_and_without_the_light_byte():
+    import ld2410
+    r = ld2410.parse_payload(_ld2410_eng_payload())
+    assert r["engineering"] and r["state"] == "both" and r["static_cm"] == 150 and r["light"] == 77
+    assert r["moving_gates"] == list(range(10, 19)) and r["static_gates"] == list(range(20, 29))
+    assert ld2410.parse_payload(_ld2410_eng_payload(light=False))["light"] is None     # not the 0x55 of the tail
