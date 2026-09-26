@@ -21,3 +21,21 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 | `firmware/r4_drive` | The drive firmware (v1.0 tag `v1.0-best-drive`) |
 | `pi/` | Pi-side code, deploy and flash scripts |
 | `cad/` | Deck tiles for an Ender 3 and the full-plate DXF |
+| `tests/` | `python3 -m pytest tests` — remote recorder and API (stub R4), wiring gate, drivetrain identities, radar ports |
+
+## The remote
+
+`pi/rover/web.py` runs on the Pi as the `rover-web` service; `rover-tunnel` gives it a public Cloudflare link (`sh ~/rover/tunnel_url.sh` on the Pi prints it, key included; it changes on every reboot). Deploy with `pi/deploy.sh`, flash the R4 with `pi/flash_r4.sh` — both over the LAN.
+
+- **Drive:** hold-to-drive pad, W A S D / Q E keys, speed slider, crab circle, per-motor test panel. The R4 stops by itself 400 ms after the Pi goes quiet.
+- **Turret:** nothing is driven at boot — the turret starts wherever it was set by hand, and every move is relative to that. Tilt is a positional MG996R on PCA9685 channel 3 (78–150°); pan is a continuous-rotation MG996R on channel 2, turned only by timed nudges. **Pan trim:** press *hold still 3 s*; if the pan creeps, tap − or + until it doesn't (saved on the Pi). The Ceres show sweeps outward and back about the start pose and returns there when stopped.
+- **Record motions:** record the tilt slider and pan buttons with their timing, label the take, replay it on the Pi. Recordings live in `~/rover/motions.json` (kept across deploys).
+- Working on the page without the rover: `python3 tests/remote_stub.py` → http://localhost:8099/?k=dev.
+
+## Radars
+
+The two LD2410Cs go through their own CP2102 adapters (+5V, GND, TXD → radar RX, RXD → radar TX; the 3V3 pin stays empty). The LD2450 needs no adapter: it sits on the Pi's own UART — 5V pin 4, GND pin 34, its TX → pin 10, its RX → pin 8 — after `sh ~/rover/enable_gpio_uart.sh` once on the Pi (moves Bluetooth off that UART, reboot afterwards). `sensing/station.py` finds all three; `~/rover/radars.json` overrides left/right if the adapters come up swapped.
+
+## Regenerating the docs
+
+`wiring.py` is the netlist and its checks; everything else is drawn from it, in this order: `python3 wiring.py`, `venv/bin/python wiring_diagrams.py` (WireViz + Graphviz; cross-checks against wiring.py), `wiring_art.py`, `wiring_page.py`, then `python3 assembly.py`, `rover3d.py`, `python3 drivetrain.py --json > bom-site/drivetrain.txt`, and `cd bom-site && python3 build.py`.
