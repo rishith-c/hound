@@ -107,11 +107,15 @@ def turret_cmd(kind, a=0, b=0):
             rec["ev"].append([round(time.time() - rec["t0"], 3), kind, a, b])
 
 
+_save_lock = threading.Lock()
+
+
 def save_motions():
-    with lock:
-        text = json.dumps(motions)
-    with open(MOTIONS_FILE, "w") as fh:
-        fh.write(text)
+    with _save_lock:                                  # snapshot and write in one piece, so an older snapshot never lands last
+        with lock:
+            text = json.dumps(motions)
+        with open(MOTIONS_FILE, "w") as fh:
+            fh.write(text)
 
 
 def rec_start():
@@ -280,7 +284,8 @@ document.getElementById('panStop').onclick=()=>{clearInterval(panTimer);api('set
 let ptrim=0,ptrimSeen=false;const setTrim=v=>{ptrim=Math.max(-150,Math.min(150,v));document.getElementById('ptv').textContent=ptrim;api('set?ptrim='+ptrim);};
 document.getElementById('trm').onclick=()=>setTrim(ptrim-5);document.getElementById('trp').onclick=()=>setTrim(ptrim+5);
 document.getElementById('still').onclick=()=>api('set?still=3000');
-let showOn=false;document.getElementById('show').onclick=()=>{showOn=!showOn;document.getElementById('show').textContent=showOn?'■ stop show':'▶ Ceres show';api('set?show='+(showOn?1:0));};
+let showOn=false,showT=-1e9;const showLabel=()=>{document.getElementById('show').textContent=showOn?'■ stop show':'▶ Ceres show';};
+document.getElementById('show').onclick=()=>{showOn=!showOn;showT=performance.now();showLabel();api('set?show='+(showOn?1:0));};   // the R4 ignores K 1 while a show runs: the label follows its status, not the tap count
 const keys={w:[1,0,0],s:[-1,0,0],a:[0,1,0],d:[0,-1,0],q:[0,0,1],e:[0,0,-1],arrowup:[1,1,0],arrowright:[1,-1,0],arrowdown:[-1,-1,0],arrowleft:[-1,1,0]};
 let held=null;
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k===' '){e.preventDefault();held=null;stop();return;}
@@ -289,6 +294,7 @@ window.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(held===k){hel
 const wh=document.getElementById('wheels');W.forEach((n,i)=>{const d=document.createElement('div');d.innerHTML='<b>'+n+' · '+DRV[i]+'</b><span id=r'+i+'>0</span>';wh.append(d);});
 function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];document.getElementById('r'+i).textContent=(r>0?'▲ ':r<0?'▼ ':'· ')+Math.abs(r);document.getElementById('mi'+i).textContent=s.inv&&s.inv[i]?'· flipped':'';});
  document.getElementById('ms').value=s.ms;document.getElementById('sp').max=Math.floor(s.maxmm||190);
+ if(s.show!=null&&performance.now()-showT>1500){showOn=!!s.show;showLabel();}   // resync from the R4 (after a reload, or from another phone)
  if(s.ptrim!=null&&!ptrimSeen){ptrimSeen=true;ptrim=s.ptrim;document.getElementById('ptv').textContent=ptrim;}
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';
