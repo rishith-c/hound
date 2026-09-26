@@ -114,3 +114,25 @@ def test_http_api_needs_the_key_and_serves_the_recorder(web):
         assert open(web.TRIM_FILE).read() == "20" and ("T 20" in [c for _, c in web.r4.sent])
     finally:
         srv.shutdown()
+
+
+def test_r4_status_is_assembled_across_reads(monkeypatch):
+    """pi/rover/r4.py: a status line split over two serial reads is joined, the newest complete JSON wins, noise is ignored."""
+    monkeypatch.setitem(sys.modules, "serial", types.SimpleNamespace(Serial=object, SerialException=Exception))
+    monkeypatch.syspath_prepend(os.path.join(ROOT, "pi", "rover"))
+    sys.modules.pop("r4", None)
+    r4 = importlib.import_module("r4")
+
+    class Port:
+        def __init__(self, chunks): self.chunks, self.written = list(chunks), []
+        def write(self, b): self.written.append(b)
+        def read(self, n): return self.chunks.pop(0) if self.chunks else b""
+
+    r = object.__new__(r4.R4)
+    r._io = threading.Lock(); r.status = {}
+    r.ser = Port([b'noise\n{"tilt": 9', b'2, "pca": 1}\n{"tilt": 1', b'00}\n'])
+    r._send("?"); assert r.status == {}                                  # only half a line so far
+    r._send("?"); assert r.status == {"tilt": 92, "pca": 1}              # joined across the two reads
+    r._send("?"); assert r.status == {"tilt": 100}
+    assert r.ser.written == [b"?\n"] * 3
+    sys.modules.pop("r4", None)
