@@ -399,3 +399,15 @@ def test_thermal_bad_reads_retry_then_skip_instead_of_ending_the_stop(monkeypatc
     th.mlx = MLX([True] * 1000)
     rec = station.run_station("S1", {"thermal": th}, sim=False)                     # a whole stop of bad frames
     assert rec["features"]["thermal"] is None
+
+
+def test_radar_unplugged_mid_dwell_keeps_what_it_had(monkeypatch):
+    station = pytest.importorskip("station")
+    monkeypatch.setattr(station.time, "sleep", lambda s: None)
+    class Dies(_FakePort):
+        def read(self, n):
+            if self.chunks: return self.chunks.pop(0)
+            raise OSError(5, "Input/output error")                  # what pyserial raises when the CP2102 goes
+    r = station.RadarUSB("fake", ser=Dies([_ld2410_frame(True) * 3]))
+    t, rows = r.collect(5.0)
+    assert rows.shape == (3, 9)
