@@ -329,3 +329,24 @@ def test_ld2410_engineering_payload_with_and_without_the_light_byte():
     assert r["engineering"] and r["state"] == "both" and r["static_cm"] == 150 and r["light"] == 77
     assert r["moving_gates"] == list(range(10, 19)) and r["static_gates"] == list(range(20, 29))
     assert ld2410.parse_payload(_ld2410_eng_payload(light=False))["light"] is None     # not the 0x55 of the tail
+
+
+def test_camera_scores_a_frame_taken_now_not_one_queued_before_the_pan():
+    station = pytest.importorskip("station")
+    import numpy as np
+    class Cap:                          # 4 frames queued before the nudge, then live ones
+        def __init__(self): self.q, self.cur = ["old"] * 4 + ["new"] * 3, None
+        def grab(self): self.cur = self.q.pop(0); return True
+        def retrieve(self): return True, self.cur
+        def read(self): self.grab(); return self.retrieve()
+    seen = []
+    class Net:
+        def setInput(self, blob): seen.append(blob)
+        def forward(self):
+            d = np.zeros((1, 1, 1, 7)); d[0, 0, 0, 1] = 15; d[0, 0, 0, 2] = 0.9 if seen[-1] == "new" else 0.1; return d
+    class CV2:
+        resize = staticmethod(lambda img, size: img)
+        class dnn:
+            blobFromImage = staticmethod(lambda img, *a: img)
+    cam = object.__new__(station.Camera); cam.cap, cam.net, cam.cv2 = Cap(), Net(), CV2
+    assert cam.score() == 0.9
