@@ -608,7 +608,7 @@
   {
    "level": "VERIFY",
    "id": "i2c1",
-   "text": "One I2C bus for everything: the Pi's 1.8 kΩ pull-ups plus the boards' own 10 kΩ. i2cdetect -y 1 must show 0x33 (thermal) and 0x29 (rear ToF); the front ToF appears at 0x30 only after station.py re-addresses it. If the SCD41 is fitted the bus drops to 100 kHz — fine for 4 fps thermal."
+   "text": "One I2C bus for everything: the Pi's 1.8 kΩ pull-ups plus the boards' own 10 kΩ. i2cdetect -y 1 must show 0x33 (thermal) and 0x29 (rear ToF); the front ToF appears at 0x30 only after sensing/tof.py re-addresses it (both XSHUT low, FRONT alone → 0x30, then REAR). If the SCD41 is fitted the bus drops to 100 kHz — fine for 4 fps thermal."
   },
   {
    "level": "VERIFY",

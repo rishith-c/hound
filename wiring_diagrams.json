@@ -302,7 +302,7 @@
     "SCL",
     "XSHUT"
    ],
-   "notes": "Both ToFs share I2C-1. At boot the Pi holds FRONT XSHUT low, gives REAR 0x29… then raises FRONT and moves it to 0x30."
+   "notes": "Both ToFs share I2C-1 and boot at 0x29. At every start sensing/tof.py holds BOTH XSHUT low, wakes FRONT alone and moves it to 0x30, then wakes REAR (0x29). Waking both before the change would move both."
   },
   "TOF_R": {
    "type": "VL53L1X ToF REAR (0x29)",

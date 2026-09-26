@@ -152,3 +152,36 @@ def test_radar_check_verdicts(monkeypatch):
     assert t["verdict"] == "PASS" and t["nearest_xy_mm"] == (300, 1500)
     noisy = rc.check_ld2450("ld2450", 0.05, _Repeat([b"login: " * 8]))
     assert noisy["verdict"] == "FAIL" and "enable_gpio_uart.sh" in noisy["hint"]
+
+
+class _ToFBus:
+    """Two VL53L1X on one bus. Waking (XSHUT high) resets a sensor to 0x29; an address change moves every awake sensor
+    that answers the old address — which is exactly what goes wrong when both are awake."""
+    def __init__(self): self.dev = {22: {"on": False, "addr": 0x29}, 27: {"on": False, "addr": 0x29}}; self.collisions = 0
+    def pin(self, bcm):
+        bus = self
+        class P:
+            @property
+            def value(self): return bus.dev[bcm]["on"]
+            @value.setter
+            def value(self, v):
+                if v and not bus.dev[bcm]["on"]: bus.dev[bcm]["addr"] = 0x29
+                bus.dev[bcm]["on"] = bool(v)
+        return P()
+    def sensor(self, i2c, address):
+        bus = self
+        awake = [d for d in bus.dev.values() if d["on"] and d["addr"] == address]
+        assert awake, f"nothing answers 0x{address:02x}"
+        if len(awake) > 1: bus.collisions += 1
+        class S:
+            def set_address(self, new):
+                for d in awake: d["addr"] = new
+        return S()
+
+
+def test_tofs_come_up_at_two_addresses():
+    tof = pytest.importorskip("tof")
+    bus = _ToFBus()
+    tof.init_tofs(i2c=object(), pin=bus.pin, sensor=bus.sensor, sleep=lambda s: None)
+    assert bus.collisions == 0, "two sensors answered 0x29 while one was being addressed"
+    assert bus.dev[tof.FRONT_XSHUT]["addr"] == 0x30 and bus.dev[tof.REAR_XSHUT]["addr"] == 0x29

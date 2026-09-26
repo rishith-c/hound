@@ -176,7 +176,7 @@ D["4-pi-sensors"] = dict(
     connectors=dict(
         PI=PI_HDR,
         MLX=C("MLX90640 thermal array breakout (0x33)", ["VIN 3V3", "GND", "SCL", "SDA"], "On I2C-1 with the two ToFs (no address clash: 0x33 / 0x29 / 0x30). 400 kHz gives 8 fps; station.py uses 4. Rides beside the webcam on the tilt bracket."),
-        TOF_F=C("VL53L1X ToF FRONT (0x29 → re-addressed 0x30 by XSHUT)", ["VIN 3V3", "GND", "SDA", "SCL", "XSHUT"], "Both ToFs share I2C-1. At boot the Pi holds FRONT XSHUT low, gives REAR 0x29… then raises FRONT and moves it to 0x30."),
+        TOF_F=C("VL53L1X ToF FRONT (0x29 → re-addressed 0x30 by XSHUT)", ["VIN 3V3", "GND", "SDA", "SCL", "XSHUT"], "Both ToFs share I2C-1 and boot at 0x29. At every start sensing/tof.py holds BOTH XSHUT low, wakes FRONT alone and moves it to 0x30, then wakes REAR (0x29). Waking both before the change would move both."),
         TOF_R=C("VL53L1X ToF REAR (0x29)", ["VIN 3V3", "GND", "SDA", "SCL", "XSHUT"], "XSHUT on BCM 27 so the Pi can reset it independently."),
         MIC=C("INMP441 I2S microphone", ["VDD 3V3", "GND", "SCK", "WS", "SD", "L/R"], "L/R tied to GND = left channel. On the post front face, 120 mm up (assembly.py)."),
         LD2450=LD2450,
