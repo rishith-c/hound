@@ -94,7 +94,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--seconds", type=float, default=5.0)
     a = ap.parse_args(argv)
-    from station import radar_ports
+    from station import port_label, radar_ports
     ports = radar_ports()
     if not ports:
         print("no radar ports found: no CP2102 in /dev/serial/by-id and /dev/serial0 is not the PL011 — check USB and enable_gpio_uart.sh")
@@ -108,7 +108,7 @@ def main(argv=None) -> int:
         ok &= r["verdict"] == "PASS"
         seen = (f"strongest static gate {r['strongest_m']}, state {r.get('state')}" if r.get("strongest_m") else
                 f"nearest mover {r['nearest_mm']} mm at x/y {r['nearest_xy_mm']}" if r.get("nearest_mm") else "nothing in view")
-        print(f"{r['verdict']:4s}  {name:6s} {r['kind']:7s} {os.path.basename(path)[:40]:40s} "
+        print(f"{r['verdict']:4s}  {name:6s} {r['kind']:7s} {port_label(path)[:40]:40s} "
               f"{r.get('fps', 0):4.1f} frames/s  {seen}" + (f"\n      → {r['hint']}" if r["hint"] else ""))
     return 0 if ok else 1
 

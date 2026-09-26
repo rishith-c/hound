@@ -453,3 +453,10 @@ def test_dwell_drops_a_failing_stream_not_the_stop():
         def collect(self, s): raise OSError(101, "Network is unreachable")
     radars, csi_data = station.dwell({"radar_left": Ok(), "radar_right": Broken(), "csi": Broken()}, window=0.01)
     assert radars["left"][0][1].shape == (3, 9) and len(radars["right"][0][1]) == 0 and len(csi_data[0]) == 0
+
+
+def test_port_label_names_the_hub_socket():
+    station = pytest.importorskip("station")
+    assert station.port_label("/dev/serial/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.2:1.0-port0") == "USB socket 1.2"
+    assert station.port_label("/dev/serial/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usbv2-0:1.3.4:1.0-port0") == "USB socket 1.3.4"
+    assert station.port_label("/dev/ttyAMA0") == "ttyAMA0"
