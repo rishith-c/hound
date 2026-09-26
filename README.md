@@ -18,6 +18,7 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 | [sensing/report.html](https://rover-amazon-bom.vercel.app/sensing/report.html) | Sensing simulation results |
 | `drivetrain.py` `assembly.py` `wiring.py` | The verification sources of truth: torque, placement, netlist |
 | `dc_drive.py` | What a DC-gearmotor Hound would need and cost: TT motors fail, a JGA25-370 12 V 1:45 passes; priced against the stepper build |
+| `sensing/thermal_arrays.py` | Whether a cheaper thermal array still finds a person: the MLX90641 (−$12.55) does, the AMG8833 (−$41.42) loses a lying person past 2.8 m |
 | `sensing/` | Prior art, sensor models, vitals, fusion, station sequencer, Monte Carlo |
 | `firmware/r4_drive` | The drive firmware (v1.0 tag `v1.0-best-drive`) |
 | `pi/` | Pi-side code, deploy and flash scripts |
