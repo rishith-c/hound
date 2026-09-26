@@ -26,7 +26,12 @@ class R4:
 
     def __init__(self, port=None, baud=115200):
         self.port = port or self.find_port()
-        self.ser = serial.Serial(self.port, baud, timeout=0.05, exclusive=True)   # one owner: two would override each other's commands
+        try:
+            self.ser = serial.Serial(self.port, baud, timeout=0.05, exclusive=True)   # one owner: two would override each other's commands
+        except serial.SerialException as e:
+            if "exclusively lock" in str(e):
+                raise serial.SerialException(f"{e} — another program has the R4; if it is the remote: sudo systemctl stop rover-web") from e
+            raise
         self.ser.dtr = True
         time.sleep(1.0)
         self.ser.reset_input_buffer()
