@@ -120,6 +120,29 @@ int main() {
   run_ms(150, true);                                                   // 450 ms since the last command
   CHECK(wdTripped && tVx == 0, "the R4 must stop itself 400 ms after the Pi goes quiet");
 
+  // 11. The rest of the frozen drive's commands: jog one wheel, invert (saved, survives a reset), microsteps keep the
+  //     ramp in mm/s², and any drive command cancels the crab circle.
+  send("s"); run_ms(700, true);
+  send("j 1 1 60");
+  CHECK(!bodyMode && near(targetRate[FR], 60 * stepsPerMm(), 1) && targetRate[FL] == 0 && targetRate[BL] == 0 && targetRate[BR] == 0,
+        "jog FR: targets %d %d %d %d", (int)targetRate[0], (int)targetRate[1], (int)targetRate[2], (int)targetRate[3]);
+  send("j 2 1 60"); run_ms(50, true);
+  CHECK(pin_state[DIR_PIN[BL]] == HIGH, "BL forward drives DIR high");
+  send("i 2"); send("j 2 1 60"); run_ms(50, true);
+  CHECK(inv[BL] == 1 && pin_state[DIR_PIN[BL]] == LOW, "an inverted BL drives DIR low for the same command");
+  CHECK(EEPROM.m[0] == EE_MAGIC && EEPROM.m[1 + BL] == 1, "invert must be saved to EEPROM");
+  inv[BL] = 0; loadSettings(); CHECK(inv[BL] == 1, "invert survives a reset");
+  send("i 2"); CHECK(inv[BL] == 0, "i toggles back");
+  send("s"); run_ms(700, true);
+  send("m 16");
+  CHECK(microsteps == 16 && near(stepsPerMm(), 200 * 16 / (3.14159265f * 80), 0.01f), "m 16 → %.2f steps/mm", stepsPerMm());
+  CHECK(near(accelSteps / stepsPerMm(), ACCEL_MM_S2, 1), "the ramp stays %.0f mm/s² at 1/16", accelSteps / stepsPerMm());
+  send("m 32"); CHECK(microsteps == 32 && EEPROM.m[5] == 32, "back to 1/32, saved");
+  send("c 300 8"); run_ms(200, false);
+  CHECK(circleOn && (tVx != 0 || tVy != 0), "the crab circle drives the body vector");
+  send("s"); CHECK(!circleOn, "any drive command cancels the circle");
+  run_ms(700, true);
+
   // 10. The status JSON the Pi parses must never be truncated by jsonBuf: typical, then every field at its widest.
   printf("STATUS %s\n", statusJson());
   i2cN = 8; for (int i = 0; i < 8; i++) i2cFound[i] = 0x40 + i;
