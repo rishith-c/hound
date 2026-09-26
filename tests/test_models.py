@@ -408,6 +408,11 @@ def test_radar_unplugged_mid_dwell_keeps_what_it_had(monkeypatch):
         def read(self, n):
             if self.chunks: return self.chunks.pop(0)
             raise OSError(5, "Input/output error")                  # what pyserial raises when the CP2102 goes
-    r = station.RadarUSB("fake", ser=Dies([_ld2410_frame(True) * 3]))
+    port = Dies([_ld2410_frame(True) * 3])
+    r = station.RadarUSB("fake", ser=port)
     t, rows = r.collect(5.0)
     assert rows.shape == (3, 9)
+    def gone(): raise OSError(5, "Input/output error")
+    port.reset_input_buffer = gone
+    t2, rows2 = r.collect(5.0)                                        # the second window on the dead port
+    assert len(rows2) == 0

@@ -64,8 +64,12 @@ class RadarUSB:
     def collect(self, seconds: float):
         """Timestamped static-gate energies for every gate: returns (t, gates[n, 9]). Frames are stamped when read, so
         whatever queued up before the call is thrown away: read late, a minute of backlog would all be stamped 'now'."""
-        self.ser.reset_input_buffer(); self.reader = type(self.reader)()
         t, rows = [], []
+        self.reader = type(self.reader)()
+        try:
+            self.ser.reset_input_buffer()
+        except OSError as e:                     # the port died in an earlier window
+            print(f"  radar {self.port}: {e}"); return np.array(t), np.array(rows, float)
         t0 = time.time()
         while time.time() - t0 < seconds:
             try:
