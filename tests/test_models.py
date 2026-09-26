@@ -206,3 +206,35 @@ def test_thermal_array_ranges():
     assert r[0] > r[1] > r[2]
     amg = ta.ARRAYS[2]
     assert abs(ta.worst_fill(amg, 0.5, 0.5, r[2]) - ta.F_MIN) < 1e-3              # the range is where the fill hits the threshold
+
+
+I2CDETECT = """     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- --
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+20: -- -- -- -- -- -- -- -- -- 29 -- -- -- -- -- --
+30: {30} -- -- 33 -- -- -- -- -- -- -- -- -- -- -- --
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+"""
+
+
+def test_bringup_checks(monkeypatch):
+    np = pytest.importorskip("numpy")
+    bu = pytest.importorskip("bringup")
+    v, txt, hint = bu.check_i2c(I2CDETECT.replace("{30}", "30"))
+    assert v == "PASS" and "0x29 0x30 0x33" in txt
+    v, txt, hint = bu.check_i2c(I2CDETECT.replace("{30}", "--"))
+    assert v == "PASS" and "not yet moved" in txt
+    v, _, hint = bu.check_i2c(I2CDETECT.replace("{30}", "--").replace(" 33 ", " -- "))
+    assert v == "FAIL" and "0x33 thermal" in hint
+    assert bu.check_tof(init=lambda: ("f", "r"), read=lambda s: 850)[0] == "PASS"
+    assert bu.check_tof(init=lambda: ("f", "r"), read=lambda s: None if s == "r" else 850)[0] == "WARN"
+    room = type("T", (), {"frame": lambda self: 22 + np.random.default_rng(1).normal(0, 0.3, (24, 32))})()
+    flat = type("T", (), {"frame": lambda self: np.zeros((24, 32))})()
+    assert bu.check_thermal(room)[0] == "PASS" and bu.check_thermal(flat)[0] == "FAIL"
+    cam = type("C", (), {"cap": type("V", (), {"read": lambda self: (True, None)})(), "score": lambda self: 0.91})()
+    assert bu.check_camera(cam) == ("PASS", "frame ok, person score 0.91", "")
+    sink = lambda n: type("S", (), {"collect": lambda self, s: (list(range(n)), None)})()
+    assert bu.check_csi(sink(500), 5)[0] == "PASS" and bu.check_csi(sink(100), 5)[0] == "WARN" and bu.check_csi(sink(0), 5)[0] == "FAIL"
+    monkeypatch.setattr(bu, "check_thermal", lambda: (_ for _ in ()).throw(ModuleNotFoundError("No module named 'adafruit_mlx90640'")))
+    res = bu.run(skip={"i2c", "tof", "camera", "csi", "radars"}, report=lambda s: None)
+    assert res == [("thermal", "FAIL", "thermal", "ModuleNotFoundError: No module named 'adafruit_mlx90640'")]
