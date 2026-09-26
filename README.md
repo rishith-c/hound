@@ -27,7 +27,7 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 
 ## The remote
 
-`pi/rover/web.py` runs on the Pi as the `rover-web` service; `rover-tunnel` gives it a public Cloudflare link (`sh ~/rover/tunnel_url.sh` on the Pi prints it, key included; it changes on every reboot). Deploy with `pi/deploy.sh`, flash the R4 with `pi/flash_r4.sh` — both over the LAN.
+`pi/rover/web.py` runs on the Pi as the `rover-web` service; `rover-tunnel` gives it a public Cloudflare link (`sh ~/rover/tunnel_url.sh` on the Pi prints it, key included; it changes on every reboot). Deploy with `pi/deploy.sh`, flash the R4 with `pi/flash_r4.sh` — both over the LAN; they find the Pi by its MAC (`pi/find_pi.sh`, since its address moves), or take `PI_HOST=rishithc@<ip>`.
 
 - **Drive:** hold-to-drive pad, W A S D / Q E keys, speed slider, crab circle, per-motor test panel. The R4 stops by itself 400 ms after the Pi goes quiet.
 - **Turret:** nothing is driven at boot — the turret starts wherever it was set by hand, and every move is relative to that. Tilt is a positional MG996R on PCA9685 channel 3 (78–150°); pan is a continuous-rotation MG996R on channel 2, turned only by timed nudges. **Pan trim:** press *hold still 3 s*; if the pan creeps, tap − or + until it doesn't (saved on the Pi). The Ceres show sweeps outward and back about the start pose and returns there when stopped.
