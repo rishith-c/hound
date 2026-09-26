@@ -49,7 +49,8 @@ def test_wheel_to_axis_map_agrees():
     rear = {"BL": "RL", "BR": "RR"}                                       # the manual says rear-left/right
     wheel_of = {ax: w for w, ax in fw_map.items()}
     order = ", ".join(f"{ax} = {rear.get(wheel_of[ax], wheel_of[ax])}" for ax in "XYZA")          # X = RL, Y = FL, Z = RR, A = FR
-    assert order in read("bom-site", "manual.html"), f"manual motor order ≠ firmware ({order})"
+    found = re.findall(r"X = \w\w, Y = \w\w, Z = \w\w, A = \w\w", read("bom-site", "manual.html"))
+    assert found and all(f == order for f in found), f"every motor order in the manual must be {order}: {found}"
 
 
 def test_radar_adapters_agree():
