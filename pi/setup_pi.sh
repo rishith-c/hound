@@ -1,12 +1,12 @@
 #!/bin/sh
 # setup_pi.sh — one-time setup ON THE PI (run over ssh by pi/deploy.sh --setup).
-# Installs: Python venv with pyserial + Adafruit PCA9685/servo libs (turret), I2C enabled,
+# Installs: Python venv with pyserial + the sensing libs (the Adafruit PCA9685 libs are left over from v4 — the R4 drives the turret now), I2C enabled,
 # arduino-cli + the UNO R4 core so the Pi can flash the R4 over its own USB cable.
 set -e
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -qq
 sudo apt-get install -y -qq python3-venv python3-pip python3-serial i2c-tools python3-smbus rsync git >/dev/null
-sudo raspi-config nonint do_i2c 0 2>/dev/null || true          # enable the hardware I2C bus for the PCA9685
+sudo raspi-config nonint do_i2c 0 2>/dev/null || true          # enable the hardware I2C bus (thermal array + both ToFs; the PCA9685 is on the R4)
 sudo usermod -aG dialout,i2c,gpio "$USER" 2>/dev/null || true   # serial + I2C without sudo (takes effect on next login)
 
 mkdir -p "$HOME/rover"
