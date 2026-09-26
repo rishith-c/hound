@@ -234,3 +234,49 @@ def test_r4_busy_port_says_what_holds_it(monkeypatch):
     with pytest.raises(Busy, match="systemctl stop rover-web"):
         r4.R4(port="/dev/ttyACM0")
     sys.modules.pop("r4", None)
+
+
+def _ld2450_frame(x, y, speed=20):
+    import struct
+    enc = lambda v: (0x8000 | v) if v >= 0 else (-v & 0x7FFF)            # bit 15 set = positive
+    return b"\xaa\xff\x03\x00" + struct.pack("<HHHH", enc(x), enc(y), enc(speed), 360) + bytes(16) + b"\x55\xcc"
+
+
+def test_radar_view_shows_ld2450_targets_and_lets_the_port_go(web):
+    """The remote's radar view reads the LD2450 only while it is on, reports its moving targets, and closes the port."""
+    class Port:
+        def __init__(self): self.closed = False
+        def read(self, n): time.sleep(0.01); return _ld2450_frame(-400, 1800)
+        def close(self): self.closed = True
+    port = Port()
+    web.radar_start(opener=lambda p: port)
+    t0 = time.monotonic()
+    while not web.status().get("radar", {}).get("targets") and time.monotonic() - t0 < 3:
+        time.sleep(0.02)
+    r = web.status()["radar"]
+    assert r["on"] and r["targets"] == [{"x_mm": -400, "y_mm": 1800, "speed_cms": 20}]
+    web.radar_stop(wait=True)
+    assert port.closed and "radar" not in web.status()                     # off: port closed, nothing in the status
+
+
+def test_radar_view_without_the_uart_says_why(web):
+    def missing(p): raise OSError(2, "No such file or directory")
+    web.radar_start(opener=missing)
+    t0 = time.monotonic()
+    while web.radar["on"] and time.monotonic() - t0 < 3:
+        time.sleep(0.02)
+    r = web.status()["radar"]
+    assert not r["on"] and "enable_gpio_uart.sh" in r["err"]
+
+
+def test_check_senses_turns_the_radar_view_off_first(web, tmp_path):
+    class Port:
+        closed = False
+        def read(self, n): time.sleep(0.01); return b""
+        def close(self): Port.closed = True
+    web.radar_start(opener=lambda p: Port())
+    time.sleep(0.1)
+    d = tmp_path / "sensing"; d.mkdir(); (d / "bringup.py").write_text("print('PASS  i2c  ok')\n"); web.SENSING = str(d)
+    web.senses_start()
+    assert Port.closed and not web.radar["on"]                             # bringup gets the port to itself
+    _wait_senses(web)

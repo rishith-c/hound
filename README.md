@@ -33,6 +33,7 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 - **Turret:** nothing is driven at boot — the turret starts wherever it was set by hand, and every move is relative to that. Tilt is a positional MG996R on PCA9685 channel 3 (78–150°); pan is a continuous-rotation MG996R on channel 2, turned only by timed nudges. **Pan trim:** press *hold still 3 s*; if the pan creeps, tap − or + until it doesn't (saved on the Pi). The Ceres show sweeps outward and back about the start pose and returns there when stopped.
 - **Record motions:** record the tilt slider and pan buttons with their timing, label the take, replay it on the Pi. Recordings live in `~/rover/motions.json` (kept across deploys).
 - **Check senses:** runs `sensing/bringup.py` on the Pi (radars, Wi-Fi CSI, thermal, both ToFs, camera, I2C, about 20 s) and shows a PASS / WARN / FAIL line for each, with the likely fault. It runs as its own process and never touches the motors.
+- **Radar view:** live dots for the LD2450's moving targets (up to 3, x/y and speed, on a 6 m fan). It holds the LD2450's port only while it is on, and *check senses* turns it off first.
 - Working on the page without the rover: `python3 tests/remote_stub.py` → http://localhost:8099/?k=dev.
 
 ## Radars
