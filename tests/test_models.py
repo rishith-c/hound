@@ -112,6 +112,7 @@ class _FakePort:
     def write(self, b): self.written.append(bytes(b))
     def flush(self): pass
     def read(self, n): return self.chunks.pop(0) if self.chunks else b""
+    def reset_input_buffer(self): pass                                   # chunks are what arrives after it
 
 
 def test_station_radar_arms_engineering_mode_and_reads_gates(monkeypatch):
@@ -262,17 +263,56 @@ def test_csi_udp_parsing_matches_the_firmware():
     assert len(csi.parse_udp(_csi_packet(n=200))["amp"]) == 52                       # a longer buffer: LLTF block only
 
 
-def test_station_csi_sink_reads_real_packets(monkeypatch):
+class _UdpSock:
+    """A bound UDP socket: `queued` arrived before collect(), `live` arrives after. Like a real one it hands out the
+    queue first in any mode; non-blocking, it raises once nothing is waiting (live packets are not here yet)."""
+    def __init__(self, queued, live): self.queued, self.live, self.timeout = list(queued), list(live), 0.2
+    def settimeout(self, t): self.timeout = t
+    def recvfrom(self, n):
+        import socket as so
+        if self.queued: return self.queued.pop(0), ("10.42.0.7", 5005)
+        if self.timeout == 0: raise BlockingIOError
+        if self.live: return self.live.pop(0), ("10.42.0.7", 5005)
+        raise so.timeout
+
+
+def test_station_csi_sink_reads_real_packets_and_drops_the_backlog():
     station = pytest.importorskip("station")
-    import socket as so
-    pkts = [_csi_packet(seq=i) for i in range(5)] + [b"noise"]
-    class Sock:
-        def recvfrom(self, n):
-            if pkts: return pkts.pop(0), ("10.42.0.7", 5005)
-            raise so.timeout
-    sink = object.__new__(station.CsiSink); sink.sock = Sock()
+    sink = object.__new__(station.CsiSink)
+    sink.sock = _UdpSock(queued=[_csi_packet(seq=i) for i in range(40)], live=[_csi_packet(seq=100 + i) for i in range(5)] + [b"noise"])
     t, A = sink.collect(0.05)
-    assert A.shape == (5, 52)
+    assert A.shape == (5, 52)                          # the 40 stale packets would have been stamped 'now'
+
+
+def test_station_radar_drops_the_backlog(monkeypatch):
+    station = pytest.importorskip("station")
+    monkeypatch.setattr(station.time, "sleep", lambda s: None)
+    class Backlogged(_FakePort):
+        def __init__(self, backlog, chunks): super().__init__(chunks); self.backlog = list(backlog)
+        def read(self, n): return self.backlog.pop(0) if self.backlog else super().read(n)
+        def reset_input_buffer(self): self.backlog = []
+    port = Backlogged([_ld2410_frame(True) * 50], [_ld2410_frame(True, (0, 0, 9, 9, 9, 9, 9, 9, 9)) * 2])
+    t, rows = station.RadarUSB("fake", ser=port).collect(0.1)
+    assert rows.shape == (2, 9) and rows[0][2] == 9
+
+
+def test_station_dwell_reads_every_stream_at_once():
+    station = pytest.importorskip("station")
+    import threading, time as tm
+    import numpy as np
+    spans, lock = {}, threading.Lock()
+    class Drv:
+        def __init__(self, name): self.name = name
+        def collect(self, s):
+            t0 = tm.monotonic(); tm.sleep(s)
+            with lock: spans.setdefault(self.name, []).append((t0, tm.monotonic()))
+            return np.zeros(3), np.zeros((3, 9))
+    t0 = tm.monotonic()
+    radars, csi_data = station.dwell({"radar_left": Drv("L"), "radar_right": Drv("R"), "csi": Drv("C")}, window=0.2)
+    took = tm.monotonic() - t0
+    assert set(radars) == {"left", "right"} and csi_data is not None
+    assert 0.35 < took < 0.55                                  # 2 windows, not 2 + 2 + 1 of them
+    assert abs(spans["L"][0][0] - spans["R"][0][0]) < 0.05 and abs(spans["L"][0][0] - spans["C"][0][0]) < 0.05
 
 
 def _ld2410_eng_payload(light=True):
