@@ -136,3 +136,40 @@ def test_r4_status_is_assembled_across_reads(monkeypatch):
     r._send("?"); assert r.status == {"tilt": 100}
     assert r.ser.written == [b"?\n"] * 3
     sys.modules.pop("r4", None)
+
+
+def test_r4_takes_the_port_exclusively(monkeypatch):
+    """web.py holds the R4 all the time; a second opener (station.py, demo.py) must fail loudly, not fight it for the motors."""
+    opened = {}
+    class Serial:
+        def __init__(self, port, baud, **kw): opened.update(kw); self.dtr = False
+        def reset_input_buffer(self): pass
+        def write(self, b): pass
+        def read(self, n): return b""
+        def close(self): pass
+    monkeypatch.setitem(sys.modules, "serial", types.SimpleNamespace(Serial=Serial, SerialException=Exception))
+    monkeypatch.syspath_prepend(os.path.join(ROOT, "pi", "rover"))
+    sys.modules.pop("r4", None)
+    r4 = importlib.import_module("r4")
+    monkeypatch.setattr(r4.time, "sleep", lambda s: None)
+    r = r4.R4(port="/dev/fake")
+    r._alive = False; r.close()
+    assert opened.get("exclusive") is True
+    sys.modules.pop("r4", None)
+
+
+def test_station_finds_r4_in_the_pi_layout(tmp_path):
+    """On the Pi, deploy.sh puts r4.py in ~/rover and station.py in ~/rover/sensing: station must still import it."""
+    import shutil, subprocess
+    (tmp_path / "rover" / "sensing").mkdir(parents=True)
+    for f in os.listdir(os.path.join(ROOT, "sensing")):
+        if f.endswith(".py") or f.endswith(".json"):
+            shutil.copy(os.path.join(ROOT, "sensing", f), tmp_path / "rover" / "sensing")
+    (tmp_path / "rover" / "r4.py").write_text("R4 = 'found'\n")
+    # a runner OUTSIDE ~/rover, so nothing but station.py's own sys.path can put ~/rover on it (python -c would add the cwd)
+    (tmp_path / "run.py").write_text("import importlib.util as u, sys\n"
+                                     "s = u.spec_from_file_location('station', sys.argv[1]); m = u.module_from_spec(s)\n"
+                                     "s.loader.exec_module(m)\nfrom r4 import R4\nprint(R4)\n")
+    r = subprocess.run([sys.executable, str(tmp_path / "run.py"), str(tmp_path / "rover" / "sensing" / "station.py")],
+                       cwd=tmp_path, capture_output=True, text=True)
+    assert r.stdout.strip() == "found", r.stderr[-800:]
