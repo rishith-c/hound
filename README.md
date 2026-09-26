@@ -21,7 +21,7 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 | `firmware/r4_drive` | The drive firmware (v1.0 tag `v1.0-best-drive`) |
 | `pi/` | Pi-side code, deploy and flash scripts |
 | `cad/` | Deck tiles for an Ender 3 and the full-plate DXF |
-| `tests/` | `python3 -m pytest tests` — remote recorder and API (stub R4), wiring gate, drivetrain identities, radar ports |
+| `tests/` | `python3 -m pytest tests` — the R4 firmware itself compiled on the host (turret, show, drive ramps, watchdog), remote recorder and API (stub R4), cross-file consistency, wiring gate, drivetrain identities, radar ports |
 
 ## The remote
 
