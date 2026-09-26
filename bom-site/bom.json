@@ -419,6 +419,16 @@
    "note": "USED (v4.1): on the CNC shield's SDA/SCL comms header (5 V I2C from the R4), V+ from the XL4015 at 5.0 V. Tilt ch 3 (positional — must be the 180° MG996R), pan ch 2 (continuous, timed nudges with a trimmed stop pulse), fan on ch 15's V+/GND pins. Never also on the Pi's I2C."
   },
   {
+   "id": "SERVO180",
+   "status": "optional",
+   "group": "Sensing and compute",
+   "asin": "B0FGP9ZPJN",
+   "item": "6× MG996R metal-gear servo, 180° (positional)",
+   "qty": 1,
+   "price": 21.99,
+   "note": "ONLY IF the tilt servo is a 360° one: set a tilt on the remote and let go — a 180° servo stops dead, a 360° one keeps turning (it reads the pulse as speed) and cannot hold the camera. TowerPro sells both in the same case, so buy a listing that says 180° and check the new one by hand, unpowered: it stops at about half a turn. The tilt goes on PCA9685 channel 3. LISTING CHECK 2026-09-25: 180° in the title, $3.67 each."
+  },
+  {
    "id": "M3KIT",
    "status": "buy",
    "group": "Fasteners and assembly",
