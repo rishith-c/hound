@@ -151,7 +151,7 @@ def on_deck(pid, inst, name, dims, x, y, mounts, fast, torque, mass, verify="", 
 on_deck("UNO", "—", "UNO R4 WiFi + DRV8825 CNC Shield stack", (UNO[0], UNO[1], SHIELD_STACK_H), -115.7, 86.7,
         "deck top, rear-left", "printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4's 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties", "hand-tight",
         M["uno_stack"], verify="stack height with heatsinks",
-        note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces −X. Jumpers: D12 + D13 on the A header, caps on MS1 + MS3 under each driver (1/32), EN/GND open. Drivers in with EN on EN. Tilt servo signal on the Z+ end-stop pin (D11).")
+        note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces −X. Jumpers: D12 + D13 on the A header, caps on MS1 + MS3 under each driver (1/32), EN/GND open. Drivers in with EN on EN. Servos run from the PCA9685 on the shield's SDA/SCL comms header (wiring sheet 3).")
 on_deck("FAN", "—", "40×40×10 5 V fan over the drivers", FAN, -115.7, 86.7, "printed PETG bridge over the shield",
         "printed bridge on 2× M3×8 into deck bosses; fan held to the bridge by 2 cable ties", "hand-tight", M["fan"],
         note=f"Blows down onto the four DRV8825 heatsinks. Fan face at Z ≈ {DECK_TOP + 10 + SHIELD_STACK_H + 8:.0f}.")
@@ -174,16 +174,16 @@ on_deck("BANK2", "→ ESP32 #3", "small USB power bank (ESP32 only)", (90.0, 26.
         "velcro strap", "hand-tight", 0.090, verify="any ≥ 1 A bank; weigh it",
         note="Its only load is the CSI node; nothing else plugs into it.")
 on_deck("HUB", "→ Pi USB", "4-port USB hub", (60.0, 30.0, 12.0), -95.0, -165.0, "deck top, rear-right corner",
-        "velcro", "hand-tight", 0.030, note="R4 + the three CP2102 adapters. 0.3 m cable to the Pi.")
-on_deck("CP2102", "×3 → radars", "three CP2102 USB-UART sticks in the hub", (60.0, 55.0, 10.0), -30.0, -160.0, "deck top, rear edge",
-        "cable tie", "hand-tight", 0.030, note="Four wires each to a radar: 5V, GND, TXD, RXD. Label LEFT / RIGHT / LD2450.")
+        "velcro", "hand-tight", 0.030, note="R4 + the two CP2102 adapters; port 4 free. 0.3 m cable to the Pi.")
+on_deck("CP2102", "×2 → LD2410Cs", "two CP2102 USB-UART sticks in the hub", (40.0, 55.0, 10.0), -30.0, -160.0, "deck top, rear edge",
+        "cable tie", "hand-tight", 0.020, note="Four wires each to an LD2410C: +5V, GND, TXD, RXD (3V3 stays empty). Label LEFT / RIGHT. The LD2450 needs no adapter: it goes straight onto the Pi header (pins 4, 34, 10, 8).")
 
 # ── Turret (Ceres pan/tilt) at the front centre ─────────────────────────────
 TX = 110.0
 add("PT", "base", "Ceres pan/tilt turret base plate 100×60×6", TX, 0, DECK_TOP + TURRET_BASE[2] / 2, *TURRET_BASE,
-    "flat on deck; pan stage free — pan servo on the shield's X+ pin — the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3", "front-left/right tiles across the seam",
+    "flat on deck; pan stage free — the Ceres pan servo (PCA9685 ch 2) is continuous-rotation: the firmware turns it by timed nudges and it cannot hold or report an angle, so its zero is wherever it was set by hand", "front-left/right tiles across the seam",
     "4× M3×16 through base (6 mm) + deck (5 mm) + 4× M3 nut (M3 kit)", "1.0 N·m", M["turret"],
-    verify="hole positions on the actual Ceres base", note="Spans X +60..+160, Y −30..+30. Tilt servo cable to PCA9685 ch 0; the pan servo stays disconnected.")
+    verify="hole positions on the actual Ceres base", note="Spans X +60..+160, Y −30..+30. Tilt servo cable to PCA9685 ch 3, pan servo to ch 2.")
 CAM_Z = DECK_TOP + TURRET_BASE[2] + TURRET_H
 add("CAM", "on tilt bracket", "Owned USB webcam (C920-class)", TX, 0, CAM_Z, *CAM,
     "lens forward (+X) at tilt = 0", "turret tilt bracket — the Ceres clamp it was built for", "Ceres camera clamp; 2 cable ties as backup", "hand-tight",
@@ -205,7 +205,7 @@ add("LD2410C", "#1 (left)", "HLK-LD2410C radar", PX + 6, 50, RADAR_Z, *LD2410C, 
     verify="PCB 35×7", note=f"Boresight Z = {RADAR_Z:.0f}, passes over the camera (top ≈ {DECK_TOP + TURRET_BASE[2] + TURRET_H + 10:.0f}). Walleye found floor-level radar sees nothing — this height is a compromise to TEST.")
 add("LD2450", "—", "HLK-LD2450 radar", PX + 6, 0, RADAR_Z, *LD2450, "antenna face +X, straight ahead, horizontal", "radar bar, Y 0 (centre)",
     "2× M2 or printed clip", "hand-tight", M["radar"], verify="PCB 43×15",
-    note="Between the two LD2410Cs, 50 mm from each. Its own ±60° field gives x/y of anything that moves; bench-test whether it reports a still, breathing person. Power one radar at a time first, then all three, and watch for mutual interference.")
+    note="Between the two LD2410Cs, 50 mm from each. Its own ±60° field gives x/y of anything that moves; bench-test whether it reports a still, breathing person. Power one radar at a time first, then all three, and watch for mutual interference. Wired straight to the Pi header's UART (pins 4, 34, 10, 8) — no adapter.")
 add("LD2410C", "#2 (right)", "HLK-LD2410C radar", PX + 6, -50, RADAR_Z, *LD2410C, "antenna face +X toed out 30° to the RIGHT (yaw −30°), horizontal",
     "radar bar, Y −50, on a mirrored printed 30° wedge", "2× M2 or a printed clip; nothing metal within 10 mm of the antenna face", "hand-tight", M["radar"],
     verify="PCB 35×7", note="The pair is an amplitude-comparison direction finder: log(E_left / E_right) at the breathing gate gives bearing (localize.py). Both in 0.2 m gate mode.")
@@ -231,9 +231,9 @@ for inst, x, y, face, dims in (("front", 175 + 2 + TOF[2] / 2, 0, "+X", (TOF[2],
 add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → XL4015 IN (6 V servo rail)", -60, 40, DECK_TOP, 0, 0, 0,
     "—", "pack connector at the battery (rear)", "cable ties every 60 mm to the deck; tape or heat-shrink every joint", "—", M["strapwire"] / 3,
     note="~250 mm each run; 22 AWG is rated 7 A against a 4 A burst. Single common ground at the shield GND terminal. No fuse — by your call; the connector is the disconnect, so keep the pack leads short, sleeved and never resting on a rail edge.")
-add("WIRE22", "signals", "22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 2× ToF + PCA9685 + SCD41; UART radar → ESP32", -80, 0, DECK_TOP, 0, 0, 0,
+add("WIRE22", "signals", "22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 2× ToF + PCA9685 + SCD41; radar UARTs → 2× CP2102 + the Pi header", -80, 0, DECK_TOP, 0, 0, 0,
     "—", "—", "cable mounts on deck underside for motor leads", "—", M["strapwire"] / 3,
-    verify="motor lead length — never documented; the FR motor needs ~400 mm to the shield, so expect to extend with 22 AWG and crimp 4-pin Dupont housings", note="Motor order at the shield: X=FL, Y=FR, Z=RL, A=RR (D12/D13 jumpers fitted). Shared ENABLE on D8.")
+    verify="motor lead length — never documented; the FR motor needs ~400 mm to the shield, so expect to extend with 22 AWG and crimp 4-pin Dupont housings", note="Motor order at the shield, as the firmware maps them (verified 2026-09-09): X=BL, Y=FL, Z=BR, A=FR (D12/D13 jumpers fitted). Shared ENABLE on D8.")
 
 # ── Checks ──────────────────────────────────────────────────────────────────
 def box(p):

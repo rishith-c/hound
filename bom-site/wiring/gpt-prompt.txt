@@ -1,9 +1,9 @@
-You are an electronics documentation engineer. Produce the complete wiring diagram set for "Hound", an indoor search rover (Raspberry Pi 4 + Arduino UNO R4 WiFi + CNC Shield v3 + 4× DRV8825 + 4× NEMA 17 mecanum drive, 3S LiPo, ONE buck converter (XL4015 at 5.0 V) powering the tilt servo and the fan directly from its output pads, the servo signal from the CNC shield's own Z+ end-stop pin (R4 D11), no servo board, an ESP32-S3 on its own small power bank, MLX90640 thermal array, 2× VL53L1X ToF, INMP441 mic, 2–3 HLK radars on CP2102 USB-UART adapters, ESP32-S3 WiFi-CSI node, webcam).
+You are an electronics documentation engineer. Produce the complete wiring diagram set for "Hound", an indoor search rover (Raspberry Pi 4 + Arduino UNO R4 WiFi + CNC Shield v3 + 4× DRV8825 + 4× NEMA 17 mecanum drive, 3S LiPo, ONE buck converter (XL4015 at 5.0 V) feeding a PCA9685 servo board that the R4 drives over the CNC shield's I2C pins (tilt servo ch 3, pan servo ch 2, fan on ch 15), an ESP32-S3 WiFi-CSI node on its own small power bank, MLX90640 thermal array, 2× VL53L1X ToF, INMP441 mic, 2× HLK-LD2410C radars on CP2102 USB-UART adapters, an HLK-LD2450 radar on the Pi's own UART, webcam).
 
 HARD RULES — read before drawing anything
 1. Use ONLY the connectors, pins and wires listed below. Every pin name is taken from a datasheet or the board silkscreen. Do not add, rename, merge or "helpfully" reroute anything. If something looks wrong, say so in a note; do not fix it silently.
 2. Every wire is drawn with BOTH ends labelled "CONNECTOR:pin", its colour and its gauge, exactly as listed.
-3. Colour the rails consistently: 11.1 V pack = red, 6.0 V servo rail = orange, 5.0 V rail = yellow, 3.3 V = violet, GND = black, signals = blue/green/white as listed.
+3. Colour the rails consistently: 11.1 V pack = red, 5.0 V servo rail (XL4015) = orange, 5.0 V logic rail = yellow, 3.3 V = violet, GND = black, signals = blue/green/white as listed.
 4. Do NOT produce pin-level diagrams with an image generator: generated images get pin labels wrong. Produce them as code: a WireViz YAML file per diagram (https://github.com/wireviz/WireViz, `pip install wireviz`, needs Graphviz) rendered with Python, or hand-written SVG. An image generator may be used ONLY for a block-level overview picture with no pin text.
 5. Six diagrams, landscape, one per section below, named exactly as the section headings. Each diagram gets a notes box with the section's NOTES.
 6. Before you hand anything over, run the SELF-CHECK at the end and print its results.
@@ -103,7 +103,7 @@ CONNECTIONS (from → wire#/colour → to):
   A_MOT:1A  →  W_FR #3 green  →  M_FR:coil A +
   A_MOT:1B  →  W_FR #4 black  →  M_FR:coil A −
 
-=== DIAGRAM 3-turret: Hound 3 — turret: PCA9685 on the CNC Shield's I2C pins, tilt ch 0, pan ch 2, fan on ch 15, powered by the XL4015 ===
+=== DIAGRAM 3-turret: Hound 3 — turret: PCA9685 on the CNC Shield's I2C pins, tilt ch 3, pan ch 2, fan on ch 15, powered by the XL4015 ===
 
 CONNECTORS (pin order is the physical order on the part):
   SHIELD_I2C — CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)
@@ -118,18 +118,18 @@ CONNECTORS (pin order is the physical order on the part):
   XL4015 — HiLetgo XL4015 5 A buck — trim OUT to 5.0 V
      pins: IN+ | IN− | OUT+ | OUT−
      NOTES: HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. OUT goes to the PCA9685 terminal, which distributes it to both servos and the fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.
-  PCA_CH0 — PCA9685 channel 0 — TILT
+  PCA_CH3 — PCA9685 channel 3 — TILT
      pins: PWM | V+ | GND
-     NOTES: Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row (as the Ceres turret was wired).
-  TILT — MG996R TILT servo (positional)
+     NOTES: Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row.
+  TILT — MG996R TILT servo (positional, 180°)
      pins: signal (orange) | V+ (red) | GND (brown)
-     NOTES: Plugs onto channel 0. Limits 65–150° in the firmware ('t 90'), Ceres mapping 600 + 10 µs/°.
+     NOTES: Plugs onto channel 3. Limits 78–150° in the firmware ('t 90'), mapping 600 + 10 µs/°. Must be the 180° MG996R: a 360° one cannot hold the camera. Not driven at boot: it starts where it was set by hand.
   PCA_CH2 — PCA9685 channel 2 — PAN
      pins: PWM | V+ | GND
      NOTES: Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row (channel 2, as the Ceres sketch had it).
   PAN — MG996R PAN servo (continuous-rotation)
      pins: signal (orange) | V+ (red) | GND (brown)
-     NOTES: Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it Ceres-style, 'n DIR MS' = 1250/1750 µs for 300 ms then pulse cut; 'p' stops.
+     NOTES: Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it, eased timed turns, then pulse cut; 'p' stops. This one turns right below 1500 µs (PAN_SIGN −1). Stop-pulse trim 'T' is set once with the remote's hold-still test.
   PCA_CH15 — PCA9685 channel 15 — used as a 5 V tap
      pins: PWM | V+ | GND
      NOTES: Only V+ and GND are used: the fan's red to V+, black to GND. PWM pin stays empty.
@@ -149,21 +149,21 @@ CONNECTIONS (from → wire#/colour → to):
   SHIELD_I2C:5V  →  W_I2C #4 red  →  PCA_LOGIC:VCC
   XL4015:OUT+  →  W_SERVO #1 red  →  PCA_PWR:V+
   XL4015:OUT−  →  W_SERVO #2 black  →  PCA_PWR:GND
-  PCA_CH0:PWM  →  W_TILT #1 orange  →  TILT:signal (orange)
-  PCA_CH0:V+  →  W_TILT #2 red  →  TILT:V+ (red)
-  PCA_CH0:GND  →  W_TILT #3 brown  →  TILT:GND (brown)
+  PCA_CH3:PWM  →  W_TILT #1 orange  →  TILT:signal (orange)
+  PCA_CH3:V+  →  W_TILT #2 red  →  TILT:V+ (red)
+  PCA_CH3:GND  →  W_TILT #3 brown  →  TILT:GND (brown)
   PCA_CH2:PWM  →  W_PAN #1 orange  →  PAN:signal (orange)
   PCA_CH2:V+  →  W_PAN #2 red  →  PAN:V+ (red)
   PCA_CH2:GND  →  W_PAN #3 brown  →  PAN:GND (brown)
   PCA_CH15:V+  →  W_FAN #1 red  →  FAN:5V (red)
   PCA_CH15:GND  →  W_FAN #2 black  →  FAN:GND (black)
 
-=== DIAGRAM 4-pi-sensors: Hound 4 — Pi 40-pin header: thermal (i2c3), ToF ×2 (I2C-1), microphone (I2S) ===
+=== DIAGRAM 4-pi-sensors: Hound 4 — Pi 40-pin header: thermal + ToF ×2 (I2C-1), microphone (I2S), LD2450 radar (UART) ===
 
 CONNECTORS (pin order is the physical order on the part):
   PI — Raspberry Pi 4 — 40-pin header (used pins only)
-     pins: 1 3V3 | 3 SDA1 BCM2 | 5 SCL1 BCM3 | 6 GND | 9 GND | 12 BCM18 I2S-BCLK | 13 BCM27 XSHUT-rear | 14 GND | 15 BCM22 XSHUT-front | 17 3V3 | 20 GND | 30 GND | 35 BCM19 I2S-LRCLK | 38 BCM20 I2S-DIN | 39 GND
-     NOTES: Physical pin numbers (odd = inner row from the SD-card end). One I2C bus (pins 3/5) for thermal + both ToFs; three boards share it, so chain through their second headers or a mini breadboard — one female per Pi pin.
+     pins: 1 3V3 | 3 SDA1 BCM2 | 4 5V | 5 SCL1 BCM3 | 8 BCM14 UART-TXD | 9 GND | 10 BCM15 UART-RXD | 12 BCM18 I2S-BCLK | 13 BCM27 XSHUT-rear | 14 GND | 15 BCM22 XSHUT-front | 17 3V3 | 20 GND | 30 GND | 34 GND | 35 BCM19 I2S-LRCLK | 38 BCM20 I2S-DIN | 39 GND
+     NOTES: Physical pin numbers (odd = inner row from the SD-card end). One I2C bus (pins 3/5) for thermal + both ToFs; three boards share it, so chain through their second headers or a mini breadboard — one female per Pi pin. Pins 4/8/10/34 = the LD2450: 5 V on pin 4 only, never on 8 or 10.
   MLX — MLX90640 thermal array breakout (0x33)
      pins: VIN 3V3 | GND | SCL | SDA
      NOTES: On I2C-1 with the two ToFs (no address clash: 0x33 / 0x29 / 0x30). 400 kHz gives 8 fps; station.py uses 4. Rides beside the webcam on the tilt bracket.
@@ -176,11 +176,15 @@ CONNECTORS (pin order is the physical order on the part):
   MIC — INMP441 I2S microphone
      pins: VDD 3V3 | GND | SCK | WS | SD | L/R
      NOTES: L/R tied to GND = left channel. On the post front face, 120 mm up (assembly.py).
+  LD2450 — HLK-LD2450 (centre, x/y tracker)
+     pins: 5V | GND | TX | RX
+     NOTES: Silkscreen 5V GND TX RX; 5 V supply, 3.3 V UART, 256000 baud. No adapter: straight onto the Pi header — the Pi's own UART (/dev/ttyAMA0 once pi/enable_gpio_uart.sh has run). Powered OFF by default: same 24 GHz band as the LD2410Cs, interference untested.
 WIRES:
   W_MLX: 26 AWG, 0.35 m, conductors red, black, yellow, blue — to the turret: leave a service loop for tilt
   W_TOF_F: 26 AWG, 0.25 m, conductors red, black, blue, yellow, white
   W_TOF_R: 26 AWG, 0.35 m, conductors red, black, blue, yellow, white
   W_MIC: 26 AWG, 0.25 m, conductors red, black, green, orange, violet, black
+  W_LD2450: 26 AWG, 0.25 m, conductors red, black, green, white — 5V, GND, radar TX → Pi RXD, radar RX ← Pi TXD — one 4-wire Dupont lead
 CONNECTIONS (from → wire#/colour → to):
   PI:1 3V3  →  W_MLX #1 red  →  MLX:VIN 3V3
   PI:9 GND  →  W_MLX #2 black  →  MLX:GND
@@ -202,15 +206,19 @@ CONNECTIONS (from → wire#/colour → to):
   PI:35 BCM19 I2S-LRCLK  →  W_MIC #4 orange  →  MIC:WS
   PI:38 BCM20 I2S-DIN  →  W_MIC #5 violet  →  MIC:SD
   PI:30 GND  →  W_MIC #6 black  →  MIC:L/R
+  PI:4 5V  →  W_LD2450 #1 red  →  LD2450:5V
+  PI:34 GND  →  W_LD2450 #2 black  →  LD2450:GND
+  LD2450:TX  →  W_LD2450 #3 green  →  PI:10 BCM15 UART-RXD
+  LD2450:RX  →  W_LD2450 #4 white  →  PI:8 BCM14 UART-TXD
 
-=== DIAGRAM 5-radars-usb: Hound 5 — radars: four wires each to their own CP2102, and the USB tree ===
+=== DIAGRAM 5-radars-usb: Hound 5 — LD2410C radars: four wires each to their own CP2102, and the USB tree (the LD2450 is on sheet 4) ===
 
 CONNECTORS (pin order is the physical order on the part):
   PI_USB — Raspberry Pi 4 — USB-A ports
      pins: USB 1: webcam | USB 2: hub | USB 3: free | USB 4: free
-     NOTES: 1.2 A shared across all four ports; peak here 1.0 A (webcam 0.3, R4 0.2, hub + adapters + three radars 0.5). Webcam on its own port, everything else through the hub.
+     NOTES: 1.2 A shared across all four ports; peak here 0.8 A (webcam 0.3, R4 0.2, hub + two adapters + two LD2410Cs 0.28). Webcam on its own port, everything else through the hub.
   HUB — 4-port USB hub (unpowered)
-     pins: upstream | port 1: UNO R4 | port 2: CP2102 no.1 | port 3: CP2102 no.2 | port 4: CP2102 no.3
+     pins: upstream | port 1: UNO R4 | port 2: CP2102 no.1 | port 3: CP2102 no.2 | port 4: free
   CAM — Webcam (C920-class) — captive 1.5 m cable
      pins: USB-A
      NOTES: On the turret beside the thermal array. If it drops out at 1080p, run 720p.
@@ -219,39 +227,30 @@ CONNECTORS (pin order is the physical order on the part):
      NOTES: USB CDC serial to the Pi: /dev/serial/by-id/*Arduino*
   CP1 — CP2102 USB-UART no.1 → LD2410C LEFT
      pins: 3V3 | 5V | GND | TXD | RXD | DTR
-     NOTES: 3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2410C LEFT.
+     NOTES: 3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: +5V → VCC (the 3V3 pin stays empty), GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2410C LEFT.
   CP2 — CP2102 USB-UART no.2 → LD2410C RIGHT
      pins: 3V3 | 5V | GND | TXD | RXD | DTR
-     NOTES: 3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2410C RIGHT.
-  CP3 — CP2102 USB-UART no.3 → LD2450 (when the third adapter arrives)
-     pins: 3V3 | 5V | GND | TXD | RXD | DTR
-     NOTES: 3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2450 (when the third adapter arrives).
+     NOTES: 3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: +5V → VCC (the 3V3 pin stays empty), GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2410C RIGHT.
   LDL — HLK-LD2410C LEFT (toed +30° out, deck Y +50)
      pins: 1 TX | 2 RX | 3 OUT | 4 GND | 5 VCC
      NOTES: Pins per Hi-Link manual table 1: 1 UART_Tx, 2 UART_Rx, 3 OUT, 4 GND, 5 VCC (5–12 V, 5 V advised). IO 3.3 V, 256000 baud. OUT unused.
   LDR — HLK-LD2410C RIGHT (toed −30° out, deck Y −50)
      pins: 1 TX | 2 RX | 3 OUT | 4 GND | 5 VCC
      NOTES: Pins per Hi-Link manual table 1: 1 UART_Tx, 2 UART_Rx, 3 OUT, 4 GND, 5 VCC (5–12 V, 5 V advised). IO 3.3 V, 256000 baud. OUT unused.
-  LD2450 — HLK-LD2450 (centre, x/y tracker)
-     pins: 5V | GND | TX | RX
-     NOTES: Silkscreen 5V GND TX RX; 5 V supply, 3.3 V UART, 256000 baud. Needs the THIRD CP2102 — until it arrives, leave it unplugged.
 WIRES:
   W_CAM: 28 AWG, 1.5 m, conductors white — captive
   W_HUB: 28 AWG, 0.3 m, conductors white
   W_R4: 28 AWG, 0.3 m, conductors white — USB-A → USB-C
   W_CPA: 28 AWG, 0.15 m, conductors white
   W_CPB: 28 AWG, 0.15 m, conductors white
-  W_CPC: 28 AWG, 0.15 m, conductors white
   W_LDL: 26 AWG, 0.25 m, conductors green, white, black, red — TX, RX, GND, VCC — one 4-wire Dupont lead per radar
   W_LDR: 26 AWG, 0.25 m, conductors green, white, black, red
-  W_LD2450: 26 AWG, 0.25 m, conductors green, white, black, red
 CONNECTIONS (from → wire#/colour → to):
   PI_USB:USB 1: webcam  →  W_CAM #1 white  →  CAM:USB-A
   PI_USB:USB 2: hub  →  W_HUB #1 white  →  HUB:upstream
   HUB:port 1: UNO R4  →  W_R4 #1 white  →  R4_USB:USB-C
   HUB:port 2: CP2102 no.1  →  W_CPA #1 white  →  CP1:5V
   HUB:port 3: CP2102 no.2  →  W_CPB #1 white  →  CP2:5V
-  HUB:port 4: CP2102 no.3  →  W_CPC #1 white  →  CP3:5V
   LDL:1 TX  →  W_LDL #1 green  →  CP1:RXD
   LDL:2 RX  →  W_LDL #2 white  →  CP1:TXD
   CP1:GND  →  W_LDL #3 black  →  LDL:4 GND
@@ -260,10 +259,6 @@ CONNECTIONS (from → wire#/colour → to):
   LDR:2 RX  →  W_LDR #2 white  →  CP2:TXD
   CP2:GND  →  W_LDR #3 black  →  LDR:4 GND
   CP2:5V  →  W_LDR #4 red  →  LDR:5 VCC
-  LD2450:TX  →  W_LD2450 #1 green  →  CP3:RXD
-  LD2450:RX  →  W_LD2450 #2 white  →  CP3:TXD
-  CP3:GND  →  W_LD2450 #3 black  →  LD2450:GND
-  CP3:5V  →  W_LD2450 #4 red  →  LD2450:5V
 
 === DIAGRAM 6-csi: Hound 6 — WiFi CSI nodes: ESP32-S3 no.3 on the rover on its own power bank, no.2 off the rover ===
 
@@ -283,46 +278,48 @@ CONNECTIONS (from → wire#/colour → to):
   BANK2:USB-A out  →  W_ESP #1 white  →  ESP3:USB-C
 
 === PROCEDURES AND WARNINGS (print these on the sheet; they come from the electrical model wiring.py) ===
-  [WARN] V_SERVO (XL4015 trimmed to 5.0 V → PCA9685 V+ terminal (tilt ch 0, pan ch 2, fan on ch 15's V+/GND pins)): avg 0.75 A of 4.0 A (19%), peak 4.40 A of 5.0 A (88%)
+  [WARN] V_SERVO (XL4015 trimmed to 5.0 V → PCA9685 V+ terminal (tilt ch 3, pan ch 2, fan on ch 15's V+/GND pins)): avg 0.75 A of 4.0 A (19%), peak 4.40 A of 5.0 A (88%)
   [WARN] webcam sees 4.53 V at its 500 mA descriptor (4.57 V at a typical 250 mA) through its own captive 1.5 m cable; USB floor 4.75 V, most cameras run to ~4.4 V. If it drops out at 1080p, run 720p — its cable cannot be shortened
-  [WARN] A 1 m 28 AWG phone cable to the Pi would drop 1.04 V → 3.86 V at the Pi = brownout. The bank cable is a spec: ≤ 0.2 m with 22 AWG or heavier power conductors (a short '3 A fast-charge' cable)
+  [WARN] A 1 m 28 AWG phone cable to the Pi would drop 1.03 V → 3.87 V at the Pi = brownout. The bank cable is a spec: ≤ 0.2 m with 22 AWG or heavier power conductors (a short '3 A fast-charge' cable)
   [WARN] Motor phases run 1.5 A through Dupont 2.54 contacts rated 2.0 A — inside rating but the crimp quality is the margin. A contact that heats in the wheels-up test gets re-crimped or soldered.
-  [WARN] Both servos stalling together = 4.4 A on the XL4015 (5 A peak, 4 A continuous) and 2.1 A per PCA9685 channel header (rated 2.0 A): momentary by nature; keep stalls short with the firmware limits (tilt 65–150°) and release the servos ('t -1', 'p -1') between stations
+  [WARN] Both servos stalling together = 4.4 A on the XL4015 (5 A peak, 4 A continuous) and 2.1 A per PCA9685 channel header (rated 2.0 A): momentary by nature; keep stalls short with the firmware limits (tilt 78–150°) and release the servos ('t -1', 'p -1') between stations
   [WARN] No EN pull-up fitted: during an R4 reset (~1 s at boot, every sketch upload) all four drivers are ENABLED at full holding current. Harmless for a second; NOT harmless if you flash repeatedly with the pack plugged in (drivers heat). So: pack unplugged whenever the USB cable is doing anything but driving.
   [WARN] No fuse, no cell alarm, no voltage divider (all declined for simplicity): nothing stops the pack from over-discharging. Rule: a full pack (12.6 V) gives ~45 min of driving — set a 30-minute timer, then meter the pack; stop at 11.1 V, never below 10.5 V. A pack that reads 6–7 V is dead (pack A).
   [WARN] Pi 5 only: default 600 mA USB cap → set usb_max_current_enable=1, or use the Pi 4 this file assumes.
-  [WARN] bank → Pi USB-C cable (SPEC: ≤ 0.2 m, 22 AWG or heavier power conductors): 22 AWG × 0.2 m, peak 2.44 A (ampacity 7 A, USB-C 3.0 A), round-trip drop 52 mV = 1.0%
+  [WARN] bank → Pi USB-C cable (SPEC: ≤ 0.2 m, 22 AWG or heavier power conductors): 22 AWG × 0.2 m, peak 2.41 A (ampacity 7 A, USB-C 3.0 A), round-trip drop 51 mV = 1.0%
   [WARN] Pi USB-A → webcam (captive cable, 1.5 m): 28 AWG × 1.5 m, peak 0.30 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 192 mV = 3.8%
   [VERIFY] Load-test the bank at 2.5 A for 60 s with the meter on the Pi's 5 V pin: below 4.8 V the bank is not a 3 A bank.
   [VERIFY] If the bank's output is USB-C and the Pi 4 is an early board (pre-2020, rev 1.1), an e-marked C-to-C cable will not power it — use an A-to-C cable or a plain C-to-C. Later Pi 4s and all Pi 5s are fine
   [VERIFY] Before connecting SDA/SCL: power each I2C module alone and meter SDA to GND — it must read ≤ 3.3 V. A module whose pull-ups go to 5 V goes on 3.3 V power or not on the Pi.
   [VERIFY] One I2C bus for everything: the Pi's 1.8 kΩ pull-ups plus the boards' own 10 kΩ. i2cdetect -y 1 must show 0x33 (thermal) and 0x29 (rear ToF); the front ToF appears at 0x30 only after station.py re-addresses it. If the SCD41 is fitted the bus drops to 100 kHz — fine for 4 fps thermal.
+  [VERIFY] The tilt servo must be a 180° (positional) MG996R: with the remote, set a tilt and let go — it must stop dead. A 360° servo keeps turning under a tilt command (it reads the pulse as speed), cannot hold the camera, and winds one way under the show. TowerPro sells both with the same case
   [PROCEDURE] 1000 µF electrolytic across VMOT: stripe = negative, to the GND terminal. Reversed, it vents on the first power-up
   [PROCEDURE] CSI v2: ESP32 #2 runs csi_tx OFF the rover (dropped as far along the wall as the room allows, any USB 5 V, channel 6, 100 Hz probes). ESP32 #3 runs csi_rx_udp ON the rover from its OWN small power bank on its USB-C — nothing else plugs into it, no wire touches the rover's electronics. It streams the CSI of every probe to the Pi hotspot (channel 6), UDP port 5005. ESP32 #1 is the spare.
   [PROCEDURE] DRV8825 into the shield socket with its EN pin over the socket's EN label (the trimpot ends up toward the shield's power terminal on genuine Pololu layouts; clones vary — go by the label). Backwards = dead driver on power-up, no warning
   [PROCEDURE] The 40 mm 5 V fan plugs onto the PCA9685's channel-15 header: red → the middle (V+) pin, black → the bottom (GND) pin. The XL4015 is set to 5.0 V for exactly this; the tilt servo is fine at 5 V.
-  [PROCEDURE] Servo/fan return: XL4015 OUT−, which is the same node as IN− (a buck shares its negative) and so the shield GND screw — the D11 signal is referenced to it automatically. Radars return through their adapters (USB side). Pack current never flows through a board GND pin or a USB cable.
+  [PROCEDURE] Servo/fan return: XL4015 OUT−, which is the same node as IN− (a buck shares its negative) and so the shield GND screw — the D11 signal is referenced to it automatically. The LD2410Cs return through their adapters (USB side), the LD2450 through the Pi header's pin 34. Pack current never flows through a board GND pin or a USB cable.
   [PROCEDURE] The Pi header has two 3V3 pins and one SDA/SCL pair, but four boards want 3V3 and three want SDA/SCL — one Dupont female per pin. Chain through the boards' second header/STEMMA port (Adafruit-pattern MLX/ToF boards have one), or use a mini breadboard as the 3V3/SDA/SCL splitter. Never force two females onto one pin.
   [PROCEDURE] AS BUILT (v1.0 best drive): DRV8825 1/32 = M0 + M2 → caps on MS1 and MS3 under each driver, MS2 open (eight caps), plus the D12 and D13 jumpers on the A header = ten jumpers total. Caps go on before the drivers. 1/16 (one cap, MS3 only, firmware m 16) is the faster alternative — a drive-setting change, ask first.
   [PROCEDURE] The shield's VMOT/GND screw terminal is the only pack splice: the 14 AWG pack lead and the 22 AWG XL4015 input wire share each screw (2.4 mm² total, inside the 5.08 mm terminal's range). Strip 7 mm, twist the two conductors together before inserting, tug-test both.
   [PROCEDURE] Motor coil pairs by multimeter: the two leads that show ~2 Ω are one coil. A coil split across the 2B/2A–1A/1B header halves makes a motor buzz and not turn.
-  [PROCEDURE] Each radar is a 4-wire job to its own CP2102: VCC → the adapter's 5V pin, GND → GND, TX → RXD, RX → TXD. The three radars add 260 mA to the Pi's USB budget (checked above). The adapter must be a 3.3 V-logic type: meter its TXD pin at idle — 3.3 V, not 5 V
+  [PROCEDURE] Each LD2410C is a 4-wire job to its own CP2102: VCC → the adapter's +5V pin (never 3V3 — too weak, and the radar needs 5 V), GND → GND, TX → RXD, RX → TXD. They add 160 mA to the Pi's USB budget (checked above). The adapter must be a 3.3 V-logic type: meter its TXD pin at idle — 3.3 V, not 5 V. The LD2450 (100 mA) takes no adapter: 5V → Pi pin 4, GND → pin 34 (pin 6 also works — any Pi GND pin), TX → pin 10, RX → pin 8
   [PROCEDURE] Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. Power-down and BEFORE every flash/reset of the R4: pull the pack plug first. Reason: DRV8825 nENABLE has a pull-down, so while the R4 is dead or resetting all four drivers sit at full holding current (no pull-up resistor fitted — by choice; the plug order replaces it).
-  [PROCEDURE] PCA9685 on the CNC shield's comms header: shield SDA → PCA SDA, SCL → SCL, 5V → VCC, GND → GND (5 V I2C from the R4). XL4015 OUT+/OUT− → the PCA9685's V+/GND screw terminal. TILT servo on channel 0 (positional MG996R, floor ~62–70°), PAN servo on channel 2 (continuous-rotation) — as the Ceres turret is plugged; brown toward the board edge = GND row. Fan red/black onto channel 15's V+ and GND pins. Firmware, Ceres-style: tilt 't <deg>' 65–150 (600 + 10 µs/°); pan only by timed nudge 'n -1 300' / 'n 1 300' (1250/1750 µs for 300 ms, then pulse cut, ~20°), 'p' = stop; 'K 1' runs the Ceres kinematic show. Status 'pca' = 1 when the board answers.
+  [PROCEDURE] PCA9685 on the CNC shield's comms header: shield SDA → PCA SDA, SCL → SCL, 5V → VCC, GND → GND (5 V I2C from the R4). XL4015 OUT+/OUT− → the PCA9685's V+/GND screw terminal. TILT servo on channel 3 (positional MG996R), PAN servo on channel 2 (continuous-rotation); brown toward the board edge = GND row. Fan red/black onto channel 15's V+ and GND pins. Firmware: nothing is driven at boot — the turret starts wherever it was set by hand. Tilt 't <deg>' 78–150 (600 + 10 µs/°), 't -1' = limp; pan only by timed eased nudges 'n -1 300' / 'n 1 300' (this servo turns right below 1500 µs, so PAN_SIGN = −1), 'p' = stop, 'T <µs>' trims the stop pulse (saved on the Pi, set with the remote's hold-still test), 'H <ms>' holds the stop pulse; 'K 1' runs the show about the start pose and 'K 0' returns to it. Status 'pca' = 1 when the board answers.
+  [PROCEDURE] The LD2450 on the Pi's own UART, once: raspi-config nonint do_serial_cons 1 (no login console on it), do_serial_hw 0, add dtoverlay=disable-bt to /boot/firmware/config.txt, systemctl disable hciuart, reboot (pi/enable_gpio_uart.sh). It then reads as /dev/ttyAMA0 at 256000 baud: put that path in ~/rover/radars.json as "ld2450". Nothing on the rover uses Bluetooth. Never land a 5 V wire on pins 8/10
   [PROCEDURE] Read the sense resistor on one driver: R100 → Vref = 0.75 V for 1.5 A; R200 → 1.50 V. Set all four with the multimeter, motors unplugged, before any motor is connected.
 
 === DECISION ALREADY MADE: which bus drives the PCA9685 ===
-The PCA9685 hangs on the CNC shield's SDA/SCL comms header (R4 A4/A5, 5 V I2C, VCC from the shield's 5V pin) and is driven by the R4 (firmware 't <deg>' for tilt; pan is a continuous-rotation servo driven only by 'n dir ms' timed nudges, 1250/1750 µs for 300 ms then pulse off, as in Ceres's turret_duet.ino). XL4015 OUT → its V+ terminal. Tilt servo on channel 0, pan on channel 2, fan on channel 15's V+/GND pins. It must never also touch the Pi's SDA/SCL. Draw sheet 3 exactly so.
+The PCA9685 hangs on the CNC shield's SDA/SCL comms header (R4 A4/A5, 5 V I2C, VCC from the shield's 5V pin) and is driven by the R4 (firmware 't <deg>' for tilt; pan is a continuous-rotation servo driven only by 'n dir ms' eased timed nudges then pulse off, as in Ceres's turret_duet.ino; nothing is driven at boot). XL4015 OUT → its V+ terminal. Tilt servo on channel 3, pan on channel 2, fan on channel 15's V+/GND pins. It must never also touch the Pi's SDA/SCL. Draw sheet 3 exactly so.
 
 === SELF-CHECK (run it, print PASS/FAIL per line) ===
 1. Every CONNECTOR:pin used in CONNECTIONS exists in that connector's pin list.
-2. Each LD2410C and the LD2450 has exactly TWO GND wires: one to WAGO5_N, one to its CP2102 GND. Their VCC/5V comes from WAGO5_P, never from the CP2102's 5V pin.
-3. Nothing on the Pi 40-pin header carries 5 V: all I2C/I2S devices are on 3V3 pins.
+2. Each LD2410C has exactly ONE GND wire, to its own CP2102's GND, and its VCC from that adapter's +5V pin (never its 3V3 pin). The LD2450 has one GND wire, to Pi pin 34, and its 5V from Pi pin 4.
+3. Pi pin 4 is the only header pin that carries 5 V (the LD2450's supply). Every signal pin used on the header — I2C, I2S, XSHUT and the UART pins 8/10 — is 3.3 V.
 4. The MLX90640 and the two VL53L1X share I2C-1 (BCM 2/3). Addresses: 0x33, 0x29, 0x30 — no clash.
-5. Motor bus: WAGO_P → SHIELD_PWR VMOT and WAGO_N → SHIELD_PWR GND, 22 AWG, with the 1000 µF cap noted, stripe to GND.
+5. Motor bus: the Deans plug → SHIELD_PWR VMOT/GND, 14 AWG, with the 1000 µF cap noted, stripe to GND; the XL4015's 22 AWG input shares the same two screws.
 6. XL4015 OUT− goes to the PCA9685's GND terminal; the buck's negative is common with the shield GND, so the R4's I2C and the servo rail share a reference.
-7. The E-STOP sits in the pack + lead between the T-plug and WAGO_P; the Pi is on the USB bank, not on the pack.
-8. The divider is 47 kΩ WAGO_P → A3, 10 kΩ A3 → WAGO_N; A3 is the shield's CoolEn pin.
-9. ESP32-S3 no.3 is fed at its 5V pin from WAGO5_P and its USB port is marked "never while 5V is fed".
+7. The E-STOP is the Deans pull-plug on the deck, between the pack and the shield terminal; the Pi is on the USB bank, not on the pack.
+8. There is no voltage divider: A3 stays free, so the firmware's low-voltage cut stays off (vcut 0).
+9. ESP32-S3 no.3 is powered only through its USB-C, from its own small bank; nothing on the rover is wired to it.
 10. The shield's four motor headers map X=BL, Y=FL, Z=BR, A=FR; each motor's coil pairs are found with a meter, colours are indicative only.
 11. Power-up order is printed: bank → Pi → R4 (USB) → then the pack.

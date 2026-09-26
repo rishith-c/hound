@@ -206,23 +206,23 @@
    ],
    "notes": "The big 2-pin terminal = the 5.0 V rail in from the XL4015. Every channel header's middle (V+) and bottom (GND) pin is bussed to it."
   },
-  "PCA_CH0": {
-   "type": "PCA9685 channel 0 — TILT",
+  "PCA_CH3": {
+   "type": "PCA9685 channel 3 — TILT",
    "pinlabels": [
     "PWM",
     "V+",
     "GND"
    ],
-   "notes": "Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row (as the Ceres turret was wired)."
+   "notes": "Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row."
   },
   "TILT": {
-   "type": "MG996R TILT servo (positional)",
+   "type": "MG996R TILT servo (positional, 180°)",
    "pinlabels": [
     "signal (orange)",
     "V+ (red)",
     "GND (brown)"
    ],
-   "notes": "Plugs onto channel 0. Limits 65–150° in the firmware ('t 90'), Ceres mapping 600 + 10 µs/°."
+   "notes": "Plugs onto channel 3. Limits 78–150° in the firmware ('t 90'), mapping 600 + 10 µs/°. Must be the 180° MG996R: a 360° one cannot hold the camera. Not driven at boot: it starts where it was set by hand."
   },
   "PCA_CH2": {
    "type": "PCA9685 channel 2 — PAN",
@@ -240,7 +240,7 @@
     "V+ (red)",
     "GND (brown)"
    ],
-   "notes": "Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it Ceres-style, 'n DIR MS' = 1250/1750 µs for 300 ms then pulse cut; 'p' stops."
+   "notes": "Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it, eased timed turns, then pulse cut; 'p' stops. This one turns right below 1500 µs (PAN_SIGN −1). Stop-pulse trim 'T' is set once with the remote's hold-still test."
   },
   "PCA_CH15": {
    "type": "PCA9685 channel 15 — used as a 5 V tap",
@@ -264,9 +264,11 @@
    "pinlabels": [
     "1 3V3",
     "3 SDA1 BCM2",
+    "4 5V",
     "5 SCL1 BCM3",
-    "6 GND",
+    "8 BCM14 UART-TXD",
     "9 GND",
+    "10 BCM15 UART-RXD",
     "12 BCM18 I2S-BCLK",
     "13 BCM27 XSHUT-rear",
     "14 GND",
@@ -274,11 +276,12 @@
     "17 3V3",
     "20 GND",
     "30 GND",
+    "34 GND",
     "35 BCM19 I2S-LRCLK",
     "38 BCM20 I2S-DIN",
     "39 GND"
    ],
-   "notes": "Physical pin numbers (odd = inner row from the SD-card end). One I2C bus (pins 3/5) for thermal + both ToFs; three boards share it, so chain through their second headers or a mini breadboard — one female per Pi pin."
+   "notes": "Physical pin numbers (odd = inner row from the SD-card end). One I2C bus (pins 3/5) for thermal + both ToFs; three boards share it, so chain through their second headers or a mini breadboard — one female per Pi pin. Pins 4/8/10/34 = the LD2450: 5 V on pin 4 only, never on 8 or 10."
   },
   "MLX": {
    "type": "MLX90640 thermal array breakout (0x33)",
@@ -324,6 +327,16 @@
    ],
    "notes": "L/R tied to GND = left channel. On the post front face, 120 mm up (assembly.py)."
   },
+  "LD2450": {
+   "type": "HLK-LD2450 (centre, x/y tracker)",
+   "pinlabels": [
+    "5V",
+    "GND",
+    "TX",
+    "RX"
+   ],
+   "notes": "Silkscreen 5V GND TX RX; 5 V supply, 3.3 V UART, 256000 baud. No adapter: straight onto the Pi header — the Pi's own UART (/dev/ttyAMA0 once pi/enable_gpio_uart.sh has run). Powered OFF by default: same 24 GHz band as the LD2410Cs, interference untested."
+  },
   "PI_USB": {
    "type": "Raspberry Pi 4 — USB-A ports",
    "pinlabels": [
@@ -332,7 +345,7 @@
     "USB 3: free",
     "USB 4: free"
    ],
-   "notes": "1.2 A shared across all four ports; peak here 1.0 A (webcam 0.3, R4 0.2, hub + adapters + three radars 0.5). Webcam on its own port, everything else through the hub."
+   "notes": "1.2 A shared across all four ports; peak here 0.8 A (webcam 0.3, R4 0.2, hub + two adapters + two LD2410Cs 0.28). Webcam on its own port, everything else through the hub."
   },
   "HUB": {
    "type": "4-port USB hub (unpowered)",
@@ -341,7 +354,7 @@
     "port 1: UNO R4",
     "port 2: CP2102 no.1",
     "port 3: CP2102 no.2",
-    "port 4: CP2102 no.3"
+    "port 4: free"
    ]
   },
   "CAM": {
@@ -368,7 +381,7 @@
     "RXD",
     "DTR"
    ],
-   "notes": "3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2410C LEFT."
+   "notes": "3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: +5V → VCC (the 3V3 pin stays empty), GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2410C LEFT."
   },
   "CP2": {
    "type": "CP2102 USB-UART no.2 → LD2410C RIGHT",
@@ -380,19 +393,7 @@
     "RXD",
     "DTR"
    ],
-   "notes": "3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2410C RIGHT."
-  },
-  "CP3": {
-   "type": "CP2102 USB-UART no.3 → LD2450 (when the third adapter arrives)",
-   "pinlabels": [
-    "3V3",
-    "5V",
-    "GND",
-    "TXD",
-    "RXD",
-    "DTR"
-   ],
-   "notes": "3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2450 (when the third adapter arrives)."
+   "notes": "3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: +5V → VCC (the 3V3 pin stays empty), GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter body: LD2410C RIGHT."
   },
   "LDL": {
    "type": "HLK-LD2410C LEFT (toed +30° out, deck Y +50)",
@@ -415,16 +416,6 @@
     "5 VCC"
    ],
    "notes": "Pins per Hi-Link manual table 1: 1 UART_Tx, 2 UART_Rx, 3 OUT, 4 GND, 5 VCC (5–12 V, 5 V advised). IO 3.3 V, 256000 baud. OUT unused."
-  },
-  "LD2450": {
-   "type": "HLK-LD2450 (centre, x/y tracker)",
-   "pinlabels": [
-    "5V",
-    "GND",
-    "TX",
-    "RX"
-   ],
-   "notes": "Silkscreen 5V GND TX RX; 5 V supply, 3.3 V UART, 256000 baud. Needs the THIRD CP2102 — until it arrives, leave it unplugged."
   },
   "ESP3": {
    "type": "ESP32-S3 DevKitC no.3 — csi_rx_udp, ON the rover",
@@ -862,7 +853,7 @@
    ],
    [
     [
-     "PCA_CH0",
+     "PCA_CH3",
      "PWM"
     ],
     [
@@ -876,7 +867,7 @@
    ],
    [
     [
-     "PCA_CH0",
+     "PCA_CH3",
      "V+"
     ],
     [
@@ -890,7 +881,7 @@
    ],
    [
     [
-     "PCA_CH0",
+     "PCA_CH3",
      "GND"
     ],
     [
@@ -1253,6 +1244,62 @@
      "MIC",
      "L/R"
     ]
+   ],
+   [
+    [
+     "PI",
+     "4 5V"
+    ],
+    [
+     "W_LD2450",
+     1
+    ],
+    [
+     "LD2450",
+     "5V"
+    ]
+   ],
+   [
+    [
+     "PI",
+     "34 GND"
+    ],
+    [
+     "W_LD2450",
+     2
+    ],
+    [
+     "LD2450",
+     "GND"
+    ]
+   ],
+   [
+    [
+     "LD2450",
+     "TX"
+    ],
+    [
+     "W_LD2450",
+     3
+    ],
+    [
+     "PI",
+     "10 BCM15 UART-RXD"
+    ]
+   ],
+   [
+    [
+     "LD2450",
+     "RX"
+    ],
+    [
+     "W_LD2450",
+     4
+    ],
+    [
+     "PI",
+     "8 BCM14 UART-TXD"
+    ]
    ]
   ],
   "5-radars-usb": [
@@ -1328,20 +1375,6 @@
    ],
    [
     [
-     "HUB",
-     "port 4: CP2102 no.3"
-    ],
-    [
-     "W_CPC",
-     1
-    ],
-    [
-     "CP3",
-     "5V"
-    ]
-   ],
-   [
-    [
      "LDL",
      "1 TX"
     ],
@@ -1450,62 +1483,6 @@
     [
      "LDR",
      "5 VCC"
-    ]
-   ],
-   [
-    [
-     "LD2450",
-     "TX"
-    ],
-    [
-     "W_LD2450",
-     1
-    ],
-    [
-     "CP3",
-     "RXD"
-    ]
-   ],
-   [
-    [
-     "LD2450",
-     "RX"
-    ],
-    [
-     "W_LD2450",
-     2
-    ],
-    [
-     "CP3",
-     "TXD"
-    ]
-   ],
-   [
-    [
-     "CP3",
-     "GND"
-    ],
-    [
-     "W_LD2450",
-     3
-    ],
-    [
-     "LD2450",
-     "GND"
-    ]
-   ],
-   [
-    [
-     "CP3",
-     "5V"
-    ],
-    [
-     "W_LD2450",
-     4
-    ],
-    [
-     "LD2450",
-     "5V"
     ]
    ]
   ],

@@ -14,20 +14,20 @@
  "3-turret": {
   "wires": 14,
   "parts": 7,
-  "crossings": 33,
-  "overlaps": 0
+  "crossings": 24,
+  "overlaps": 2
  },
  "4-pi-sensors": {
-  "wires": 20,
-  "parts": 5,
-  "crossings": 118,
+  "wires": 24,
+  "parts": 6,
+  "crossings": 166,
   "overlaps": 11
  },
  "5-radars-usb": {
-  "wires": 18,
-  "parts": 10,
-  "crossings": 26,
-  "overlaps": 3
+  "wires": 13,
+  "parts": 8,
+  "crossings": 13,
+  "overlaps": 2
  },
  "6-csi": {
   "wires": 1,
@@ -36,9 +36,9 @@
   "overlaps": 0
  },
  "poster": {
-  "wires": 76,
-  "parts": 30,
-  "crossings": 338,
-  "overlaps": 22
+  "wires": 75,
+  "parts": 29,
+  "crossings": 408,
+  "overlaps": 23
  }
 }

@@ -1,5 +1,5 @@
 metadata:
-  title: 'Hound 5 — radars: four wires each to their own CP2102, and the USB tree'
+  title: 'Hound 5 — LD2410C radars: four wires each to their own CP2102, and the USB tree (the LD2450 is on sheet 4)'
 connectors:
   PI_USB:
     type: Raspberry Pi 4 — USB-A ports
@@ -8,7 +8,7 @@ connectors:
     - 'USB 2: hub'
     - 'USB 3: free'
     - 'USB 4: free'
-    notes: 1.2 A shared across all four ports; peak here 1.0 A (webcam 0.3, R4 0.2, hub + adapters + three radars 0.5). Webcam on its own port, everything else through the hub.
+    notes: 1.2 A shared across all four ports; peak here 0.8 A (webcam 0.3, R4 0.2, hub + two adapters + two LD2410Cs 0.28). Webcam on its own port, everything else through the hub.
   HUB:
     type: 4-port USB hub (unpowered)
     pinlabels:
@@ -16,7 +16,7 @@ connectors:
     - 'port 1: UNO R4'
     - 'port 2: CP2102 no.1'
     - 'port 3: CP2102 no.2'
-    - 'port 4: CP2102 no.3'
+    - 'port 4: free'
   CAM:
     type: Webcam (C920-class) — captive 1.5 m cable
     pinlabels:
@@ -36,8 +36,8 @@ connectors:
     - TXD
     - RXD
     - DTR
-    notes: '3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter
-      body: LD2410C LEFT.'
+    notes: '3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: +5V → VCC (the 3V3 pin stays empty), GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through
+      (≤ 500 mA). Label the adapter body: LD2410C LEFT.'
   CP2:
     type: CP2102 USB-UART no.2 → LD2410C RIGHT
     pinlabels:
@@ -47,19 +47,8 @@ connectors:
     - TXD
     - RXD
     - DTR
-    notes: '3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter
-      body: LD2410C RIGHT.'
-  CP3:
-    type: CP2102 USB-UART no.3 → LD2450 (when the third adapter arrives)
-    pinlabels:
-    - 3V3
-    - 5V
-    - GND
-    - TXD
-    - RXD
-    - DTR
-    notes: '3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: 5V → VCC, GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through (≤ 500 mA). Label the adapter
-      body: LD2450 (when the third adapter arrives).'
+    notes: '3.3 V-logic adapter (meter TXD at idle: 3.3 V). Four wires to the radar: +5V → VCC (the 3V3 pin stays empty), GND → GND, TXD → radar RX, RXD → radar TX. The 5V pin is USB power passed through
+      (≤ 500 mA). Label the adapter body: LD2410C RIGHT.'
   LDL:
     type: HLK-LD2410C LEFT (toed +30° out, deck Y +50)
     pinlabels:
@@ -78,14 +67,6 @@ connectors:
     - 4 GND
     - 5 VCC
     notes: 'Pins per Hi-Link manual table 1: 1 UART_Tx, 2 UART_Rx, 3 OUT, 4 GND, 5 VCC (5–12 V, 5 V advised). IO 3.3 V, 256000 baud. OUT unused.'
-  LD2450:
-    type: HLK-LD2450 (centre, x/y tracker)
-    pinlabels:
-    - 5V
-    - GND
-    - TX
-    - RX
-    notes: Silkscreen 5V GND TX RX; 5 V supply, 3.3 V UART, 256000 baud. Needs the THIRD CP2102 — until it arrives, leave it unplugged.
 cables:
   W_CAM:
     gauge: 28 AWG
@@ -119,12 +100,6 @@ cables:
     colors:
     - WH
     category: bundle
-  W_CPC:
-    gauge: 28 AWG
-    length: 0.15
-    colors:
-    - WH
-    category: bundle
   W_LDL:
     gauge: 26 AWG
     length: 0.25
@@ -136,15 +111,6 @@ cables:
     category: bundle
     notes: TX, RX, GND, VCC — one 4-wire Dupont lead per radar
   W_LDR:
-    gauge: 26 AWG
-    length: 0.25
-    colors:
-    - GN
-    - WH
-    - BK
-    - RD
-    category: bundle
-  W_LD2450:
     gauge: 26 AWG
     length: 0.25
     colors:
@@ -184,12 +150,6 @@ connections:
     - 1
   - CP2:
     - 5V
-- - HUB:
-    - 'port 4: CP2102 no.3'
-  - W_CPC:
-    - 1
-  - CP3:
-    - 5V
 - - LDL:
     - 1 TX
   - W_LDL:
@@ -238,29 +198,5 @@ connections:
     - 4
   - LDR:
     - 5 VCC
-- - LD2450:
-    - TX
-  - W_LD2450:
-    - 1
-  - CP3:
-    - RXD
-- - LD2450:
-    - RX
-  - W_LD2450:
-    - 2
-  - CP3:
-    - TXD
-- - CP3:
-    - GND
-  - W_LD2450:
-    - 3
-  - LD2450:
-    - GND
-- - CP3:
-    - 5V
-  - W_LD2450:
-    - 4
-  - LD2450:
-    - 5V
 options:
   bgcolor: '#ffffff'
