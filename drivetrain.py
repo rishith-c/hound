@@ -349,7 +349,7 @@ def main(emit_json=False):
     if emit_json:
         with open("drivetrain.json", "w") as f:
             json.dump(out, f, indent=1)
-        print("wrote drivetrain.json")
+        print("wrote drivetrain.json", file=sys.stderr)
 
 
 if __name__ == "__main__":

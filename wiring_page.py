@@ -231,7 +231,7 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 <script>
 document.querySelectorAll('.viewer').forEach(fig=>{{
  const vp=fig.querySelector('.vp'),svg=fig.querySelector('svg.sheet');if(!svg)return;
- const vb0=svg.getAttribute('viewBox').split(/[\s,]+/).map(Number);let vb=vb0.slice();
+ const vb0=svg.getAttribute('viewBox').split(/[\\s,]+/).map(Number);let vb=vb0.slice();
  const apply=()=>svg.setAttribute('viewBox',vb.map(v=>v.toFixed(1)).join(' '));
  const pt=(cx,cy)=>{{const r=vp.getBoundingClientRect();const sx=vb[2]/r.width,sy=vb[3]/r.height,s=Math.max(sx,sy);
    const ox=(r.width-vb[2]/s)/2,oy=(r.height-vb[3]/s)/2;return [vb[0]+(cx-r.left-ox)*s,vb[1]+(cy-r.top-oy)*s,s];}};
