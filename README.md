@@ -17,6 +17,7 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 | [rover3d/](https://rover-amazon-bom.vercel.app/rover3d/) | Interactive 3D rover: every placement, every wire, real part artwork; click to unplug |
 | [sensing/report.html](https://rover-amazon-bom.vercel.app/sensing/report.html) | Sensing simulation results |
 | `drivetrain.py` `assembly.py` `wiring.py` | The verification sources of truth: torque, placement, netlist |
+| `dc_drive.py` | What a DC-gearmotor Hound would need and cost: TT motors fail, a JGA25-370 12 V 1:45 passes; priced against the stepper build |
 | `sensing/` | Prior art, sensor models, vitals, fusion, station sequencer, Monte Carlo |
 | `firmware/r4_drive` | The drive firmware (v1.0 tag `v1.0-best-drive`) |
 | `pi/` | Pi-side code, deploy and flash scripts |
