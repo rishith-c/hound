@@ -66,6 +66,7 @@ static void IRAM_ATTR csi_cb(void*, wifi_csi_info_t* info) {
 void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);   // the S3 core defaults to modem sleep: asleep between the AP's beacons, deaf to most probes
   WiFi.begin(HOUND_SSID, HOUND_PASS);
   uint32_t t0 = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - t0 < 15000) delay(100);
