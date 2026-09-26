@@ -89,7 +89,7 @@ SIGNALS = [
     ("Pi BCM 22 / 27", "XSHUT out", 3.3, "VL53L1X front / rear", "XSHUT (pull-up to VIN = 3.3)", 3.6, 1.2, "GPIO"),
     ("Pi I2S (BCM 18/19/20)", "BCLK/LRCLK/DIN", 3.3, "INMP441", "SCK/WS/SD", 3.6, 2.3, "I2S"),
     ("Pi ↔ UNO R4", "USB CDC", 5.0, "UNO R4", "USB", 5.25, 0, "USB"),
-    ("Pi ↔ 2× CP2102", "USB → /dev/serial/by-id/*CP2102*", 5.0, "LD2410C left/right at 256000 baud", "USB", 5.25, 0, "USB"),
+    ("Pi ↔ 2× CP2102", "USB → /dev/serial/by-path (by hub socket: cheap CP2102s share serial 0001, so by-id shows one)", 5.0, "LD2410C left/right at 256000 baud", "USB", 5.25, 0, "USB"),
     ("ESP32-S3 #2 csi_tx, OFF the rover 3 m along the wall on any USB 5 V: 100 Hz ESP-NOW probes, channel 6", "radio", 0, "ESP32-S3 #3 csi_rx_udp on the rover: CSI of every probe → UDP to the Pi hotspot (channel 6) port 5005", "wlan0", 0, 0, "WIFI"),
 ]
 

@@ -196,7 +196,7 @@ code{background:#f3f4f5;padding:1px 4px;border-radius:3px;font-size:.92em}
 <tr><td>PCA9685 channels 3 / 2 / 15</td><td>Tilt servo / pan servo / fan (V+ and GND only)</td><td>Their own leads</td><td>Brown or black to the GND row.</td></tr>
 <tr><td>Shield X / Y / Z / A sockets</td><td>Motors RL / FL / RR / FR</td><td>4-pin Dupont</td><td>Never plug or unplug with VMOT live.</td></tr>
 <tr><td>Power bank</td><td>Pi USB-C</td><td>≤ 0.2 m, 22 AWG or heavier power conductors</td><td>A 1 m phone cable browns the Pi out.</td></tr>
-<tr><td>Pi USB-A</td><td>Webcam (own port); USB hub → UNO R4 + CP2102 #1 + CP2102 #2</td><td>Their cables</td><td>Find them by /dev/serial/by-id.</td></tr>
+<tr><td>Pi USB-A</td><td>Webcam (own port); USB hub → UNO R4 + CP2102 #1 + CP2102 #2</td><td>Their cables</td><td>The R4 by /dev/serial/by-id; the two CP2102s by /dev/serial/by-path, since cheap ones share serial 0001 and by-id then shows only one. Left/right follows the hub socket: keep each adapter in its socket.</td></tr>
 <tr><td>CP2102 #1 / #2 +5V, GND, TXD, RXD</td><td>LD2410C LEFT / RIGHT VCC, GND, RX, TX</td><td>4 Dupont each</td><td>TX and RX crossed. The adapter's 3V3 pin stays empty. Meter TXD first: 3.3 V at idle.</td></tr>
 <tr><td>Pi pins 4 (5V), 34 (GND), 10 (RXD), 8 (TXD)</td><td>LD2450 5V, GND, TX, RX</td><td>4 Dupont</td><td>The Pi's own UART, after <code>enable_gpio_uart.sh</code>. 5 V on pin 4 only — never on 8 or 10.</td></tr>
 <tr><td>Pi 3V3 (1, 17), SDA 3, SCL 5, GND</td><td>MLX90640 and both VL53L1X</td><td>Dupont, chained through the boards' second headers</td><td>I2C-1, all on 3.3 V. The thermal lead goes through the tilt axis with a service loop.</td></tr>

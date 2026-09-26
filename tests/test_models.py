@@ -67,7 +67,7 @@ def devs(tmp_path):
 
 def _ports(devs, serial0, cfg=None):
     station = pytest.importorskip("station")
-    return station.radar_ports(str(devs / "by-id"), str(devs / serial0), str(cfg or devs / "none.json"))
+    return station.radar_ports(str(devs / "by-id"), str(devs / serial0), str(cfg or devs / "none.json"), str(devs / "no-by-path"))
 
 
 def test_radar_ports_stock_pi_never_takes_the_bluetooth_uart(devs):
@@ -79,6 +79,29 @@ def test_radar_ports_stock_pi_never_takes_the_bluetooth_uart(devs):
 
 def test_radar_ports_with_the_uart_enabled_finds_the_ld2450(devs):
     assert _ports(devs, "uart")["ld2450"].endswith("uart")
+
+
+def test_radar_ports_two_cp2102s_sharing_serial_0001_are_both_found(tmp_path):
+    """Cheap CP2102s ship with serial 0001: by-id then has ONE link for two adapters. By socket, both are found, in socket
+    order, once each (Bookworm's udev also makes a usbv2- twin of every by-path link), and never the R4 (cdc_acm)."""
+    station = pytest.importorskip("station")
+    (tmp_path / "by-id").mkdir(); (tmp_path / "bp").mkdir()
+    for tty, drv in (("ttyUSB0", "cp210x"), ("ttyUSB1", "cp210x"), ("ttyACM0", "cdc_acm")):
+        (tmp_path / tty).touch()
+        (tmp_path / "drivers" / drv).mkdir(parents=True, exist_ok=True)
+        (tmp_path / "sys" / tty / "device").mkdir(parents=True)
+        (tmp_path / "sys" / tty / "device" / "driver").symlink_to(tmp_path / "drivers" / drv)
+    (tmp_path / "by-id" / "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0").symlink_to(tmp_path / "ttyUSB1")
+    pre = "platform-fd500000.pcie-pci-0000:01:00.0-"
+    for v in ("usb", "usbv2"):
+        (tmp_path / "bp" / f"{pre}{v}-0:1.3:1.0-port0").symlink_to(tmp_path / "ttyUSB0")     # enumerated first, socket 3
+        (tmp_path / "bp" / f"{pre}{v}-0:1.2:1.0-port0").symlink_to(tmp_path / "ttyUSB1")     # socket 2
+        (tmp_path / "bp" / f"{pre}{v}-0:1.1:1.0").symlink_to(tmp_path / "ttyACM0")           # the R4
+    (tmp_path / "s0").symlink_to(tmp_path / "ttyUSB0")
+    p = station.radar_ports(str(tmp_path / "by-id"), str(tmp_path / "s0"), str(tmp_path / "none.json"),
+                            str(tmp_path / "bp"), str(tmp_path / "sys"))
+    assert set(p) == {"left", "right"}
+    assert p["left"].endswith("usb-0:1.2:1.0-port0") and p["right"].endswith("usb-0:1.3:1.0-port0")
 
 
 def test_radars_json_overrides_but_keeps_the_rest(devs):
