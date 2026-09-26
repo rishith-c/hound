@@ -32,6 +32,7 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 - **Drive:** hold-to-drive pad, W A S D / Q E keys, speed slider, crab circle, per-motor test panel. The R4 stops by itself 400 ms after the Pi goes quiet.
 - **Turret:** nothing is driven at boot — the turret starts wherever it was set by hand, and every move is relative to that. Tilt is a positional MG996R on PCA9685 channel 3 (78–150°); pan is a continuous-rotation MG996R on channel 2, turned only by timed nudges. **Pan trim:** press *hold still 3 s*; if the pan creeps, tap − or + until it doesn't (saved on the Pi). The Ceres show sweeps outward and back about the start pose and returns there when stopped.
 - **Record motions:** record the tilt slider and pan buttons with their timing, label the take, replay it on the Pi. Recordings live in `~/rover/motions.json` (kept across deploys).
+- **Check senses:** runs `sensing/bringup.py` on the Pi (radars, Wi-Fi CSI, thermal, both ToFs, camera, I2C, about 20 s) and shows a PASS / WARN / FAIL line for each, with the likely fault. It runs as its own process and never touches the motors.
 - Working on the page without the rover: `python3 tests/remote_stub.py` → http://localhost:8099/?k=dev.
 
 ## Radars

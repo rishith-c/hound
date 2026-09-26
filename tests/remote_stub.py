@@ -43,6 +43,7 @@ class FakeR4:
 sys.modules["r4"] = types.SimpleNamespace(R4=FakeR4)
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pi", "rover"))
 import web  # noqa: E402
+web.SENSING = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sensing")   # the repo's, not ~/rover's
 
 print(f"Hound remote (stub R4) → http://localhost:{PORT}/?k=dev   (throwaway HOME {HOME})", flush=True)
 web.ThreadingHTTPServer(("127.0.0.1", PORT), web.H).serve_forever()
