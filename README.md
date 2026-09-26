@@ -34,7 +34,7 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 
 ## Radars
 
-The two LD2410Cs go through their own CP2102 adapters (+5V, GND, TXD → radar RX, RXD → radar TX; the 3V3 pin stays empty). The LD2450 needs no adapter: it sits on the Pi's own UART — 5V pin 4, GND pin 34, its TX → pin 10, its RX → pin 8 — after `sh ~/rover/enable_gpio_uart.sh` once on the Pi (moves Bluetooth off that UART, reboot afterwards). `sensing/station.py` finds all three; `~/rover/radars.json` overrides left/right if the adapters come up swapped.
+The two LD2410Cs go through their own CP2102 adapters (+5V, GND, TXD → radar RX, RXD → radar TX; the 3V3 pin stays empty). The LD2450 needs no adapter: it sits on the Pi's own UART — 5V pin 4, GND pin 34, its TX → pin 10, its RX → pin 8 — after `sh ~/rover/enable_gpio_uart.sh` once on the Pi (moves Bluetooth off that UART, reboot afterwards). `sensing/station.py` finds all three; `~/rover/radars.json` overrides left/right if the adapters come up swapped. After wiring, `cd ~/rover && venv/bin/python sensing/radar_check.py` reads each radar for 5 s and says PASS / WARN / FAIL with frames per second, what it sees, and the likely fault when one is silent (power, TX/RX, the adapter's logic level, or the Pi console still on the UART).
 
 ## Regenerating the docs
 

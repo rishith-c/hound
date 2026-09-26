@@ -126,3 +126,29 @@ def test_station_radar_arms_engineering_mode_and_reads_gates(monkeypatch):
     t, rows = r.collect(0.2)
     assert rows.shape == (4, 9) and list(rows[0]) == [0, 0, 5, 60, 20, 10, 5, 3, 2]   # basic frames add no rows
     assert port.written == arm * 2                                          # 30 basic frames → re-armed once
+
+
+def _ld2450_frame(x=300, y=1500):
+    import struct
+    import ld2450
+    enc = lambda v: (0x8000 | v) if v >= 0 else (-v & 0x7FFF)            # bit 15 set = positive
+    t = struct.pack("<HHHH", enc(x), enc(y), enc(10), 360) + bytes(16)
+    return ld2450.HEAD + t + ld2450.TAIL
+
+
+class _Repeat(_FakePort):
+    def read(self, n): return self.chunks[0] if self.chunks else b""      # a radar that keeps talking
+
+
+def test_radar_check_verdicts(monkeypatch):
+    rc = pytest.importorskip("radar_check")
+    monkeypatch.setattr(rc.time, "sleep", lambda s: None)
+    healthy = rc.check_ld2410("left", 0.05, _Repeat([_ld2410_frame(True)]))
+    assert healthy["verdict"] == "PASS" and healthy["strongest_m"] == "2.25–3.00 m"
+    assert rc.check_ld2410("left", 0.05, _FakePort([]))["verdict"] == "FAIL"                      # silent: power / TX
+    basic = rc.check_ld2410("right", 0.05, _Repeat([_ld2410_frame(False)]))
+    assert basic["verdict"] == "WARN" and "RX" in basic["hint"]                                   # arm never arrived
+    t = rc.check_ld2450("ld2450", 0.05, _Repeat([_ld2450_frame()]))
+    assert t["verdict"] == "PASS" and t["nearest_xy_mm"] == (300, 1500)
+    noisy = rc.check_ld2450("ld2450", 0.05, _Repeat([b"login: " * 8]))
+    assert noisy["verdict"] == "FAIL" and "enable_gpio_uart.sh" in noisy["hint"]
