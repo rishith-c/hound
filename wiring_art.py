@@ -343,7 +343,7 @@ def render(name, diagrams, layout=None, embed=False, title=None):
             wires.append((A, B)); meta.append((HEX[cab["colors"][int(wi) - 1]], WIDTH.get(cab["gauge"], 3)))
             tags.append((A, pa)); tags.append((B, pb))
     if "SHIELD" in sprites: sprites.add("R4")
-    boxes = {c: sprite_box(c, pos) for c in sprites}
+    boxes = {c: sprite_box(c, pos) for c in sorted(sprites)}
     polys = route(wires, boxes)
     cross, overlap = metrics(polys)
     x0 = min(b[0] for b in boxes.values()) - 90; y0 = min(b[1] for b in boxes.values()) - 110
@@ -353,7 +353,7 @@ def render(name, diagrams, layout=None, embed=False, title=None):
             x0, y0, x1, y1 = min(x0, p[0] - 30), min(y0, p[1] - 30), max(x1, p[0] + 30), max(y1, p[1] + 30)
     y0 -= 70                                                   # a band for the title that no ribbon can enter
     defs = {}
-    body = [draw_sprite(c, pos, defs, embed) for c in sorted(sprites, key=lambda c: 0 if c == "R4" else 1)]
+    body = [draw_sprite(c, pos, defs, embed) for c in sorted(sprites, key=lambda c: (0 if c == "R4" else 1, c))]   # deterministic: R4 under the shield, then by name
     wire_svg = ""
     for pl, (col, wd) in zip(polys, meta):
         d = "M" + " L".join(f"{p[0]:.1f} {p[1]:.1f}" for p in pl)
