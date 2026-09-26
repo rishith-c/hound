@@ -1,0 +1,116 @@
+"""The Pi remote (pi/rover/web.py) against a stub R4: the motion recorder, playback timing, trim persistence and the
+HTTP API's key check. No serial port, no hardware — web.py is imported with a fake `r4` module and HOME in a temp dir."""
+import importlib
+import json
+import os
+import sys
+import threading
+import time
+import types
+import urllib.error
+import urllib.request
+
+import pytest
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+class FakeR4:
+    def __init__(self, *a, **k):
+        self.port = "stub"
+        self.status = {"tilton": 1, "tilt": 100, "rate": [0, 0, 0, 0], "pca": 1}
+        self.sent = []                                   # (monotonic time, command)
+
+    def _send(self, cmd): self.sent.append((time.monotonic(), cmd))
+    def tilt(self, deg): self._send(f"t {int(deg)}")
+    def nudge_pan(self, d, ms=300): self._send(f"n {1 if d > 0 else -1} {int(ms)}")
+    def pan_stop(self): self._send("p 0")
+    def velocity(self, *a): self._send("v")
+    def stop(self): self._send("s")
+    def jog(self, *a): self._send("j")
+    def hold_enable(self, on): self._send(f"e {int(on)}")
+    def close(self): pass
+
+
+@pytest.fixture
+def web(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    (tmp_path / "rover").mkdir()
+    (tmp_path / "rover" / "pan_trim").write_text("-15")
+    monkeypatch.setitem(sys.modules, "r4", types.SimpleNamespace(R4=FakeR4))
+    monkeypatch.syspath_prepend(os.path.join(ROOT, "pi", "rover"))
+    sys.modules.pop("web", None)
+    mod = importlib.import_module("web")
+    yield mod
+    sys.modules.pop("web", None)
+
+
+def test_saved_trim_is_sent_at_start(web):
+    assert ("T -15" in [c for _, c in web.r4.sent])
+
+
+def test_record_save_and_replay_keep_order_and_timing(web):
+    web.rec_start()                                     # the stub holds tilt 100 → the start pose is logged at t=0
+    web.turret_cmd("tilt", 110); time.sleep(0.25)
+    web.turret_cmd("nudge", -1, 300); time.sleep(0.15)
+    web.turret_cmd("tilt", 90)
+    web.rec_stop("nod")
+    ev = web.motions["nod"]
+    assert [e[1:] for e in ev] == [["tilt", 100, 0], ["tilt", 110, 0], ["nudge", -1, 300], ["tilt", 90, 0]]
+    assert json.load(open(web.MOTIONS_FILE))["nod"] == ev                     # saved to ~/rover/motions.json
+
+    web.r4.sent.clear(); t0 = time.monotonic()
+    web.play_start("nod"); time.sleep(0.8)
+    got = [(round(t - t0, 2), c) for t, c in web.r4.sent]
+    assert [c for _, c in got] == ["t 100", "t 110", "n -1 300", "t 90"]
+    for (t, _), e in zip(got, ev):
+        assert abs(t - e[0]) < 0.06                     # replayed within 60 ms of the recorded times
+    assert web.status()["playing"] is None              # finished by itself
+
+
+def test_stop_without_recording_saves_nothing(web):
+    web.rec_start(); web.turret_cmd("tilt", 120); web.rec_stop("a")
+    web.rec_stop("")
+    assert list(web.motions) == ["a"]
+
+
+def test_recording_with_only_the_start_pose_is_not_saved(web):
+    web.rec_start(); web.rec_stop("empty")
+    assert "empty" not in web.motions
+
+
+def test_unnamed_recordings_take_the_first_free_label(web):
+    for _ in range(2):
+        web.rec_start(); web.turret_cmd("tilt", 95); web.rec_stop("")
+    web.motions.pop("motion 1")
+    web.rec_start(); web.turret_cmd("tilt", 96); web.rec_stop("")
+    assert set(web.motions) == {"motion 1", "motion 2"}
+    assert web.motions["motion 2"][-1][2] == 95         # the older one was not overwritten
+
+
+def test_playback_can_be_stopped(web):
+    web.motions["long"] = [[0.0, "tilt", 100, 0], [5.0, "tilt", 140, 0]]
+    web.r4.sent.clear()
+    web.play_start("long"); time.sleep(0.1); web.play_stop(); time.sleep(0.2)
+    assert "t 140" not in [c for _, c in web.r4.sent]
+    assert web.status()["playing"] is None
+
+
+def test_http_api_needs_the_key_and_serves_the_recorder(web):
+    srv = web.ThreadingHTTPServer(("127.0.0.1", 0), web.H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        with pytest.raises(urllib.error.HTTPError) as e:
+            urllib.request.urlopen(f"{base}/api/status?k=wrong")
+        assert e.value.code == 403
+        get = lambda p: json.load(urllib.request.urlopen(f"{base}/api/{p}&k={web.KEY}"))
+        assert get("rec?on=1")["rec"] is True
+        get("set?tilt=120")
+        s = get("rec?on=0&name=wave")
+        assert s["rec"] is False and "wave" in s["motions"]
+        assert "id=rec" in urllib.request.urlopen(f"{base}/?k={web.KEY}").read().decode()
+        get("set?ptrim=20")
+        assert open(web.TRIM_FILE).read() == "20" and ("T 20" in [c for _, c in web.r4.sent])
+    finally:
+        srv.shutdown()
