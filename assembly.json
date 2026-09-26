@@ -596,7 +596,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.03,
    "verify": "",
-   "note": "Trim to 5.0 V unloaded. IN from the shield's VMOT/GND screws (second wire each); tilt servo red/brown and fan leads soldered to the OUT pads."
+   "note": "Trim to 5.0 V unloaded. IN from the shield's VMOT/GND screws (second wire each); OUT pads \u2192 the PCA9685's V+/GND terminal, which feeds both servos and the fan."
   },
   {
    "id": "T-plug",
@@ -650,7 +650,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.01,
    "verify": "",
-   "note": "V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Tilt ch 0, pan ch 2 (continuous, Ceres nudges), fan on ch 15's V+/GND pins."
+   "note": "V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Tilt ch 3, pan ch 2 (continuous, timed nudges), fan on ch 15's V+/GND pins."
   },
   {
    "id": "BANK2",
