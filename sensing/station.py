@@ -101,8 +101,12 @@ def radar_ports(by_id="/dev/serial/by-id", serial0="/dev/serial0", cfg="~/rover/
 
     def cp210x(dev):
         return os.path.basename(os.path.realpath(os.path.join(sysfs, os.path.basename(dev), "device", "driver"))) == "cp210x"
+    def socket(p):                                               # '…-usb-0:1.10:1.0-port0' → (1, 10): numbers, so 1.2 < 1.10
+        import re
+        m = re.search(r"-usb(?:v2)?-\d+:([\d.]+):", os.path.basename(p))
+        return (0, tuple(int(x) for x in m.group(1).split(".")), p) if m else (1, (), p)
     found, seen = [], set()
-    for p in sorted(glob.glob(os.path.join(by_path, "*"))):      # newer udev adds a usbv2- twin of each link: one per device
+    for p in sorted(glob.glob(os.path.join(by_path, "*")), key=socket):   # newer udev adds a usbv2- twin of each link: one per device
         dev = os.path.realpath(p)
         if dev not in seen and cp210x(dev):
             seen.add(dev); found.append(p)
