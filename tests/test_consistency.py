@@ -67,3 +67,47 @@ def test_watchdog_and_keepalive_agree():
     assert "WATCHDOG_TICKS = TICK_HZ * 4 / 10" in FW
     keep = float(re.search(r"KEEPALIVE_S\s*=\s*([\d.]+)", read("pi", "rover", "r4.py")).group(1))
     assert keep * 1000 <= wd_ms / 3, "the Pi's keepalive must beat the R4 watchdog with room for two misses"
+
+
+# ── pi/enable_gpio_uart.sh edits the Pi's boot files: a bad edit is a Pi that does not boot ─────────────────
+def _uart_script():
+    return open(os.path.join(ROOT, "pi", "enable_gpio_uart.sh")).read()
+
+
+BOOKWORM_CMDLINES = [   # Raspberry Pi OS Bookworm desktop / Lite / already edited / legacy ttyAMA0 at the end
+    "console=serial0,115200 console=tty1 root=PARTUUID=4e639091-02 rootfstype=ext4 fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles cfg80211.ieee80211_regdom=US",
+    "console=serial0,115200 console=tty1 root=PARTUUID=4e639091-02 rootfstype=ext4 fsck.repair=yes rootwait cfg80211.ieee80211_regdom=US",
+    "console=tty1 root=PARTUUID=4e639091-02 rootfstype=ext4 fsck.repair=yes rootwait",
+    "console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait console=ttyAMA0,115200",
+]
+
+
+def test_uart_script_cmdline_edit_keeps_the_boot_line():
+    import re
+    m = re.search(r"sed -i -E 's/(.+?)/(.*?)/g; s/ \+\$//' \"\$CMD\"", _uart_script())
+    assert m, "the cmdline.txt sed changed shape: update this test"
+    pat, rep = m.group(1), m.group(2).replace("\\1", r"\1")
+    for line in BOOKWORM_CMDLINES:
+        out = re.sub(r" +$", "", re.sub(pat, rep, line))
+        assert "console=serial0" not in out and "console=ttyAMA0" not in out and "console=ttyS0" not in out
+        assert out.split() == [w for w in line.split() if not re.match(r"console=(serial0|ttyAMA0|ttyS0),", w)]   # nothing else touched
+        assert "\n" not in out and "  " not in out and "console=tty1" in out
+
+
+def test_uart_script_config_lines_land_in_an_all_section(tmp_path):
+    import subprocess
+    src = _uart_script()
+    block = src[src.index("# lines appended after"):src.index("# no login console")]
+    ends = {"all": "dtparam=audio=on\n[cm5]\ndtoverlay=dwc2,dr_mode=host\n\n[all]\n",
+            "cm5": "dtparam=audio=on\n[all]\ndtparam=i2c_arm=on\n[cm5]\ndtoverlay=dwc2,dr_mode=host\n",
+            "done": "[all]\nenable_uart=1\ndtoverlay=disable-bt\n[cm5]\notg_mode=1\n"}
+    for name, text in ends.items():
+        cfg = tmp_path / f"config-{name}.txt"; cfg.write_text(text)
+        subprocess.run(["sh", "-ec", 'sudo() { "$@"; }\nCFG="$1"\n' + block + block, "sh", str(cfg)], check=True)   # twice: idempotent
+        out = cfg.read_text()
+        if name == "done":
+            assert out == text; continue
+        sections = [l for l in out.splitlines() if l.startswith("[")]
+        tail = out[out.rindex("[all]"):]
+        assert sections[-1] == "[all]" and "enable_uart=1" in tail and "dtoverlay=disable-bt" in tail
+        assert out.count("enable_uart=1") == 1 and out.count("dtoverlay=disable-bt") == 1
