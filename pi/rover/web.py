@@ -205,6 +205,7 @@ def senses_start():
             return
         senses.update(running=True, lines=[])
     radar_stop(wait=True)                      # bringup reads the LD2450's port too: two readers would split its frames
+    thermal_stop(wait=True)                    # ...and the thermal array's I2C address: interleaved transactions corrupt a frame
     threading.Thread(target=senses_thread, daemon=True).start()
 
 
@@ -273,11 +274,81 @@ def radar_stop(wait=False):
         time.sleep(0.3)                        # the reader notices within one 0.1 s read and closes the port
 
 
+# ── thermal view: the MLX90640 (I2C 0x33), live, only while the page asks for it ─────────────────────────────────────────
+thermal = {"on": False, "id": 0, "frame": None, "fps": 0.0, "err": ""}
+_mlx = {}                                      # the driver object is kept between on/off: opening the bus again is slow
+
+
+def _open_mlx():
+    if "dev" not in _mlx:
+        import adafruit_mlx90640, board, busio
+        i2c = busio.I2C(board.SCL, board.SDA, frequency=400000)
+        m = adafruit_mlx90640.MLX90640(i2c)
+        m.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_4_HZ
+        _mlx["dev"] = m
+    return _mlx["dev"]
+
+
+def thermal_thread(tid, opener=None):
+    try:
+        mlx = (opener or _open_mlx)()
+    except Exception as e:
+        with lock:
+            if thermal["id"] == tid:
+                thermal.update(on=False, err=f"{e.__class__.__name__}: {e} — wired to Pi pins 1/3/5/9? (VCC 3V3, SDA, SCL, GND)")
+        return
+    n, t0, bad = 0, time.time(), 0
+    while True:
+        with lock:
+            if thermal["id"] != tid:
+                break
+        buf = [0.0] * 768
+        try:
+            mlx.getFrame(buf)
+            bad = 0
+        except (RuntimeError, ValueError, OSError):      # a frame that changed mid-read: the driver raises, try the next
+            bad += 1
+            if bad >= 10:
+                with lock:
+                    if thermal["id"] == tid:
+                        thermal.update(on=False, err="10 bad reads in a row — re-seat the thermal lead (SDA/SCL), keep it short")
+                break
+            continue
+        n += 1
+        with lock:
+            if thermal["id"] != tid:
+                break
+            thermal["frame"] = [int(round(v * 10)) for v in buf]          # tenths of a degree C: a third the size of floats
+            if time.time() - t0 >= 1.0:
+                thermal["fps"], n, t0 = round(n / (time.time() - t0), 1), 0, time.time()
+    with lock:
+        if thermal["id"] == tid:
+            thermal.update(on=False, frame=None)
+
+
+def thermal_start(opener=None):
+    with lock:
+        if thermal["on"] or senses["running"]:  # a senses check is reading that address: wait for it
+            return
+        thermal["id"] += 1; thermal.update(on=True, frame=None, fps=0.0, err=""); tid = thermal["id"]
+    threading.Thread(target=thermal_thread, args=(tid, opener), daemon=True).start()
+
+
+def thermal_stop(wait=False):
+    with lock:
+        was = thermal["on"]
+        thermal["id"] += 1; thermal.update(on=False, frame=None)
+    if was and wait:
+        time.sleep(0.6)                        # a frame read takes up to ~0.5 s; the reader leaves at its next check
+
+
 def status():
     s = dict(r4.status)
     with lock:
         s.update(mode=state["mode"], cmd=state["cmd"], uptime=round(time.time() - state["t0"]), port=r4.port)
         s.update(rec=rec["on"], rec_n=len(rec["ev"]), playing=play["name"], motions={k: (v[-1][0] if v else 0) for k, v in motions.items()})
+        if thermal["on"] or thermal["err"]:
+            s["thermal"] = {"on": thermal["on"], "frame": thermal["frame"], "fps": thermal["fps"], "err": thermal["err"]}
         if radar["on"] or radar["err"]:
             s["radar"] = {"on": radar["on"], "targets": list(radar["targets"]), "fps": radar["fps"], "err": radar["err"]}
     return s
@@ -334,6 +405,9 @@ input[type=range]{width:200px;max-width:36vw}label small{white-space:nowrap}sele
 <h1 style="margin-top:16px">Senses</h1>
 <div class=row><button id=sns style="padding:6px 12px">▶ check senses</button><span style="color:#93a1ae;font-size:12px">radars, Wi-Fi CSI, thermal, ToFs, camera, I2C · about 20 s · motors not touched</span></div>
 <pre id=snsout style="font:12px ui-monospace,monospace;white-space:pre-wrap;margin:4px 0"></pre>
+<h1 style="margin-top:16px">Thermal view</h1>
+<div class=row><button id=thb style="padding:6px 12px">▶ thermal live</button><span id=thst style="color:#93a1ae;font-size:12px">MLX90640, 32×24 pixels, 55° wide · bright = warm · a person reads ~28–36 °C</span></div>
+<canvas id=thc width=320 height=240 style="width:320px;max-width:100%;background:#172029;border-radius:8px;display:none;image-rendering:pixelated"></canvas>
 <h1 style="margin-top:16px">Radar view</h1>
 <div class=row><button id=rdr style="padding:6px 12px">▶ LD2450 live</button><span id=rdst style="color:#93a1ae;font-size:12px">up to 3 moving people, x/y from the rear radar · 6 m fan</span></div>
 <canvas id=rdc width=320 height=180 style="width:320px;max-width:100%;background:#172029;border-radius:8px;display:none"></canvas>
@@ -408,12 +482,24 @@ function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];docum
  if(s.ptrim!=null&&!ptrimSeen){ptrimSeen=true;ptrim=s.ptrim;document.getElementById('ptv').textContent=ptrim;}
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';
- showRec(s);drawRadar(s.radar);}
+ showRec(s);drawThermal(s.thermal);drawRadar(s.radar);}
 const sns=document.getElementById('sns'),snsout=document.getElementById('snsout');let snsT=null;
 function showSns(j){const s=j.senses;if(!s)return;
  snsout.innerHTML=s.lines.map(l=>{const c=/^PASS/.test(l)?'#7fd18b':/^WARN/.test(l)?'#ffcf5c':/^FAIL/.test(l)?'#ff8a4c':'#93a1ae';
   return '<span style="color:'+c+'">'+l.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>';}).join('\n');
  sns.textContent=s.running?'… checking':'▶ check senses';sns.disabled=s.running;if(!s.running&&snsT){clearInterval(snsT);snsT=null;}}
+const thb=document.getElementById('thb'),thc=document.getElementById('thc'),thst=document.getElementById('thst');let thOn=false,thT=-1e9;
+const IRON=[[0,0,0],[40,0,90],[150,0,120],[230,60,20],[255,170,0],[255,245,170],[255,255,255]];
+function iron(t){const x=Math.max(0,Math.min(1,t))*(IRON.length-1),i=Math.min(IRON.length-2,Math.floor(x)),f=x-i;return IRON[i].map((v,k)=>Math.round(v+(IRON[i+1][k]-v)*f));}
+function drawThermal(r){const on=!!(r&&r.on);if(performance.now()-thT>1500){thOn=on;thb.textContent=on?'■ stop thermal':'▶ thermal live';}
+ thc.style.display=thOn?'':'none';if(r&&r.err){thst.textContent=r.err;thst.style.color='#ff8a4c';}
+ if(!on||!r.frame)return;thst.style.color='#93a1ae';
+ const f=r.frame.map(v=>v/10),lo=Math.min(...f),hi=Math.max(...f),span=Math.max(hi-lo,6),base=lo,g=thc.getContext('2d'),c=10;
+ f.forEach((v,i)=>{const[R,G,B]=iron((v-base)/span);g.fillStyle='rgb('+R+','+G+','+B+')';g.fillRect((i%32)*c,Math.floor(i/32)*c,c,c);});
+ const hot=f.indexOf(hi),hx=(hot%32)*c+c/2,hy=Math.floor(hot/32)*c+c/2;g.strokeStyle='#7fd18b';g.lineWidth=2;g.beginPath();g.arc(hx,hy,9,0,7);g.stroke();
+ const med=[...f].sort((a,b)=>a-b)[384],warm=f.filter(v=>v>med+2.5&&v<38.5).length;
+ thst.textContent='hottest '+hi.toFixed(1)+' °C (circled) · coolest '+lo.toFixed(1)+' · room ~'+med.toFixed(1)+' · '+warm+' warm pixels · '+r.fps+' frames/s';}
+thb.onclick=()=>{thOn=!thOn;thT=performance.now();thb.textContent=thOn?'■ stop thermal':'▶ thermal live';thc.style.display=thOn?'':'none';api('thermal?on='+(thOn?1:0));};
 const rdr=document.getElementById('rdr'),rdc=document.getElementById('rdc'),rdst=document.getElementById('rdst');let rdOn=false,rdT=-1e9;
 function drawRadar(r){const on=!!(r&&r.on);if(performance.now()-rdT>1500){rdOn=on;rdr.textContent=on?'■ stop radar':'▶ LD2450 live';}
  rdc.style.display=rdOn?'':'none';if(r&&r.err){rdst.textContent=r.err;rdst.style.color='#ff8a4c';}
@@ -494,6 +580,8 @@ class H(BaseHTTPRequestHandler):
                 with lock:
                     motions.pop(q.get("del", ""), None)
                 save_motions()
+            elif ep == "thermal":
+                thermal_start() if q.get("on") == "1" else thermal_stop(wait=True)
             elif ep == "radar":
                 radar_start() if q.get("on") == "1" else radar_stop(wait=True)   # port closed before a quick re-start
             elif ep == "senses":
