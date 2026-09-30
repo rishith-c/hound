@@ -361,3 +361,36 @@ def test_check_senses_and_thermal_view_never_share_the_bus(web, tmp_path):
 def test_thermal_page_has_its_button_and_colour_scale(web):
     for needle in ("id=thb", "id=thc", "function drawThermal", "api('thermal?on='", "drawThermal(s.thermal)"):
         assert needle in web.PAGE, needle
+
+
+def test_live_views_stop_by_themselves_when_no_page_is_asking(web):
+    """Auto-started views must not run forever after the phone tab is closed: no API request for VIEW_IDLE_S → both close."""
+    class Port:
+        closed = False
+        def read(self, n): time.sleep(0.01); return b""
+        def close(self): Port.closed = True
+    web.radar_start(opener=lambda p: Port())
+    web.thermal_start(opener=lambda: _FakeMLX())
+    _wait(lambda: web.status().get("thermal", {}).get("frame"))
+    assert web.radar["on"] and web.thermal["on"]
+    web.last_poll["t"] = time.time() - (web.VIEW_IDLE_S + 5)              # the page went away
+    _wait(lambda: not web.radar["on"] and not web.thermal["on"])
+    assert not web.radar["on"] and not web.thermal["on"] and Port.closed   # both stopped, the serial port let go
+
+
+def test_an_api_request_keeps_the_views_alive_and_status_says_if_a_check_runs(web):
+    import http.server
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), web.H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        web.last_poll["t"] = time.time() - 100
+        assert web.page_gone()
+        j = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/api/status?k={web.KEY}").read())
+        assert not web.page_gone() and j["senses_running"] is False
+    finally:
+        srv.shutdown()
+
+
+def test_page_starts_both_views_by_itself_and_respects_a_manual_stop(web):
+    for needle in ("function autoStart", "api(ep+'?on=1')", "auto.th.off=thOn", "auto.rd.off=rdOn", "autoStart(s);}", "s.senses_running"):
+        assert needle in web.PAGE, needle
