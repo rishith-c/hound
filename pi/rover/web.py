@@ -419,7 +419,7 @@ input[type=range]{width:200px;max-width:36vw}label small{white-space:nowrap}sele
 <div class=row><button id=sns style="padding:6px 12px">▶ check senses</button><span style="color:#93a1ae;font-size:12px">radars, Wi-Fi CSI, thermal, ToFs, camera, I2C · about 20 s · motors not touched</span></div>
 <pre id=snsout style="font:12px ui-monospace,monospace;white-space:pre-wrap;margin:4px 0"></pre>
 <h1 style="margin-top:16px">Thermal view</h1>
-<div class=row><button id=thb style="padding:6px 12px">▶ thermal live</button><span id=thst style="color:#93a1ae;font-size:12px">MLX90640, 32×24 pixels, 55° wide · bright = warm · a person reads ~28–36 °C</span></div>
+<div class=row><button id=thb style="padding:6px 12px">▶ thermal live</button><button id=thr style="padding:6px 12px">⟳ rotate</button><span id=thst style="color:#93a1ae;font-size:12px">MLX90640, 32×24 pixels, 55° wide · bright = warm · a person reads ~28–36 °C</span></div>
 <canvas id=thc width=320 height=240 style="width:320px;max-width:100%;background:#172029;border-radius:8px;display:none;image-rendering:pixelated"></canvas>
 <h1 style="margin-top:16px">Radar view</h1>
 <div class=row><button id=rdr style="padding:6px 12px">▶ LD2450 live</button><span id=rdst style="color:#93a1ae;font-size:12px">up to 3 moving people, x/y from the rear radar · 6 m fan</span></div>
@@ -514,12 +514,23 @@ function autoStart(s){const busy=!!s.senses_running;
   if(performance.now()-(k==='th'?thT:rdT)<1500)return;a.tries++;
   if(k==='th'){thOn=true;thT=performance.now();thb.textContent='■ stop thermal';thc.style.display='';}else{rdOn=true;rdT=performance.now();rdr.textContent='■ stop radar';rdc.style.display='';}
   api(ep+'?on=1');});}
-function drawThermal(r){const on=!!(r&&r.on);if(performance.now()-thT>1500){thOn=on;thb.textContent=on?'■ stop thermal':'▶ thermal live';}
+// The camera sits on its side: rotate the 32x24 image in 90-degree steps (0, 90 cw, 180, 270 cw), remembered in this browser.
+let thRot=1;try{const v=parseInt(localStorage.getItem('thRot'));if(v>=0&&v<=3)thRot=v;}catch(e){}
+function thermalSrc(x,y){   // source index in the 24-row x 32-column frame for output pixel (x, y)
+ if(thRot===0)return y*32+x;
+ if(thRot===1)return (23-x)*32+y;
+ if(thRot===2)return (23-y)*32+(31-x);
+ return x*32+(31-y);}
+document.getElementById('thr').onclick=()=>{thRot=(thRot+1)%4;try{localStorage.setItem('thRot',thRot);}catch(e){}if(lastThermal)drawThermal(lastThermal);};
+let lastThermal=null;
+function drawThermal(r){lastThermal=r;const on=!!(r&&r.on);if(performance.now()-thT>1500){thOn=on;thb.textContent=on?'■ stop thermal':'▶ thermal live';}
  thc.style.display=thOn?'':'none';if(r&&r.err){thst.textContent=r.err;thst.style.color='#ff8a4c';}
  if(!on||!r.frame)return;thst.style.color='#93a1ae';
  const f=r.frame.map(v=>v/10),lo=Math.min(...f),hi=Math.max(...f),span=Math.max(hi-lo,6),base=lo,g=thc.getContext('2d'),c=10;
- f.forEach((v,i)=>{const[R,G,B]=iron((v-base)/span);g.fillStyle='rgb('+R+','+G+','+B+')';g.fillRect((i%32)*c,Math.floor(i/32)*c,c,c);});
- const hot=f.indexOf(hi),hx=(hot%32)*c+c/2,hy=Math.floor(hot/32)*c+c/2;g.strokeStyle='#7fd18b';g.lineWidth=2;g.beginPath();g.arc(hx,hy,9,0,7);g.stroke();
+ const tall=thRot%2===1,OW=tall?24:32,OH=tall?32:24;if(thc.width!==OW*c){thc.width=OW*c;thc.height=OH*c;thc.style.width=(OW*c)+'px';}
+ let hx=0,hy=0;const hot=f.indexOf(hi);
+ for(let y=0;y<OH;y++)for(let x=0;x<OW;x++){const si=thermalSrc(x,y);const v=f[si];const[R,G,B]=iron((v-base)/span);g.fillStyle='rgb('+R+','+G+','+B+')';g.fillRect(x*c,y*c,c,c);if(si===hot){hx=x*c+c/2;hy=y*c+c/2;}}
+ g.strokeStyle='#7fd18b';g.lineWidth=2;g.beginPath();g.arc(hx,hy,9,0,7);g.stroke();
  const med=[...f].sort((a,b)=>a-b)[384],warm=f.filter(v=>v>med+2.5&&v<38.5).length;
  thst.textContent='hottest '+hi.toFixed(1)+' °C (circled) · coolest '+lo.toFixed(1)+' · room ~'+med.toFixed(1)+' · '+warm+' warm pixels · '+r.fps+' frames/s';}
 thb.onclick=()=>{auto.th.off=thOn;thOn=!thOn;thT=performance.now();thb.textContent=thOn?'■ stop thermal':'▶ thermal live';thc.style.display=thOn?'':'none';api('thermal?on='+(thOn?1:0));};
