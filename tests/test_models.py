@@ -460,3 +460,17 @@ def test_port_label_names_the_hub_socket():
     assert station.port_label("/dev/serial/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.2:1.0-port0") == "USB socket 1.2"
     assert station.port_label("/dev/serial/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usbv2-0:1.3.4:1.0-port0") == "USB socket 1.3.4"
     assert station.port_label("/dev/ttyAMA0") == "ttyAMA0"
+
+
+def test_radar_ports_sort_sockets_as_numbers(tmp_path):
+    """Through a hub, sockets can run past 9: 1.2 must come before 1.10 (a string sort puts 1.10 first and swaps left/right)."""
+    station = pytest.importorskip("station")
+    (tmp_path / "bp").mkdir()
+    for tty, sock in (("ttyUSB0", "1.10"), ("ttyUSB1", "1.2")):
+        (tmp_path / tty).touch()
+        (tmp_path / "drivers" / "cp210x").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "sys" / tty / "device").mkdir(parents=True)
+        (tmp_path / "sys" / tty / "device" / "driver").symlink_to(tmp_path / "drivers" / "cp210x")
+        (tmp_path / "bp" / f"platform-fd500000.pcie-pci-0000:01:00.0-usb-0:{sock}:1.0-port0").symlink_to(tmp_path / tty)
+    p = station.radar_ports(str(tmp_path / "no-by-id"), str(tmp_path / "none"), str(tmp_path / "none.json"), str(tmp_path / "bp"), str(tmp_path / "sys"))
+    assert p["left"].endswith("usb-0:1.2:1.0-port0") and p["right"].endswith("usb-0:1.10:1.0-port0")

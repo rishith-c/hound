@@ -280,3 +280,14 @@ def test_check_senses_turns_the_radar_view_off_first(web, tmp_path):
     web.senses_start()
     assert Port.closed and not web.radar["on"]                             # bringup gets the port to itself
     _wait_senses(web)
+
+
+def test_radar_view_waits_while_check_senses_has_the_port(web):
+    opened = []
+    with web.lock:
+        web.senses["running"] = True
+    web.radar_start(opener=lambda p: opened.append(p) or (_ for _ in ()).throw(OSError("busy")))
+    time.sleep(0.1)
+    assert opened == [] and not web.radar["on"]                            # never touched the port
+    with web.lock:
+        web.senses["running"] = False

@@ -259,7 +259,7 @@ def radar_thread(rid, opener=None):
 
 def radar_start(opener=None):
     with lock:
-        if radar["on"]:
+        if radar["on"] or senses["running"]:   # a senses check is reading that port: wait for it
             return
         radar["id"] += 1; radar.update(on=True, targets=[], fps=0.0, err=""); rid = radar["id"]
     threading.Thread(target=radar_thread, args=(rid, opener), daemon=True).start()
@@ -495,7 +495,7 @@ class H(BaseHTTPRequestHandler):
                     motions.pop(q.get("del", ""), None)
                 save_motions()
             elif ep == "radar":
-                radar_start() if q.get("on") == "1" else radar_stop()
+                radar_start() if q.get("on") == "1" else radar_stop(wait=True)   # port closed before a quick re-start
             elif ep == "senses":
                 if q.get("go") == "1":
                     senses_start()
