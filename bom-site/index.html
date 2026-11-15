@@ -3,7 +3,7 @@
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1180px;margin:48px auto;padding:0 24px 60px}h1{font-size:30px;line-height:1.25}h2{font-size:22px;margin-top:36px}a{color:#165bc4;text-underline-offset:3px}table{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}th,td{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}th{background:#f5f6f7}code{background:#f3f4f5;padding:2px 4px;border-radius:3px}.table-wrap{overflow-x:auto}p{margin:16px 0}ol li,ul li{margin:6px 0}.note{font-size:13px;color:#555;margin-top:4px}.where{font-size:13px;white-space:nowrap}td.where{white-space:normal;min-width:180px}tr.group th{background:#e9ecef;font-weight:600}.tag{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}.grp{font-size:12px;color:#777;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}table.totals{font-size:16px}table.totals tr.big td{font-size:20px;padding:14px 12px;background:#f5f6f7}em{color:#8a4b00;font-style:normal;font-size:13px}@media(max-width:600px){main{margin:28px auto;padding:0 16px 36px}h1{font-size:26px}table{min-width:620px}}@media print{main{max-width:none;margin:0;padding:0}a{color:inherit}}
 input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}.have-cell{text-align:center;white-space:nowrap}tr.owned td{background:#eff8f0}#checklist-note{font-size:14px;color:#555}
 </style></head><body><main><h1>Indoor search rover — practical BOM</h1>
-<p><strong>Buy: $252.77 USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): $187.26. Already owned: 19 items.</strong> The complete build: one list of everything on the rover including what you already own, each part tied to its position in millimetres and the fastener that holds it, the four-motor torque check, the wiring, the pin map, the build order, and a total. Owned rows are pre-ticked and cost $0; the buy list is only what the rover cannot work without, and every screw on it comes from two kits. Prices observed September 4–5, 2026. Physical validation is still outstanding.</p>
+<p><strong>Buy: $261.37 USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): $179.27. Already owned: 19 items.</strong> The complete build: one list of everything on the rover including what you already own, each part tied to its position in millimetres and the fastener that holds it, the four-motor torque check, the wiring, the pin map, the build order, and a total. Owned rows are pre-ticked and cost $0; the buy list is only what the rover cannot work without, and every screw on it comes from two kits. Prices observed September 4–5, 2026. Physical validation is still outstanding.</p>
 <p><a href="bom.csv" download>Download the BOM as CSV</a> · <a href="assembly.csv" download>Download every placement as CSV</a> · <a href="drivetrain.txt">Read the full drivetrain calculation</a></p>
 <h2>The design I would build</h2>
 <p>Four independently driven 80 mm mecanum wheels on the four owned NEMA 17 steppers, a low 350 × 390 mm 2020 frame, the battery slung under the deck for a low centre of gravity, the Ceres pan/tilt turret at the front carrying your webcam and a thermal array so it can look around and track, and both radars on a 200 mm post at the rear looking forward over the turret. Two short-range ToF sensors guard front and rear. The fifth motor and TB6600 stay spare.</p>
@@ -160,18 +160,18 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr class=owned>
-<td class="have-cell"><input type="checkbox" data-item="SW" data-owned="1" aria-label="I have all required quantities of Three-pin switch"></td><td>Three-pin switch<div class="grp">Power</div><div class="note">Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="SW" data-owned="1" aria-label="I have all required quantities of Three-pin switch"></td><td>Three-pin switch<div class="grp">Power</div><div class="note">Not wired in until its DC rating is read and is ≥ 10 A. Until then the T-plug is the switch.</div></td>
 <td align="right">1</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="LIPO" data-owned="0" aria-label="I have all required quantities of Gens ace G-Tech Bashing 2200 mAh 11.1 V 3S 35C LiPo, XT60"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0C2CTZPMZ">Gens ace G-Tech Bashing 2200 mAh 11.1 V 3S 35C LiPo, XT60</a><div class="grp">Power</div><div class="note">The good pack: honest capacity, low internal resistance, XT60, and a G-Tech health tag. 35C is 77 A against a 4 A need. ~190 g (verify). At ~2.8 A total draw it runs the rover about 35–40 minutes; a second one doubles a demo day. Strapped low under the deck.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="LIPO" data-owned="0" aria-label="I have all required quantities of HOOVO 3S 2200 mAh 11.1 V 80C shorty LiPo, T-plug (Deans), 2-pack"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0CC91JN1K">HOOVO 3S 2200 mAh 11.1 V 80C shorty LiPo, T-plug (Deans), 2-pack</a><div class="grp">Power</div><div class="note">Your pick, checked: 75 × 33.8 × 26.4 mm, 138 g each, JST-XH balance lead, softcase. Two packs for the price of one Gens ace and a half — swap at the e-stop and the demo day doubles. 80C is a marketing number; what matters is a 4 A burst on a 2200 pack, which is under 2C. T-plug, not XT60, so the whole harness is Deans now. At ~2.7 A average one pack runs the rover about 39 minutes.</div></td>
 <td align="right">1</td>
-<td align="right">$25.99</td>
-<td align="right">$25.99</td>
-<td class="where">(+0, +0, 76)</td>
+<td align="right">$33.99</td>
+<td align="right">$33.99</td>
+<td class="where">(+0, +0, 75)</td>
 <td class="where">printed retaining bar + 2 cable ties</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="CHG" data-owned="1" aria-label="I have all required quantities of Balance charger (owned)"></td><td>Balance charger (owned)<div class="grp">Power</div><div class="note">Yours. Charge the Gens ace at 2.6 A = 0.5 C on the LiPo program with the balance lead plugged in. If its output is banana plugs, you need an XT60 charge lead — that is the optional extension below.</div></td>
@@ -181,17 +181,10 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="XT60PIG" data-owned="0" aria-label="I have all required quantities of Padarsey 2 pairs XT60 14 AWG pigtails"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07BF8154S">Padarsey 2 pairs XT60 14 AWG pigtails</a><div class="grp">Power</div><div class="note">Two pairs: one pair is the split pigtail at the Wago, the other pair becomes the ~150 mm extension from the pack under the deck up to the e-stop connector at the rear corner — the pack&#x27;s own lead is only ~100 mm.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="XT60PIG" data-owned="0" aria-label="I have all required quantities of OliRC 2× T-plug (Deans) male-to-female extension, 14 AWG, 30 cm"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07QN7PNWF">OliRC 2× T-plug (Deans) male-to-female extension, 14 AWG, 30 cm</a><div class="grp">Power</div><div class="note">Replaces the T-plug pigtails (the pack is Deans). One whole extension is the lead from the pack under the deck to the e-stop mating pair on the deck top, rear-right — a 30 cm reach for a ~200 mm path. Cut the second one at the middle: two 15 cm pigtails, one of each gender, so the harness gender is never a guess. The pigtail whose plug MATES with the battery goes into the 5-way Wagos; the other is a bench lead. No adapters in the 4 A path.</div></td>
 <td align="right">1</td>
-<td align="right">$6.99</td>
-<td align="right">$6.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="XT60EXT" data-owned="0" aria-label="I have all required quantities of LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B09CT5VGPW">LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions</a> <span class="tag">optional</span><div class="grp">Only if you lack it</div><div class="note">Charger lead: only if your balance charger has banana-plug outputs and no XT60 lead. Cut one end, fit the bananas.</div></td>
-<td align="right">1</td>
-<td align="right">$7.99</td>
-<td align="right">$7.99</td>
+<td align="right">$7.59</td>
+<td align="right">$7.59</td>
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr class=owned>
@@ -363,7 +356,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">(-159, +0, 300)</td>
 <td class="where">1× M2 + nut (or VHB)</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="FUSE" data-owned="0" aria-label="I have all required quantities of Anyongora 4× 16 AWG inline fuse holders with 3–15 A blade fuses"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0F6NPV287">Anyongora 4× 16 AWG inline fuse holders with 3–15 A blade fuses</a> <span class="tag">optional</span><div class="grp">Safety — reviewer recommended, your call</div><div class="note">A 35C pack delivers over 70 A into a short. The XT60 is a disconnect, not protection. 10 A blade inline on the pack + lead, before the Wago. Declined earlier; the external reviewer put it back on the table.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="FUSE" data-owned="0" aria-label="I have all required quantities of Anyongora 4× 16 AWG inline fuse holders with 3–15 A blade fuses"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0F6NPV287">Anyongora 4× 16 AWG inline fuse holders with 3–15 A blade fuses</a> <span class="tag">optional</span><div class="grp">Safety — reviewer recommended, your call</div><div class="note">A 35C pack delivers over 70 A into a short. The T-plug is a disconnect, not protection. 10 A blade inline on the pack + lead, before the Wago. Declined earlier; the external reviewer put it back on the table.</div></td>
 <td align="right">1</td>
 <td align="right">$7.99</td>
 <td align="right">$7.99</td>
@@ -412,7 +405,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr>
-<tr><th colspan="4">Buy</th><th align="right">$252.77</th><th colspan="2">Optional $187.26 · 19 items already owned</th></tr>
+<tr><th colspan="4">Buy</th><th align="right">$261.37</th><th colspan="2">Optional $179.27 · 19 items already owned</th></tr>
 </tbody></table></div>
 <h2>Where every part goes</h2>
 <p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 431 mm, wheelbase 250 mm. Centre of gravity at x -4.1, y +2.0, z 80.9 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 69° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
@@ -496,13 +489,13 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>PETG</code></td><td>rear-right tile</td><td>Printed deck tile 175×195×5, half-thickness lap (15 mm tongue / rebate) on the centreline edges</td><td align="right">-87.5</td><td align="right">-97.5</td><td align="right">93.5</td><td>flat on rail tops</td><td>one side rail + one cross rail</td><td>3× M5×8 + M5 T-nut into the side-rail top slot, 2× into the cross-rail top slot (corner kit) at 1.5 N·m — 3 mm of PLA under the head crushes at the 3.0 the corners take; 3× M3×8 + nut per lap seam</td><td>3.0 N·m</td><td>—</td>
 </tr>
 <tr>
-<td><code>PETG</code></td><td>battery cradle</td><td>PETG cradle 114×40×30</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">76.0</td><td>hangs from deck underside, open at both ends for the strap</td><td>deck underside</td><td>4× M3×12 through deck + 4× M3 nut (M3 kit), at X ±46, Y ±14 — 179 g hangs on them</td><td>1.0 N·m</td><td>—</td>
+<td><code>PETG</code></td><td>battery cradle</td><td>PETG cradle 83×40×32</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">74.8</td><td>hangs from deck underside, open at both ends for the strap</td><td>deck underside</td><td>4× M3×12 through deck + 4× M3 nut (M3 kit), at X ±46, Y ±14 — 179 g hangs on them</td><td>1.0 N·m</td><td>—</td>
 </tr>
 <tr>
-<td><code>LIPO</code></td><td>—</td><td>Gens ace 3S 2200 mAh, XT60</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">76.0</td><td>long axis X, XT60 lead exits −X (rear)</td><td>battery cradle</td><td>printed retaining bar + 2 cable ties</td><td>hand-tight</td><td>—</td>
+<td><code>LIPO</code></td><td>—</td><td>HOOVO 3S 2200 mAh 80C shorty, T-plug (Deans)</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">74.8</td><td>long axis X, T-plug lead exits −X (rear)</td><td>battery cradle</td><td>printed retaining bar + 2 cable ties</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>PETG</code></td><td>cradle retaining bar</td><td>printed bar 140×12×6 across the cradle mouth</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">64.0</td><td>spans the open bottom of the cradle</td><td>cradle side walls, two printed hooks</td><td>2× cable ties through printed slots</td><td>hand-tight</td><td>—</td>
+<td><code>PETG</code></td><td>cradle retaining bar</td><td>printed bar 140×12×6 across the cradle mouth</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">61.6</td><td>spans the open bottom of the cradle</td><td>cradle side walls, two printed hooks</td><td>2× cable ties through printed slots</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
 <td><code>UNO</code></td><td>—</td><td>UNO R4 WiFi + DRV8825 CNC Shield stack</td><td align="right">-115.7</td><td align="right">+86.7</td><td align="right">128.5</td><td>flat on 10 mm standoffs</td><td>deck top, rear-left</td><td>printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4&#x27;s 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties</td><td>hand-tight</td><td>stack height with heatsinks</td>
@@ -529,7 +522,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>WAGO</code></td><td>pack split</td><td>2× Wago 221-415 5-way lever nuts in a printed clip</td><td align="right">-150.0</td><td align="right">-165.0</td><td align="right">115.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right corner</td><td>printed clip + 1 cable tie</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>XT60</code></td><td>e-stop</td><td>XT60 mating pair on the deck top, rear edge</td><td align="right">-150.0</td><td align="right">-132.0</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, between the Pi and the Wago</td><td>printed saddle + 1 cable tie on the fixed half</td><td>hand-tight</td><td>—</td>
+<td><code>T-plug</code></td><td>e-stop</td><td>T-plug mating pair on the deck top, rear edge</td><td align="right">-150.0</td><td align="right">-132.0</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, between the Pi and the Wago</td><td>printed saddle + 1 cable tie on the fixed half</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
 <td><code>ESP32</code></td><td>#1 radar bridge</td><td>ESP32-S3 DevKitC</td><td align="right">-100.0</td><td align="right">-17.3</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-centre, just ahead of the radar post</td><td>printed bosses + 2 cable ties through printed slots</td><td>hand-tight</td><td>devkit hole positions</td>
@@ -579,7 +572,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 </tbody></table></div>
 <h2>Power and connections</h2>
 <ul>
-<li>Gens ace XT60 -&gt; pigtail -&gt; two 5-way Wago 221-415 (one per polarity) -&gt; three 22 AWG branches: shield VMOT (four DRV8825 -&gt; four motors), XL4015 IN (6 V servo rail), LM2596 IN (5 V fan + radars). 22 AWG is rated 7 A against a 4 A burst. No fuse, by your call — the XT60 is the disconnect, so bring the mating pair UP through the rear deck slot and mount it on top at the rear edge: the emergency stop must be reachable one-handed from above, not under a deck. A fuse and in-run cell monitoring were declined and are listed under Safety as the reviewer&#x27;s recommendation.</li>
+<li>HOOVO T-plug -&gt; Deans pigtail (half of an OliRC extension) -&gt; two 5-way Wago 221-415 (one per polarity) -&gt; three 22 AWG branches: shield VMOT (four DRV8825 -&gt; four motors), XL4015 IN (6 V servo rail), LM2596 IN (5 V fan + radars). 22 AWG is rated 7 A against a 4 A burst. No fuse, by your call — the T-plug is the disconnect, so bring the mating pair UP through the rear deck slot and mount it on top at the rear edge: the emergency stop must be reachable one-handed from above, not under a deck. A fuse and in-run cell monitoring were declined and are listed under Safety as the reviewer&#x27;s recommendation.</li>
 <li>Power-up ORDER: bank → Pi → R4 first, THEN the pack. Power-down in reverse. With the R4 unpowered the DRV8825 enable pins float low — enabled — so VMOT alone puts full holding current into four motors with nothing to stop it.</li>
 <li>Power bank -&gt; Pi USB-C. The bank must hold 5 V at 3 A: a 2.4 A bank browns out the moment the camera, thermal array and ESP32 are all drawing. Pi USB-A -&gt; UNO R4 USB-C for logic power and serial. Fallback if the bank misbehaves: an XL4015 or LM2596 trimmed to 5.10 V on PHYSICAL HEADER PINS 2 or 4 (5 V) and 6 (GND) — physical pin numbers, not BCM GPIO numbers — and never with the bank connected at the same time; two supplies in parallel fight.</li>
 <li>XL4015 OUT -&gt; PCA9685 V+ terminal. Set to 6.0 V with a multimeter before connecting. Its 5 A rating covers the tilt servo stalling (~2.5 A) with room to spare now that the locked pan servo is disconnected; an LM2596 would sag there. Servo current returns through the PCA9685 terminal, never through a USB ground.</li>
@@ -588,10 +581,10 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>Two VL53L1X share I2C only after XSHUT (BCM GPIO 22 and 27) assigns unique addresses at boot. Power the modules from the Pi&#x27;s 3.3 V pin, never 5 V: their XSHUT and I2C pull-ups follow VIN, and a 5 V pull-up on a Pi GPIO damages it. PCA9685 is on the same bus at 0x40. If the optional SCD41 is fitted, this bus runs at 100 kHz — that sensor&#x27;s I2C maximum.</li>
 <li>Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail.</li>
 </ul>
-<p>Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion — plus up to ~0.8 A average for the servos. The 2200 mAh Gens ace gives roughly 35–40 minutes of driving; check the pack with the multimeter before and after every run and stop at 11.1 V — there is no alarm on the balance lead. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.</p>
+<p>Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion — plus up to ~0.8 A average for the servos. One 2200 mAh HOOVO gives roughly 35–40 minutes (the second pack in the box doubles that) of driving; check the pack with the multimeter before and after every run and stop at 11.1 V — there is no alarm on the balance lead. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.</p>
 <p>The owned three-pin switch is not in the load path until its DC rating is read off the body and is at least 10 A.</p>
 <p>One star ground at the shield GND terminal. The Pi sits on its own bank and reaches that ground two ways — through the R4&#x27;s USB cable and through the PCA9685&#x27;s logic GND pin — so keep the PCA9685 power return heavy and short, or servo current will find the USB cable and corrupt the serial link. That exact fault took down the Ceres rover once.</p>
-<p>Unplug the XT60 when the rover is parked for more than a few minutes. Cutting ENABLE stops the motor current, but the shield, XL4015 and LM2596 idle at tens of milliamps and will take the pack below 3.0 V/cell overnight, which ends it.</p>
+<p>Unplug the T-plug when the rover is parked for more than a few minutes. Cutting ENABLE stops the motor current, but the shield, XL4015 and LM2596 idle at tens of milliamps and will take the pack below 3.0 V/cell overnight, which ends it.</p>
 <p>Ground clearance is 18.9 mm at the motor bodies. A door threshold or rug edge above ~15 mm stops this rover; plan the demo route around them — the 80 mm mecanum wheels climb about 10 mm.</p>
 <p>Grounds, honestly: the USB cables to the R4 and ESP32 #1 are parallel ground paths whether we like it or not. Motor and servo return currents must go straight to the Wago negative bus — never through a board&#x27;s GND pin — so those USB grounds carry only signal reference.</p>
 <h2>Motor and frame fit</h2>
@@ -617,7 +610,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>Motor 31 mm × 31 mm M3 pattern, 22 mm pilot → Anndason bracket (31 mm pattern, 3 mm steel, M3 screws in the box). Bracket 4.3 mm foot slots → M4×10 + M4 T-nut (T-nut kit) → 2020 rail 6 mm slot. M5 does not fit the bracket; M4 does.</li>
 <li>2020 rail ↔ 2020 rail → TOCLUX 17×20 corner brackets, M5×8 + M5 T-nut (corner kit). Rail ↔ printed deck → M5×8 + M5 T-nut into the top slot, counterbored tiles. Rail ↔ printed radar post → M4×12 + M4 T-nut, counterbored flange.</li>
 <li>Deck → boards: printed 10 mm bosses; Uno R4 and ESP32 held by cable ties through slots; Pi (2.7 mm holes) and PCA9685 by M2 + nut. Deck → battery cradle: M3×12 + nut. Deck → Ceres turret base: M3×16 + nut through the base&#x27;s existing M3 clearance holes.</li>
-<li>Gens ace XT60 → Padarsey XT60 pigtail → two 22 AWG branches → CNC Shield VMOT screw terminal (8–45 V, DRV8825 range) and XL4015 IN (4–38 V). 12.6 V charged pack sits inside both windows.</li>
+<li>Gens ace XT60 → Padarsey T-plug pigtail → two 22 AWG branches → CNC Shield VMOT screw terminal (8–45 V, DRV8825 range) and XL4015 IN (4–38 V). 12.6 V charged pack sits inside both windows.</li>
 <li>XL4015 OUT 6.0 V → PCA9685 V+ terminal → MG996R servos (4.8–7.2 V). PCA9685 VCC ← Pi 3.3 V; I2C 0x40 ← Pi GPIO 2/3 at 3.3 V. Nothing on this rail sees pack voltage.</li>
 <li>Power bank 5 V/3 A → Pi USB-C. Pi USB-A → UNO R4 USB-C (5 V logic, CNC Shield V3 is a 5 V shield: pinout matches). Pi USB-A → ESP32-S3 USB-C. Pi USB-A → webcam. Four Pi USB ports, four loads, ~950 mA of a 1.2 A budget.</li>
 <li>LM2596 at 5.0 V → 40 mm fan (150 mA) and both radars&#x27; VCC (5 V, ~200 mA peak). Radar UART is 3.3 V, matching the ESP32-S3 GPIO. Radar TX → ESP32 RX and vice versa, 256000 baud. Verify with the multimeter that the devkit&#x27;s 5 V pin is even connected on your clone before relying on it for anything.</li>
@@ -644,7 +637,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>Shield: MS3 cap under each of the four sockets with the drivers OUT. Drivers in, EN to EN. Jumpers on D12 and D13 of the A header. EN/GND open. Then, WITH VMOT CONNECTED and no motors plugged in, trim each Vref to 0.75 V (1.5 A at 0.100 Ω — read your sense resistor first) using a plastic trimmer tool: a metal screwdriver slipping off the pot onto VMOT kills the driver, and Vref reads nonsense with only USB power. Never plug or unplug a motor while VMOT is live.</li>
 <li>Turret base on the front tile, M3×16. Camera into the Ceres clamp, thermal saddle on top. Radar post through the rear tile into the rail, bar on, LD2410C at Y +50, LD2450 at Y −50, mic between, SCD41 on the rear face.</li>
 <li>XL4015: trim to 6.0 V with a multimeter, unloaded, then wire to PCA9685 V+. Nothing else touches this rail. Charge the pack on a concrete or tile surface, never on carpet or a bench full of parts — there is no fire bag.</li>
-<li>Wiring, in this order: motor leads to the four sockets (X = FL, Y = FR, Z = RL, A = RR) — the shield sockets are 4-pin 2.54 mm male headers, so the motor leads need 4-pin Dupont housings or stepper cables; pack XT60 pigtail split with Wago 221s (or solder) to shield VMOT, XL4015 IN and LM2596 IN; LM2596 trimmed to 5.0 V feeds the fan and both radars&#x27; 5 V — NOT the shield header or the ESP32 pin; Pi to R4 by USB, Pi to ESP32 by USB, Pi to webcam by USB; I2C from the Pi to PCA9685, both ToF (with XSHUT lines), SCD41; the thermal array on the hardware second bus; radars&#x27; UART to the ESP32; mic on I2S. 1000 µF across the PCA9685 V+ terminal. Tie everything down. Run a dedicated ground wire from the LM2596 output GND to the ESP32&#x27;s GND pin alongside the radar signal wires — otherwise the radar UART&#x27;s ground reference travels through two USB cables.</li>
+<li>Wiring, in this order: motor leads to the four sockets (X = FL, Y = FR, Z = RL, A = RR) — the shield sockets are 4-pin 2.54 mm male headers, so the motor leads need 4-pin Dupont housings or stepper cables; pack T-plug pigtail split with Wago 221s (or solder) to shield VMOT, XL4015 IN and LM2596 IN; LM2596 trimmed to 5.0 V feeds the fan and both radars&#x27; 5 V — NOT the shield header or the ESP32 pin; Pi to R4 by USB, Pi to ESP32 by USB, Pi to webcam by USB; I2C from the Pi to PCA9685, both ToF (with XSHUT lines), SCD41; the thermal array on the hardware second bus; radars&#x27; UART to the ESP32; mic on I2S. 1000 µF across the PCA9685 V+ terminal. Tie everything down. Run a dedicated ground wire from the LM2596 output GND to the ESP32&#x27;s GND pin alongside the radar signal wires — otherwise the radar UART&#x27;s ground reference travels through two USB cables.</li>
 <li>Wheels-up test before the floor: each wheel forward and back in turn, then all four. A wheel that hums but does not turn is a stalled driver — check Vref and the MS3 cap. Then the floor: forward, reverse, strafe, spin, stop. Then ten minutes at cruise with a finger on each heatsink.</li>
 <li>Firmware before the floor: the R4 must ramp every speed change over ~0.3 s — a stepper commanded from rest straight to 3,800 steps/s skips and stalls; the pan lock means heading comes from wheel odometry — commanded heading, which mecanum slip makes coarse, so a radar bearing from rotation is ±20° at best; the tilt never goes below the Ceres mechanical floor; a dropped serial link stops the motors within 200 ms.</li>
 <li>The torque test: wheels up, lever on one shaft, hanging scale on the lever, drive at 24 rpm and load it until it skips. T = F × arm. Compare with 0.254 N·m. This retires the biggest assumption in the design.</li>
@@ -664,7 +657,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>The thermal array was put on a bit-banged i2c-gpio bus &#x27;at 1 MHz&#x27;. Software I2C on a Pi manages ~100–200 kHz; the MLX90640 would have run at ~3 fps. Fixed: hardware second bus (i2c3 on a Pi 4) at 400 kHz.</li>
 <li>The Pi&#x27;s USB budget counted the webcam at 250 mA. A C920 draws ~500 mA at 1080p and the R4 WiFi&#x27;s radio ~150 mA; with fan and radars on USB pass-through it was over 1.2 A. Fixed: fan and radars on an LM2596 at 5.0 V, R4 radio off.</li>
 <li>The turret is inside the radar beam — 270 mm ahead, 60 mm below boresight. Not a wiring fix: the radars are read only with the turret parked, and LD2450 targets under 0.5 m are discarded.</li>
-<li>Nothing on the list could split the XT60 into three branches, hold a coupler on a shaft, or connect motor leads to the shield&#x27;s 4-pin headers. Added a parts-box-first consumables group: threadlocker, Wago 221s, stepper cables, a 1000 µF cap for the servo rail, a plastic trimmer tool.</li>
+<li>Nothing on the list could split the T-plug into three branches, hold a coupler on a shaft, or connect motor leads to the shield&#x27;s 4-pin headers. Added a parts-box-first consumables group: threadlocker, Wago 221s, stepper cables, a 1000 µF cap for the servo rail, a plastic trimmer tool.</li>
 <li>Two 390 mm deck tiles fit no common print bed. Now four 170 × 195 quadrants with tongue-and-rebate seams.</li>
 <li>The wheels sat 25 mm outboard of the bracket legs (a fudge in the formula). Every millimetre multiplies the motor-bearing load; now 5 mm, and the bearing check uses the real overhang: indoor floors pass, a 20 mm threshold does not.</li>
 <li>The Ceres pan servo is continuous-rotation — it cannot hold or report an angle, so the camera would have had no known bearing. Pan is now the rover rotating on its wheels with odometry; the pan stage is locked; tilt keeps its mechanical floor.</li>
@@ -692,7 +685,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>Sensor breakouts commonly ship with unsoldered headers while the iron was optional. Flagged at unboxing.</li>
 <li>The front ToF module protruded 4 mm past the rail face as the rover&#x27;s leading point. Now recessed in a printed bumper lip.</li>
 <li>The Pi 5 uses a different i2c3 overlay name than the Pi 4. Both stated, since the Pi model is still unknown.</li>
-<li>The second LM2596, the Wago block and the top-side XT60 e-stop were wired in the text and placed nowhere. Now placed: LM2596 outboard of the XL4015, Wago and XT60 at the rear-right corner, clear of the Pi and the post flange.</li>
+<li>The second LM2596, the Wago block and the top-side T-plug e-stop were wired in the text and placed nowhere. Now placed: LM2596 outboard of the XL4015, Wago and the e-stop connector at the rear-right corner, clear of the Pi and the post flange.</li>
 <li>The printed-parts mass allowance (0.5 kg) no longer covered four tiles plus post, bridge, clips and lock. Tiles now specified at 20% infill (~80 g) and the allowance raised to 0.55 kg; the ramp margin still clears 1.25.</li>
 <li>The post&#x27;s flange, printed with the channel lying flat, would stand vertical and need supports. It is now a separate plate.</li>
 <li>The pack&#x27;s ~100 mm lead cannot reach the rear-corner e-stop. The pigtail kit&#x27;s second pair is now the extension.</li>
@@ -710,6 +703,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>EXTERNAL REVIEW: &#x27;overall width 390&#x27; was the frame; over the wheels it is 462 mm. Both now reported.</li>
 <li>EXTERNAL REVIEW: fuse and in-run cell monitoring were declined; the reviewer calls them unresolved requirements. Both restored as an optional Safety group so the decision is visible, not buried.</li>
 <li>EXTERNAL REVIEW, pushed back: the 400 mm post was an option under test, not a commitment, and the bearing/torque assumptions were already labelled ASSUMED — those two are restated, not changed.</li>
+<li>Battery swapped to the user&#x27;s HOOVO 3S 2200 80C shorty 2-pack: it is Deans, not XT60. Rather than an adapter in the 4 A path, the T-plug pigtail line became two Deans 30 cm extensions (one whole for the pack lead, one cut into a pigtail of each gender). Cradle re-drawn 75 × 33.8 × 26.4, mass 190 → 140 g, ramp margin 1.27 → 1.28, 0 collisions. The optional XT60 extension went away with it.</li>
 </ul>
 <h2>Total cost</h2>
 <div class="table-wrap"><table class="totals">
@@ -717,13 +711,13 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <tr><th>What</th><th align="right">Lines</th><th align="right">Cost</th></tr>
 </thead>
 <tbody>
-<tr class="big"><td><strong>Required — the rover does not work without these</strong></td><td align="right">14</td><td align="right"><strong>$252.77</strong></td></tr>
-<tr><td>Optional: Only if you lack it</td><td align="right">4</td><td align="right">$48.66</td></tr><tr><td>Optional: Build-day consumables — check your parts box first</td><td align="right">5</td><td align="right">$26.00</td></tr><tr><td>Optional: Extra senses, if budget allows</td><td align="right">2</td><td align="right">$35.48</td></tr><tr><td>Optional: Safety — reviewer recommended, your call</td><td align="right">2</td><td align="right">$14.58</td></tr><tr><td>Optional: Tools</td><td align="right">5</td><td align="right">$62.54</td></tr>
-<tr><td>All optional together</td><td align="right">18</td><td align="right">$187.26</td></tr>
+<tr class="big"><td><strong>Required — the rover does not work without these</strong></td><td align="right">14</td><td align="right"><strong>$261.37</strong></td></tr>
+<tr><td>Optional: Build-day consumables — check your parts box first</td><td align="right">5</td><td align="right">$26.00</td></tr><tr><td>Optional: Only if you lack it</td><td align="right">3</td><td align="right">$40.67</td></tr><tr><td>Optional: Extra senses, if budget allows</td><td align="right">2</td><td align="right">$35.48</td></tr><tr><td>Optional: Safety — reviewer recommended, your call</td><td align="right">2</td><td align="right">$14.58</td></tr><tr><td>Optional: Tools</td><td align="right">5</td><td align="right">$62.54</td></tr>
+<tr><td>All optional together</td><td align="right">17</td><td align="right">$179.27</td></tr>
 <tr><td>Already owned</td><td align="right">19</td><td align="right">$0.00</td></tr>
-<tr class="big"><td><strong>Everything, if you buy it all</strong></td><td align="right">32</td><td align="right"><strong>$440.03</strong></td></tr>
+<tr class="big"><td><strong>Everything, if you buy it all</strong></td><td align="right">31</td><td align="right"><strong>$440.64</strong></td></tr>
 </tbody></table></div>
-<p>Before tax and shipping, Amazon US prices observed Sept 4–5, 2026. The required figure assumes your gel-blaster pack, its charger, your webcam, the UNO R4, the Ceres turret and the 22 AWG wire all check out. If the pack is the first thing that fails, add the battery group: $252.77.</p>
+<p>Before tax and shipping, Amazon US prices observed Sept 4–5, 2026. The required figure assumes your gel-blaster pack, its charger, your webcam, the UNO R4, the Ceres turret and the 22 AWG wire all check out. If the pack is the first thing that fails, add the battery group: $261.37.</p>
 <h2>What I did NOT analyze</h2>
 <p>Fatigue, buckling, impact, vibration, roller wear, uneven floors and wheel unloading, combined-slip mecanum behaviour, motor and driver thermal equilibrium, battery sag under stall, firmware timing, fastener pull-out in PETG, deck deflection under the turret, servo torque with the camera fitted, motor-bearing radial rating (assumed 28 N — thinnest margin in the design), and radar detection at 300 mm height (Walleye measured floor-level radar as blind; this is a compromise to test). No physical test has been run.</p>
 <p>Sources: <a target="_blank" rel="noopener noreferrer" href="https://static.jkongmotor.com/JK42HS40-1704-13A-aidlnBprKrkloSRilikkrllkn.pdf">motor drawing</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/2133">DRV8825 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/1182">A4988 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.hlktech.com/en/Goods-239.html">LD2410C manufacturer</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.skyrc.com/download/100200%20B6ACneo%20Instruction%20Manual%20V1.3.pdf">SKYRC B6AC Neo manual</a>, <a href="drivetrain.txt">drivetrain.txt</a> and <a href="assembly.csv">assembly.csv</a> (all arithmetic and positions).</p>

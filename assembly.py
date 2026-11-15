@@ -42,7 +42,7 @@ PI = (85.0, 56.0, 20.0)
 PCA9685 = (62.0, 25.0, 12.0)
 BUCK = (54.0, 23.0, 18.0)   # XL4015 module                                  VERIFY
 ESP32 = (63.0, 25.4, 12.0)
-LIPO = (106.0, 34.0, 24.0)  # Gens ace 2200 mAh 3S                           VERIFY
+LIPO = (75.0, 33.8, 26.4)   # HOOVO 2200 mAh 3S 80C shorty, listing dims      VERIFY
 CRADLE_T = 3.0
 CAM = (29.0, 94.0, 24.0)    # owned C920-class webcam: depth, width, height  VERIFY
 TURRET_BASE = (100.0, 60.0, 6.0)      # Ceres pan base plate (rover_parts.py make_turret_pan_base)
@@ -56,7 +56,7 @@ RADAR_Z = DECK_TOP + POST[2] + 4.0    # 300: antenna faces horizontal, forward
 
 # ── Masses, kg, for CG (same figures as drivetrain.py) ─────────────────────
 M = dict(motor=0.240, rail=0.350 * 0.50, wheel=0.150, bracket=0.113, corner=0.012,
-         uno_stack=0.117, pi=0.070, lipo=0.190, buck=0.030, radar=0.010, esp32=0.015,
+         uno_stack=0.117, pi=0.070, lipo=0.140, buck=0.030, radar=0.010, esp32=0.015,
          cam=0.162, tof=0.005, deck=0.340, cradle=0.060, post=0.100, turret=0.250,
          pca=0.010, fan=0.030, strapwire=0.150)
 
@@ -137,7 +137,7 @@ add("PETG", "battery cradle", f"PETG cradle {LIPO[0]+8:.0f}×{LIPO[1]+6:.0f}×{L
     LIPO[0] + 8, LIPO[1] + 6, LIPO[2] + 2 * CRADLE_T, "hangs from deck underside, open at both ends for the strap",
     "deck underside", "4× M3×12 through deck + 4× M3 nut (M3 kit), at X ±46, Y ±14 — 179 g hangs on them", "1.0 N·m", M["cradle"],
     note=f"Cradle bottom at Z = {cradle_z - (LIPO[2]+2*CRADLE_T)/2:.0f}: 61 mm ground clearance, above the 18.9 mm motor bottoms.")
-add("LIPO", "—", "Gens ace 3S 2200 mAh, XT60", 0, 0, cradle_z, *LIPO, "long axis X, XT60 lead exits −X (rear)",
+add("LIPO", "—", "HOOVO 3S 2200 mAh 80C shorty, T-plug (Deans)", 0, 0, cradle_z, *LIPO, "long axis X, T-plug lead exits −X (rear)",
     "battery cradle", "printed retaining bar + 2 cable ties", "hand-tight", M["lipo"],
     note="Lowest heavy part → h_CG. Balance lead to the cell alarm, velcro alarm to cradle side.")
 add("PETG", "cradle retaining bar", "printed bar 140×12×6 across the cradle mouth", 0, 0, cradle_z - (LIPO[2] + 2 * CRADLE_T) / 2 + 3, 140, 12, 6,
@@ -169,7 +169,7 @@ on_deck("LM2596", "→ fan + radars 5.0 V", "LM2596 buck (owned)", (43.0, 21.0, 
         "printed bosses + 2 cable ties", "hand-tight", 0.020, note="Trim to 5.0 V unloaded. Feeds the fan and both radars so they stay off the Pi's USB budget; dedicated GND wire to the ESP32 alongside the radar signals.")
 on_deck("WAGO", "pack split", "2× Wago 221-415 5-way lever nuts in a printed clip", (40.0, 30.0, 18.0), -150.0, -165.0, "deck top, rear-right corner",
         "printed clip + 1 cable tie", "hand-tight", 0.020, note="Two 5-way Wago 221-415: one for +, one for − — each takes the pigtail plus three branches (shield VMOT, XL4015 IN, LM2596 IN). A 3-way cannot: source plus three branches is four conductors per polarity.")
-on_deck("XT60", "e-stop", "XT60 mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -150.0, -132.0, "deck top, between the Pi and the Wago",
+on_deck("T-plug", "e-stop", "T-plug mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -150.0, -132.0, "deck top, between the Pi and the Wago",
         "printed saddle + 1 cable tie on the fixed half", "hand-tight", 0.010, note="The pack lead comes up through the rear slot to here. One-handed disconnect from above = the emergency stop.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",

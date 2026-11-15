@@ -15,7 +15,7 @@
    "LD2410C is the primary presence sensor for anyone the camera cannot see: stationary or micro-moving people behind a door or a stud wall, plus breathing. LD2450 adds positions and speeds of moving targets and loses motionless bodies beyond about 2 m; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements — and the 60 GHz breathing/heartbeat modules on the market were skipped: their heart-rate figure benchmarks at a 0.33 correlation against a chest strap, and the owned LD2410C already covers breathing. Start with one radar powered; test the two radar types separately, then together for interference. These sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present. One more constraint the geometry forces: the turret sits 270 mm ahead of and 60 mm below the radar boresight — inside the beam. Read the radars only with the turret parked and the motors stopped, and discard LD2450 targets closer than 0.5 m; otherwise every pan registers as a moving person. After the rover stops, wait about five seconds before trusting the LD2410C — it needs a still platform to settle. And configure it: the LD2410C's gates 0–1 (0–1.5 m) look straight at the turret's metal servo and camera clamp and will report a stationary person forever; set those two gates' sensitivity to 100 (ignore) with the HLK config command — Walleye's ld2410.py already speaks it."
   ],
   "power": [
-   "Gens ace XT60 -> pigtail -> two 5-way Wago 221-415 (one per polarity) -> three 22 AWG branches: shield VMOT (four DRV8825 -> four motors), XL4015 IN (6 V servo rail), LM2596 IN (5 V fan + radars). 22 AWG is rated 7 A against a 4 A burst. No fuse, by your call — the XT60 is the disconnect, so bring the mating pair UP through the rear deck slot and mount it on top at the rear edge: the emergency stop must be reachable one-handed from above, not under a deck. A fuse and in-run cell monitoring were declined and are listed under Safety as the reviewer's recommendation.",
+   "HOOVO T-plug -> Deans pigtail (half of an OliRC extension) -> two 5-way Wago 221-415 (one per polarity) -> three 22 AWG branches: shield VMOT (four DRV8825 -> four motors), XL4015 IN (6 V servo rail), LM2596 IN (5 V fan + radars). 22 AWG is rated 7 A against a 4 A burst. No fuse, by your call — the T-plug is the disconnect, so bring the mating pair UP through the rear deck slot and mount it on top at the rear edge: the emergency stop must be reachable one-handed from above, not under a deck. A fuse and in-run cell monitoring were declined and are listed under Safety as the reviewer's recommendation.",
    "Power-up ORDER: bank → Pi → R4 first, THEN the pack. Power-down in reverse. With the R4 unpowered the DRV8825 enable pins float low — enabled — so VMOT alone puts full holding current into four motors with nothing to stop it.",
    "Power bank -> Pi USB-C. The bank must hold 5 V at 3 A: a 2.4 A bank browns out the moment the camera, thermal array and ESP32 are all drawing. Pi USB-A -> UNO R4 USB-C for logic power and serial. Fallback if the bank misbehaves: an XL4015 or LM2596 trimmed to 5.10 V on PHYSICAL HEADER PINS 2 or 4 (5 V) and 6 (GND) — physical pin numbers, not BCM GPIO numbers — and never with the bank connected at the same time; two supplies in parallel fight.",
    "XL4015 OUT -> PCA9685 V+ terminal. Set to 6.0 V with a multimeter before connecting. Its 5 A rating covers the tilt servo stalling (~2.5 A) with room to spare now that the locked pan servo is disconnected; an LM2596 would sag there. Servo current returns through the PCA9685 terminal, never through a USB ground.",
@@ -25,10 +25,10 @@
    "Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail."
   ],
   "power_after": [
-   "Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion — plus up to ~0.8 A average for the servos. The 2200 mAh Gens ace gives roughly 35–40 minutes of driving; check the pack with the multimeter before and after every run and stop at 11.1 V — there is no alarm on the balance lead. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.",
+   "Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion — plus up to ~0.8 A average for the servos. One 2200 mAh HOOVO gives roughly 35–40 minutes (the second pack in the box doubles that) of driving; check the pack with the multimeter before and after every run and stop at 11.1 V — there is no alarm on the balance lead. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.",
    "The owned three-pin switch is not in the load path until its DC rating is read off the body and is at least 10 A.",
    "One star ground at the shield GND terminal. The Pi sits on its own bank and reaches that ground two ways — through the R4's USB cable and through the PCA9685's logic GND pin — so keep the PCA9685 power return heavy and short, or servo current will find the USB cable and corrupt the serial link. That exact fault took down the Ceres rover once.",
-   "Unplug the XT60 when the rover is parked for more than a few minutes. Cutting ENABLE stops the motor current, but the shield, XL4015 and LM2596 idle at tens of milliamps and will take the pack below 3.0 V/cell overnight, which ends it.",
+   "Unplug the T-plug when the rover is parked for more than a few minutes. Cutting ENABLE stops the motor current, but the shield, XL4015 and LM2596 idle at tens of milliamps and will take the pack below 3.0 V/cell overnight, which ends it.",
    "Ground clearance is 18.9 mm at the motor bodies. A door threshold or rug edge above ~15 mm stops this rover; plan the demo route around them — the 80 mm mecanum wheels climb about 10 mm.",
    "Grounds, honestly: the USB cables to the R4 and ESP32 #1 are parallel ground paths whether we like it or not. Motor and servo return currents must go straight to the Wago negative bus — never through a board's GND pin — so those USB grounds carry only signal reference."
   ],
@@ -53,7 +53,7 @@
    "Shield: MS3 cap under each of the four sockets with the drivers OUT. Drivers in, EN to EN. Jumpers on D12 and D13 of the A header. EN/GND open. Then, WITH VMOT CONNECTED and no motors plugged in, trim each Vref to 0.75 V (1.5 A at 0.100 Ω — read your sense resistor first) using a plastic trimmer tool: a metal screwdriver slipping off the pot onto VMOT kills the driver, and Vref reads nonsense with only USB power. Never plug or unplug a motor while VMOT is live.",
    "Turret base on the front tile, M3×16. Camera into the Ceres clamp, thermal saddle on top. Radar post through the rear tile into the rail, bar on, LD2410C at Y +50, LD2450 at Y −50, mic between, SCD41 on the rear face.",
    "XL4015: trim to 6.0 V with a multimeter, unloaded, then wire to PCA9685 V+. Nothing else touches this rail. Charge the pack on a concrete or tile surface, never on carpet or a bench full of parts — there is no fire bag.",
-   "Wiring, in this order: motor leads to the four sockets (X = FL, Y = FR, Z = RL, A = RR) — the shield sockets are 4-pin 2.54 mm male headers, so the motor leads need 4-pin Dupont housings or stepper cables; pack XT60 pigtail split with Wago 221s (or solder) to shield VMOT, XL4015 IN and LM2596 IN; LM2596 trimmed to 5.0 V feeds the fan and both radars' 5 V — NOT the shield header or the ESP32 pin; Pi to R4 by USB, Pi to ESP32 by USB, Pi to webcam by USB; I2C from the Pi to PCA9685, both ToF (with XSHUT lines), SCD41; the thermal array on the hardware second bus; radars' UART to the ESP32; mic on I2S. 1000 µF across the PCA9685 V+ terminal. Tie everything down. Run a dedicated ground wire from the LM2596 output GND to the ESP32's GND pin alongside the radar signal wires — otherwise the radar UART's ground reference travels through two USB cables.",
+   "Wiring, in this order: motor leads to the four sockets (X = FL, Y = FR, Z = RL, A = RR) — the shield sockets are 4-pin 2.54 mm male headers, so the motor leads need 4-pin Dupont housings or stepper cables; pack T-plug pigtail split with Wago 221s (or solder) to shield VMOT, XL4015 IN and LM2596 IN; LM2596 trimmed to 5.0 V feeds the fan and both radars' 5 V — NOT the shield header or the ESP32 pin; Pi to R4 by USB, Pi to ESP32 by USB, Pi to webcam by USB; I2C from the Pi to PCA9685, both ToF (with XSHUT lines), SCD41; the thermal array on the hardware second bus; radars' UART to the ESP32; mic on I2S. 1000 µF across the PCA9685 V+ terminal. Tie everything down. Run a dedicated ground wire from the LM2596 output GND to the ESP32's GND pin alongside the radar signal wires — otherwise the radar UART's ground reference travels through two USB cables.",
    "Wheels-up test before the floor: each wheel forward and back in turn, then all four. A wheel that hums but does not turn is a stalled driver — check Vref and the MS3 cap. Then the floor: forward, reverse, strafe, spin, stop. Then ten minutes at cruise with a finger on each heatsink.",
    "Firmware before the floor: the R4 must ramp every speed change over ~0.3 s — a stepper commanded from rest straight to 3,800 steps/s skips and stalls; the pan lock means heading comes from wheel odometry — commanded heading, which mecanum slip makes coarse, so a radar bearing from rotation is ±20° at best; the tilt never goes below the Ceres mechanical floor; a dropped serial link stops the motors within 200 ms.",
    "The torque test: wheels up, lever on one shaft, hanging scale on the lever, drive at 24 rpm and load it until it skips. T = F × arm. Compare with 0.254 N·m. This retires the biggest assumption in the design.",
@@ -79,7 +79,7 @@
    "The thermal array was put on a bit-banged i2c-gpio bus 'at 1 MHz'. Software I2C on a Pi manages ~100–200 kHz; the MLX90640 would have run at ~3 fps. Fixed: hardware second bus (i2c3 on a Pi 4) at 400 kHz.",
    "The Pi's USB budget counted the webcam at 250 mA. A C920 draws ~500 mA at 1080p and the R4 WiFi's radio ~150 mA; with fan and radars on USB pass-through it was over 1.2 A. Fixed: fan and radars on an LM2596 at 5.0 V, R4 radio off.",
    "The turret is inside the radar beam — 270 mm ahead, 60 mm below boresight. Not a wiring fix: the radars are read only with the turret parked, and LD2450 targets under 0.5 m are discarded.",
-   "Nothing on the list could split the XT60 into three branches, hold a coupler on a shaft, or connect motor leads to the shield's 4-pin headers. Added a parts-box-first consumables group: threadlocker, Wago 221s, stepper cables, a 1000 µF cap for the servo rail, a plastic trimmer tool.",
+   "Nothing on the list could split the T-plug into three branches, hold a coupler on a shaft, or connect motor leads to the shield's 4-pin headers. Added a parts-box-first consumables group: threadlocker, Wago 221s, stepper cables, a 1000 µF cap for the servo rail, a plastic trimmer tool.",
    "Two 390 mm deck tiles fit no common print bed. Now four 170 × 195 quadrants with tongue-and-rebate seams.",
    "The wheels sat 25 mm outboard of the bracket legs (a fudge in the formula). Every millimetre multiplies the motor-bearing load; now 5 mm, and the bearing check uses the real overhang: indoor floors pass, a 20 mm threshold does not.",
    "The Ceres pan servo is continuous-rotation — it cannot hold or report an angle, so the camera would have had no known bearing. Pan is now the rover rotating on its wheels with odometry; the pan stage is locked; tilt keeps its mechanical floor.",
@@ -107,7 +107,7 @@
    "Sensor breakouts commonly ship with unsoldered headers while the iron was optional. Flagged at unboxing.",
    "The front ToF module protruded 4 mm past the rail face as the rover's leading point. Now recessed in a printed bumper lip.",
    "The Pi 5 uses a different i2c3 overlay name than the Pi 4. Both stated, since the Pi model is still unknown.",
-   "The second LM2596, the Wago block and the top-side XT60 e-stop were wired in the text and placed nowhere. Now placed: LM2596 outboard of the XL4015, Wago and XT60 at the rear-right corner, clear of the Pi and the post flange.",
+   "The second LM2596, the Wago block and the top-side T-plug e-stop were wired in the text and placed nowhere. Now placed: LM2596 outboard of the XL4015, Wago and the e-stop connector at the rear-right corner, clear of the Pi and the post flange.",
    "The printed-parts mass allowance (0.5 kg) no longer covered four tiles plus post, bridge, clips and lock. Tiles now specified at 20% infill (~80 g) and the allowance raised to 0.55 kg; the ramp margin still clears 1.25.",
    "The post's flange, printed with the channel lying flat, would stand vertical and need supports. It is now a separate plate.",
    "The pack's ~100 mm lead cannot reach the rear-corner e-stop. The pigtail kit's second pair is now the extension.",
@@ -124,14 +124,15 @@
    "EXTERNAL REVIEW: step counts are commanded heading, not measured; the radar bearing by rotation is ±20° at best. Stated.",
    "EXTERNAL REVIEW: 'overall width 390' was the frame; over the wheels it is 462 mm. Both now reported.",
    "EXTERNAL REVIEW: fuse and in-run cell monitoring were declined; the reviewer calls them unresolved requirements. Both restored as an optional Safety group so the decision is visible, not buried.",
-   "EXTERNAL REVIEW, pushed back: the 400 mm post was an option under test, not a commitment, and the bearing/torque assumptions were already labelled ASSUMED — those two are restated, not changed."
+   "EXTERNAL REVIEW, pushed back: the 400 mm post was an option under test, not a commitment, and the bearing/torque assumptions were already labelled ASSUMED — those two are restated, not changed.",
+   "Battery swapped to the user's HOOVO 3S 2200 80C shorty 2-pack: it is Deans, not XT60. Rather than an adapter in the 4 A path, the T-plug pigtail line became two Deans 30 cm extensions (one whole for the pack lead, one cut into a pigtail of each gender). Cradle re-drawn 75 × 33.8 × 26.4, mass 190 → 140 g, ramp margin 1.27 → 1.28, 0 collisions. The optional XT60 extension went away with it."
   ],
   "mesh": [
    "Motor shaft 5 mm with flat → wheel-kit 5 mm coupler (grub screw on the flat) → 80 mm mecanum hub. Same nominal bore on both sides; verify the coupler's set screw lands on the flat.",
    "Motor 31 mm × 31 mm M3 pattern, 22 mm pilot → Anndason bracket (31 mm pattern, 3 mm steel, M3 screws in the box). Bracket 4.3 mm foot slots → M4×10 + M4 T-nut (T-nut kit) → 2020 rail 6 mm slot. M5 does not fit the bracket; M4 does.",
    "2020 rail ↔ 2020 rail → TOCLUX 17×20 corner brackets, M5×8 + M5 T-nut (corner kit). Rail ↔ printed deck → M5×8 + M5 T-nut into the top slot, counterbored tiles. Rail ↔ printed radar post → M4×12 + M4 T-nut, counterbored flange.",
    "Deck → boards: printed 10 mm bosses; Uno R4 and ESP32 held by cable ties through slots; Pi (2.7 mm holes) and PCA9685 by M2 + nut. Deck → battery cradle: M3×12 + nut. Deck → Ceres turret base: M3×16 + nut through the base's existing M3 clearance holes.",
-   "Gens ace XT60 → Padarsey XT60 pigtail → two 22 AWG branches → CNC Shield VMOT screw terminal (8–45 V, DRV8825 range) and XL4015 IN (4–38 V). 12.6 V charged pack sits inside both windows.",
+   "Gens ace XT60 → Padarsey T-plug pigtail → two 22 AWG branches → CNC Shield VMOT screw terminal (8–45 V, DRV8825 range) and XL4015 IN (4–38 V). 12.6 V charged pack sits inside both windows.",
    "XL4015 OUT 6.0 V → PCA9685 V+ terminal → MG996R servos (4.8–7.2 V). PCA9685 VCC ← Pi 3.3 V; I2C 0x40 ← Pi GPIO 2/3 at 3.3 V. Nothing on this rail sees pack voltage.",
    "Power bank 5 V/3 A → Pi USB-C. Pi USB-A → UNO R4 USB-C (5 V logic, CNC Shield V3 is a 5 V shield: pinout matches). Pi USB-A → ESP32-S3 USB-C. Pi USB-A → webcam. Four Pi USB ports, four loads, ~950 mA of a 1.2 A budget.",
    "LM2596 at 5.0 V → 40 mm fan (150 mA) and both radars' VCC (5 V, ~200 mA peak). Radar UART is 3.3 V, matching the ESP32-S3 GPIO. Radar TX → ESP32 RX and vice versa, 256000 baud. Verify with the multimeter that the devkit's 5 V pin is even connected on your clone before relying on it for anything.",
@@ -289,17 +290,17 @@
    "group": "Power",
    "item": "Three-pin switch",
    "qty": 1,
-   "note": "Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch."
+   "note": "Not wired in until its DC rating is read and is ≥ 10 A. Until then the T-plug is the switch."
   },
   {
    "id": "LIPO",
    "status": "buy",
    "group": "Power",
-   "asin": "B0C2CTZPMZ",
-   "item": "Gens ace G-Tech Bashing 2200 mAh 11.1 V 3S 35C LiPo, XT60",
+   "asin": "B0CC91JN1K",
+   "item": "HOOVO 3S 2200 mAh 11.1 V 80C shorty LiPo, T-plug (Deans), 2-pack",
    "qty": 1,
-   "price": 25.99,
-   "note": "The good pack: honest capacity, low internal resistance, XT60, and a G-Tech health tag. 35C is 77 A against a 4 A need. ~190 g (verify). At ~2.8 A total draw it runs the rover about 35–40 minutes; a second one doubles a demo day. Strapped low under the deck."
+   "price": 33.99,
+   "note": "Your pick, checked: 75 × 33.8 × 26.4 mm, 138 g each, JST-XH balance lead, softcase. Two packs for the price of one Gens ace and a half — swap at the e-stop and the demo day doubles. 80C is a marketing number; what matters is a 4 A burst on a 2200 pack, which is under 2C. T-plug, not XT60, so the whole harness is Deans now. At ~2.7 A average one pack runs the rover about 39 minutes."
   },
   {
    "id": "CHG",
@@ -313,21 +314,11 @@
    "id": "XT60PIG",
    "status": "buy",
    "group": "Power",
-   "asin": "B07BF8154S",
-   "item": "Padarsey 2 pairs XT60 14 AWG pigtails",
+   "asin": "B07QN7PNWF",
+   "item": "OliRC 2× T-plug (Deans) male-to-female extension, 14 AWG, 30 cm",
    "qty": 1,
-   "price": 6.99,
-   "note": "Two pairs: one pair is the split pigtail at the Wago, the other pair becomes the ~150 mm extension from the pack under the deck up to the e-stop connector at the rear corner — the pack's own lead is only ~100 mm."
-  },
-  {
-   "id": "XT60EXT",
-   "status": "optional",
-   "group": "Only if you lack it",
-   "asin": "B09CT5VGPW",
-   "item": "LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions",
-   "qty": 1,
-   "price": 7.99,
-   "note": "Charger lead: only if your balance charger has banana-plug outputs and no XT60 lead. Cut one end, fit the bananas."
+   "price": 7.59,
+   "note": "Replaces the T-plug pigtails (the pack is Deans). One whole extension is the lead from the pack under the deck to the e-stop mating pair on the deck top, rear-right — a 30 cm reach for a ~200 mm path. Cut the second one at the middle: two 15 cm pigtails, one of each gender, so the harness gender is never a guess. The pigtail whose plug MATES with the battery goes into the 5-way Wagos; the other is a bench lead. No adapters in the 4 A path."
   },
   {
    "id": "PI",
@@ -559,7 +550,7 @@
    "item": "Anyongora 4× 16 AWG inline fuse holders with 3–15 A blade fuses",
    "qty": 1,
    "price": 7.99,
-   "note": "A 35C pack delivers over 70 A into a short. The XT60 is a disconnect, not protection. 10 A blade inline on the pack + lead, before the Wago. Declined earlier; the external reviewer put it back on the table."
+   "note": "A 35C pack delivers over 70 A into a short. The T-plug is a disconnect, not protection. 10 A blade inline on the pack + lead, before the Wago. Declined earlier; the external reviewer put it back on the table."
   },
   {
    "id": "ALARM",
