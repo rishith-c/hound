@@ -38,6 +38,12 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 
 The two LD2410Cs go through their own CP2102 adapters (+5V, GND, TXD → radar RX, RXD → radar TX; the 3V3 pin stays empty). The LD2450 needs no adapter: it sits on the Pi's own UART — 5V pin 4, GND pin 34, its TX → pin 10, its RX → pin 8 — after `sh ~/rover/enable_gpio_uart.sh` once on the Pi (moves Bluetooth off that UART, reboot afterwards). `sensing/station.py` finds all three; `~/rover/radars.json` overrides left/right if the adapters come up swapped. For every sense at once — I2C, both ToFs, thermal, camera, Wi-Fi CSI and the radars — run `cd ~/rover && venv/bin/python sensing/bringup.py` (one PASS / WARN / FAIL line each, with the likely fault). For the radars alone, `venv/bin/python sensing/radar_check.py` reads each radar for 5 s and says PASS / WARN / FAIL with frames per second, what it sees, and the likely fault when one is silent (power, TX/RX, the adapter's logic level, or the Pi console still on the UART).
 
+## A search stop
+
+`cd ~/rover && venv/bin/python sensing/station.py --name "hall S1"` runs one stop, about 75 s: motors released, 5 s settle, both LD2410Cs and Wi-Fi CSI read together for 60 s, then the pan sweeps the camera and the thermal array across five bearings and back. It prints one sentence and appends everything to `~/rover/stations.jsonl`. The remote holds the R4's port the whole time and only one program may have it, so stop the remote first (`sudo systemctl stop rover-web`, then `start` again afterwards); otherwise the station says the R4 is absent and skips the sweep. `--sim` runs the same protocol on simulated sensors, anywhere.
+
+Wi-Fi CSI needs ESP32 #3 flashed with `firmware/csi_rx_udp` and ESP32 #2 running Walleye's `csi_tx`, both on channel 6. The receiver keeps only the transmitter's frames: it learns its MAC from the first probe and prints it in its 5 s serial report (`csi_tx NOT HEARD` until then).
+
 ## Regenerating the docs
 
 `wiring.py` is the netlist and its checks; everything else is drawn from it, in this order: `python3 wiring.py`, `venv/bin/python wiring_diagrams.py` (WireViz + Graphviz; cross-checks against wiring.py), `wiring_art.py`, `wiring_page.py`, then `python3 assembly.py`, `rover3d.py`, `python3 drivetrain.py --json > bom-site/drivetrain.txt`, `cd bom-site && python3 build.py`, and `python3 make_prompt.py && cp CHATGPT-CHECK.md bom-site/` for the verification prompt. Every generator is deterministic: rerunning one on unchanged inputs leaves git clean.
