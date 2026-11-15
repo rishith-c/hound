@@ -204,7 +204,73 @@ def senses_start():
         if senses["running"]:
             return
         senses.update(running=True, lines=[])
+    radar_stop(wait=True)                      # bringup reads the LD2450's port too: two readers would split its frames
     threading.Thread(target=senses_thread, daemon=True).start()
+
+
+# ── radar view: the LD2450's moving targets, live, only while the page asks for it (it holds the port meanwhile) ─────
+RADARS_JSON = os.path.expanduser("~/rover/radars.json")
+radar = {"on": False, "id": 0, "targets": [], "fps": 0.0, "err": ""}
+
+
+def radar_port():
+    try:
+        return json.load(open(RADARS_JSON)).get("ld2450", "/dev/ttyAMA0")
+    except (OSError, ValueError):
+        return "/dev/ttyAMA0"
+
+
+def radar_thread(rid, opener=None):
+    try:
+        if SENSING not in sys.path:
+            sys.path.insert(0, SENSING)
+        import ld2450
+        if opener is None:
+            import serial
+            opener = lambda port: serial.Serial(port, 256000, timeout=0.1)
+        ser = opener(radar_port())
+    except Exception as e:
+        with lock:
+            if radar["id"] == rid:
+                radar.update(on=False, err=f"{radar_port()}: {e.__class__.__name__}: {e} — wired, and enable_gpio_uart.sh run?")
+        return
+    rd, n, t0 = ld2450.FrameReader(), 0, time.time()
+    try:
+        while True:
+            with lock:
+                if radar["id"] != rid:
+                    break
+            frames = rd.feed(ser.read(256))
+            n += len(frames)
+            with lock:
+                if frames:
+                    radar["targets"] = [{k: t[k] for k in ("x_mm", "y_mm", "speed_cms")} for t in frames[-1]]
+                if time.time() - t0 >= 1.0:
+                    radar["fps"], n, t0 = round(n / (time.time() - t0), 1), 0, time.time()
+    except Exception as e:
+        with lock:
+            radar["err"] = f"{e.__class__.__name__}: {e}"
+    finally:
+        ser.close()
+        with lock:
+            if radar["id"] == rid:
+                radar.update(on=False, targets=[])
+
+
+def radar_start(opener=None):
+    with lock:
+        if radar["on"]:
+            return
+        radar["id"] += 1; radar.update(on=True, targets=[], fps=0.0, err=""); rid = radar["id"]
+    threading.Thread(target=radar_thread, args=(rid, opener), daemon=True).start()
+
+
+def radar_stop(wait=False):
+    with lock:
+        was = radar["on"]
+        radar["id"] += 1; radar.update(on=False, targets=[])
+    if was and wait:
+        time.sleep(0.3)                        # the reader notices within one 0.1 s read and closes the port
 
 
 def status():
@@ -212,6 +278,8 @@ def status():
     with lock:
         s.update(mode=state["mode"], cmd=state["cmd"], uptime=round(time.time() - state["t0"]), port=r4.port)
         s.update(rec=rec["on"], rec_n=len(rec["ev"]), playing=play["name"], motions={k: (v[-1][0] if v else 0) for k, v in motions.items()})
+        if radar["on"] or radar["err"]:
+            s["radar"] = {"on": radar["on"], "targets": list(radar["targets"]), "fps": radar["fps"], "err": radar["err"]}
     return s
 
 
@@ -266,6 +334,9 @@ input[type=range]{width:200px;max-width:36vw}label small{white-space:nowrap}sele
 <h1 style="margin-top:16px">Senses</h1>
 <div class=row><button id=sns style="padding:6px 12px">▶ check senses</button><span style="color:#93a1ae;font-size:12px">radars, Wi-Fi CSI, thermal, ToFs, camera, I2C · about 20 s · motors not touched</span></div>
 <pre id=snsout style="font:12px ui-monospace,monospace;white-space:pre-wrap;margin:4px 0"></pre>
+<h1 style="margin-top:16px">Radar view</h1>
+<div class=row><button id=rdr style="padding:6px 12px">▶ LD2450 live</button><span id=rdst style="color:#93a1ae;font-size:12px">up to 3 moving people, x/y from the rear radar · 6 m fan</span></div>
+<canvas id=rdc width=320 height=180 style="width:320px;max-width:100%;background:#172029;border-radius:8px;display:none"></canvas>
 <p id=st>connecting…</p>
 <p class=warn id=note></p>
 <p style="font-size:13px;color:#93a1ae">Keys: <kbd>W</kbd><kbd>S</kbd> forward/back · <kbd>A</kbd><kbd>D</kbd> strafe · <kbd>Q</kbd><kbd>E</kbd> rotate · arrows = diagonals · <kbd>space</kbd> stop. Hold to move; release stops. Going faster than the slider allows means moving the caps under the drivers to M2 only (1/16) and picking 16 above.</p>
@@ -337,12 +408,21 @@ function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];docum
  if(s.ptrim!=null&&!ptrimSeen){ptrimSeen=true;ptrim=s.ptrim;document.getElementById('ptv').textContent=ptrim;}
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';
- showRec(s);}
+ showRec(s);drawRadar(s.radar);}
 const sns=document.getElementById('sns'),snsout=document.getElementById('snsout');let snsT=null;
 function showSns(j){const s=j.senses;if(!s)return;
  snsout.innerHTML=s.lines.map(l=>{const c=/^PASS/.test(l)?'#7fd18b':/^WARN/.test(l)?'#ffcf5c':/^FAIL/.test(l)?'#ff8a4c':'#93a1ae';
   return '<span style="color:'+c+'">'+l.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>';}).join('\n');
  sns.textContent=s.running?'… checking':'▶ check senses';sns.disabled=s.running;if(!s.running&&snsT){clearInterval(snsT);snsT=null;}}
+const rdr=document.getElementById('rdr'),rdc=document.getElementById('rdc'),rdst=document.getElementById('rdst');let rdOn=false,rdT=-1e9;
+function drawRadar(r){const on=!!(r&&r.on);if(performance.now()-rdT>1500){rdOn=on;rdr.textContent=on?'■ stop radar':'▶ LD2450 live';}
+ rdc.style.display=rdOn?'':'none';if(r&&r.err){rdst.textContent=r.err;rdst.style.color='#ff8a4c';}
+ if(!on)return;rdst.style.color='#93a1ae';rdst.textContent=(r.targets.length?r.targets.map(t=>(t.x_mm/1000).toFixed(1)+' m, '+(t.y_mm/1000).toFixed(1)+' m ahead, '+Math.abs(t.speed_cms)+' cm/s').join(' · '):'nothing moving')+' · '+r.fps+' frames/s';
+ const g=rdc.getContext('2d'),W=rdc.width,H=rdc.height,cx=W/2,sc=(H-10)/6000;g.clearRect(0,0,W,H);g.strokeStyle='#2a3641';
+ for(let m=2000;m<=6000;m+=2000){g.beginPath();g.arc(cx,H-4,m*sc,Math.PI*1.167,Math.PI*1.833);g.stroke();}
+ [-60,60].forEach(a=>{const r=a*Math.PI/180;g.beginPath();g.moveTo(cx,H-4);g.lineTo(cx+Math.sin(r)*6000*sc,H-4-Math.cos(r)*6000*sc);g.stroke();});
+ r.targets.forEach(t=>{g.fillStyle='#7fd18b';g.beginPath();g.arc(cx+t.x_mm*sc,H-4-t.y_mm*sc,6,0,7);g.fill();});}
+rdr.onclick=()=>{rdOn=!rdOn;rdT=performance.now();rdr.textContent=rdOn?'■ stop radar':'▶ LD2450 live';rdc.style.display=rdOn?'':'none';api('radar?on='+(rdOn?1:0));};
 const snsGet=(go)=>fetch('/api/senses?'+(go?'go=1&':'')+'k='+encodeURIComponent(K)).then(r=>r.json()).then(showSns).catch(()=>{});
 sns.onclick=()=>{snsGet(true);if(!snsT)snsT=setInterval(()=>snsGet(false),1000);};
 setInterval(()=>{if(!cur&&!curJ)api('status');},700);api('status');
@@ -414,6 +494,8 @@ class H(BaseHTTPRequestHandler):
                 with lock:
                     motions.pop(q.get("del", ""), None)
                 save_motions()
+            elif ep == "radar":
+                radar_start() if q.get("on") == "1" else radar_stop()
             elif ep == "senses":
                 if q.get("go") == "1":
                     senses_start()
