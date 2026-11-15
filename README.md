@@ -38,4 +38,4 @@ The two LD2410Cs go through their own CP2102 adapters (+5V, GND, TXD → radar R
 
 ## Regenerating the docs
 
-`wiring.py` is the netlist and its checks; everything else is drawn from it, in this order: `python3 wiring.py`, `venv/bin/python wiring_diagrams.py` (WireViz + Graphviz; cross-checks against wiring.py), `wiring_art.py`, `wiring_page.py`, then `python3 assembly.py`, `rover3d.py`, `python3 drivetrain.py --json > bom-site/drivetrain.txt`, and `cd bom-site && python3 build.py`.
+`wiring.py` is the netlist and its checks; everything else is drawn from it, in this order: `python3 wiring.py`, `venv/bin/python wiring_diagrams.py` (WireViz + Graphviz; cross-checks against wiring.py), `wiring_art.py`, `wiring_page.py`, then `python3 assembly.py`, `rover3d.py`, `python3 drivetrain.py --json > bom-site/drivetrain.txt`, `cd bom-site && python3 build.py`, and `python3 make_prompt.py && cp CHATGPT-CHECK.md bom-site/` for the verification prompt. Every generator is deterministic: rerunning one on unchanged inputs leaves git clean.
