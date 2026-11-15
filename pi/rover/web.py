@@ -173,6 +173,14 @@ def play_stop():
     r4.pan_stop()
 
 
+VIEW_IDLE_S = 30                                # the live sensor views stop by themselves when no page has asked for this long
+last_poll = {"t": time.time()}
+
+
+def page_gone():
+    return time.time() - last_poll["t"] > VIEW_IDLE_S
+
+
 # ── senses check: sensing/bringup.py in its own process (GPIO, I2C and the camera are let go when it exits, and a
 #    crash there cannot take the remote down). The motors are not touched. ────────────────────────────────────────────
 SENSING = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sensing")     # deploy.sh puts sensing/ here
@@ -241,6 +249,8 @@ def radar_thread(rid, opener=None):
             with lock:
                 if radar["id"] != rid:
                     break
+            if page_gone():
+                break
             frames = rd.feed(ser.read(256))
             n += len(frames)
             with lock:
@@ -302,6 +312,8 @@ def thermal_thread(tid, opener=None):
         with lock:
             if thermal["id"] != tid:
                 break
+        if page_gone():
+            break
         buf = [0.0] * 768
         try:
             mlx.getFrame(buf)
@@ -347,6 +359,7 @@ def status():
     with lock:
         s.update(mode=state["mode"], cmd=state["cmd"], uptime=round(time.time() - state["t0"]), port=r4.port)
         s.update(rec=rec["on"], rec_n=len(rec["ev"]), playing=play["name"], motions={k: (v[-1][0] if v else 0) for k, v in motions.items()})
+        s["senses_running"] = senses["running"]
         if thermal["on"] or thermal["err"]:
             s["thermal"] = {"on": thermal["on"], "frame": thermal["frame"], "fps": thermal["fps"], "err": thermal["err"]}
         if radar["on"] or radar["err"]:
@@ -482,7 +495,7 @@ function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];docum
  if(s.ptrim!=null&&!ptrimSeen){ptrimSeen=true;ptrim=s.ptrim;document.getElementById('ptv').textContent=ptrim;}
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';
- showRec(s);drawThermal(s.thermal);drawRadar(s.radar);}
+ showRec(s);drawThermal(s.thermal);drawRadar(s.radar);autoStart(s);}
 const sns=document.getElementById('sns'),snsout=document.getElementById('snsout');let snsT=null;
 function showSns(j){const s=j.senses;if(!s)return;
  snsout.innerHTML=s.lines.map(l=>{const c=/^PASS/.test(l)?'#7fd18b':/^WARN/.test(l)?'#ffcf5c':/^FAIL/.test(l)?'#ff8a4c':'#93a1ae';
@@ -491,6 +504,16 @@ function showSns(j){const s=j.senses;if(!s)return;
 const thb=document.getElementById('thb'),thc=document.getElementById('thc'),thst=document.getElementById('thst');let thOn=false,thT=-1e9;
 const IRON=[[0,0,0],[40,0,90],[150,0,120],[230,60,20],[255,170,0],[255,245,170],[255,255,255]];
 function iron(t){const x=Math.max(0,Math.min(1,t))*(IRON.length-1),i=Math.min(IRON.length-2,Math.floor(x)),f=x-i;return IRON[i].map((v,k)=>Math.round(v+(IRON[i+1][k]-v)*f));}
+// Both live views start by themselves: when the page opens, and again after a senses check that had to stop them.
+// A view the person turned off stays off until the page is reloaded; one that reported an error is tried at most 3 times.
+const auto={th:{off:false,tries:0},rd:{off:false,tries:0}};let sensesWas=false;
+function autoStart(s){const busy=!!s.senses_running;
+ if(sensesWas&&!busy){auto.th.tries=0;auto.rd.tries=0;}sensesWas=busy;if(busy)return;
+ [['th',s.thermal,()=>!thOn,'thermal'],['rd',s.radar,()=>!rdOn,'radar']].forEach(([k,st,idle,ep])=>{
+  const a=auto[k];if(a.off||!idle()||a.tries>=3||(st&&st.on))return;
+  if(performance.now()-(k==='th'?thT:rdT)<1500)return;a.tries++;
+  if(k==='th'){thOn=true;thT=performance.now();thb.textContent='■ stop thermal';thc.style.display='';}else{rdOn=true;rdT=performance.now();rdr.textContent='■ stop radar';rdc.style.display='';}
+  api(ep+'?on=1');});}
 function drawThermal(r){const on=!!(r&&r.on);if(performance.now()-thT>1500){thOn=on;thb.textContent=on?'■ stop thermal':'▶ thermal live';}
  thc.style.display=thOn?'':'none';if(r&&r.err){thst.textContent=r.err;thst.style.color='#ff8a4c';}
  if(!on||!r.frame)return;thst.style.color='#93a1ae';
@@ -499,7 +522,7 @@ function drawThermal(r){const on=!!(r&&r.on);if(performance.now()-thT>1500){thOn
  const hot=f.indexOf(hi),hx=(hot%32)*c+c/2,hy=Math.floor(hot/32)*c+c/2;g.strokeStyle='#7fd18b';g.lineWidth=2;g.beginPath();g.arc(hx,hy,9,0,7);g.stroke();
  const med=[...f].sort((a,b)=>a-b)[384],warm=f.filter(v=>v>med+2.5&&v<38.5).length;
  thst.textContent='hottest '+hi.toFixed(1)+' °C (circled) · coolest '+lo.toFixed(1)+' · room ~'+med.toFixed(1)+' · '+warm+' warm pixels · '+r.fps+' frames/s';}
-thb.onclick=()=>{thOn=!thOn;thT=performance.now();thb.textContent=thOn?'■ stop thermal':'▶ thermal live';thc.style.display=thOn?'':'none';api('thermal?on='+(thOn?1:0));};
+thb.onclick=()=>{auto.th.off=thOn;thOn=!thOn;thT=performance.now();thb.textContent=thOn?'■ stop thermal':'▶ thermal live';thc.style.display=thOn?'':'none';api('thermal?on='+(thOn?1:0));};
 const rdr=document.getElementById('rdr'),rdc=document.getElementById('rdc'),rdst=document.getElementById('rdst');let rdOn=false,rdT=-1e9;
 function drawRadar(r){const on=!!(r&&r.on);if(performance.now()-rdT>1500){rdOn=on;rdr.textContent=on?'■ stop radar':'▶ LD2450 live';}
  rdc.style.display=rdOn?'':'none';if(r&&r.err){rdst.textContent=r.err;rdst.style.color='#ff8a4c';}
@@ -508,7 +531,7 @@ function drawRadar(r){const on=!!(r&&r.on);if(performance.now()-rdT>1500){rdOn=o
  for(let m=2000;m<=6000;m+=2000){g.beginPath();g.arc(cx,H-4,m*sc,Math.PI*1.167,Math.PI*1.833);g.stroke();}
  [-60,60].forEach(a=>{const r=a*Math.PI/180;g.beginPath();g.moveTo(cx,H-4);g.lineTo(cx+Math.sin(r)*6000*sc,H-4-Math.cos(r)*6000*sc);g.stroke();});
  r.targets.forEach(t=>{g.fillStyle='#7fd18b';g.beginPath();g.arc(cx+t.x_mm*sc,H-4-t.y_mm*sc,6,0,7);g.fill();});}
-rdr.onclick=()=>{rdOn=!rdOn;rdT=performance.now();rdr.textContent=rdOn?'■ stop radar':'▶ LD2450 live';rdc.style.display=rdOn?'':'none';api('radar?on='+(rdOn?1:0));};
+rdr.onclick=()=>{auto.rd.off=rdOn;rdOn=!rdOn;rdT=performance.now();rdr.textContent=rdOn?'■ stop radar':'▶ LD2450 live';rdc.style.display=rdOn?'':'none';api('radar?on='+(rdOn?1:0));};
 const snsGet=(go)=>fetch('/api/senses?'+(go?'go=1&':'')+'k='+encodeURIComponent(K)).then(r=>r.json()).then(showSns).catch(()=>{});
 sns.onclick=()=>{snsGet(true);if(!snsT)snsT=setInterval(()=>snsGet(false),1000);};
 setInterval(()=>{if(!cur&&!curJ)api('status');},700);api('status');
@@ -533,6 +556,7 @@ class H(BaseHTTPRequestHandler):
             self._json({"error": "not found"}, 404); return
         if q.get("k") != KEY:
             self._json({"error": "bad key"}, 403); return
+        last_poll["t"] = time.time()
         f = lambda k, d=0.0: float(q.get(k, d))
         ep = u.path[5:]
         try:
