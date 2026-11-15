@@ -6,7 +6,7 @@ station.py — the stop-and-dwell sequencer. One call = one station = one honest
     venv/bin/python station.py --name "hall S1"         # on the rover: real sensors, real R4 (motors held OFF)
 
 Protocol (per station, ~65 s):
-    0. STOP: motors off (R4 ENABLE released), turret parked.  A moving platform corrupts every RF sense
+    0. STOP: motors off (R4 ENABLE released), turret left at its start pose.  A moving platform corrupts every RF sense
        (radar self-motion clutter, CSI channel change), so nothing RF is trusted while anything moves.
     1. SETTLE 5 s: radar static gates re-converge; CSI baseline window starts.
     2. DWELL 2 × 30 s: radar gate energies (all gates, 10 Hz, timestamped) + CSI packets (UDP) logged.

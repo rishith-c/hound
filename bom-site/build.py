@@ -128,7 +128,7 @@ m_rows = "".join(
     f'<tr>\n<td>{esc(k)}</td><td align="right">{v["t_avail_Nm"]:.3f} N·m</td>'
     f'<td align="right">{v["margins_firmware"]["E"]:.2f}</td><td align="right">{v["margins_firmware"]["F"]:.2f}</td>'
     f'<td align="right">{v["margins_firmware"]["G"]:.2f}</td><td align="right">{min(v["margins_firmware"][c] for c in "HIJ"):.2f}</td>'
-    f'<td>{"PASS" if v["pass"] else "FAIL ramp"}</td>\n</tr>\n'
+    f'<td>{"PASS" if v["pass"] else ("FAIL " + ", ".join(n for n, c in (("level", "E"), ("strafe", "F"), ("ramp", "G")) if v["margins_firmware"][c] < DT["margin_required"])).strip()}</td>\n</tr>\n'
     for k, v in DT["drivers"].items())
 
 def paras(lines):
