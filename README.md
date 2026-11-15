@@ -13,6 +13,7 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 |---|---|
 | [rover-amazon-bom.vercel.app](https://rover-amazon-bom.vercel.app) | BOM, placements, wiring checks, build order, cost |
 | [manual.html](https://rover-amazon-bom.vercel.app/manual.html) | Assembly manual |
+| [wiring.html](https://rover-amazon-bom.vercel.app/wiring.html) | Wiring diagrams (WireViz, cross-checked against wiring.py) + GPT prompt |
 | [sensing/report.html](https://rover-amazon-bom.vercel.app/sensing/report.html) | Sensing simulation results |
 | `drivetrain.py` `assembly.py` `wiring.py` | The verification sources of truth: torque, placement, netlist |
 | `sensing/` | Prior art, sensor models, vitals, fusion, station sequencer, Monte Carlo |

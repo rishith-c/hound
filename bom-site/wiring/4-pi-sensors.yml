@@ -1,0 +1,258 @@
+metadata:
+  title: 'Hound 4 — Pi 40-pin header: thermal (i2c3), ToF ×2 (I2C-1), microphone (I2S)'
+connectors:
+  PI:
+    type: Raspberry Pi 4 — 40-pin header (used pins only)
+    pinlabels:
+    - 1 3V3
+    - 3 SDA1 BCM2
+    - 5 SCL1 BCM3
+    - 6 GND
+    - 7 BCM4 i2c3-SDA
+    - 9 GND
+    - 12 BCM18 I2S-BCLK
+    - 13 BCM27 XSHUT-rear
+    - 14 GND
+    - 15 BCM22 XSHUT-front
+    - 17 3V3
+    - 20 GND
+    - 29 BCM5 i2c3-SCL
+    - 30 GND
+    - 35 BCM19 I2S-LRCLK
+    - 38 BCM20 I2S-DIN
+    - 39 GND
+    notes: Physical pin numbers (odd = inner row from the SD-card end). i2c3 on BCM 4/5 needs dtoverlay=i2c3 in config.txt and has NO on-board pull-ups. w1-gpio must stay off (it defaults to BCM 4).
+  MLX:
+    type: MLX90640 thermal array breakout (0x33)
+    pinlabels:
+    - VIN 3V3
+    - GND
+    - SCL
+    - SDA
+    notes: 'On i2c3 (BCM 4/5) ALONE so it can run at 1 MHz. BCM 4/5 have no pull-ups: if the module has none either, add 4.7 kΩ SDA→3V3 and SCL→3V3. Rides beside the webcam on the tilt bracket.'
+  TOF_F:
+    type: VL53L1X ToF FRONT (0x29 → re-addressed 0x30 by XSHUT)
+    pinlabels:
+    - VIN 3V3
+    - GND
+    - SDA
+    - SCL
+    - XSHUT
+    notes: Both ToFs share I2C-1. At boot the Pi holds FRONT XSHUT low, gives REAR 0x29… then raises FRONT and moves it to 0x30.
+  TOF_R:
+    type: VL53L1X ToF REAR (0x29)
+    pinlabels:
+    - VIN 3V3
+    - GND
+    - SDA
+    - SCL
+    - XSHUT
+    notes: XSHUT on BCM 27 so the Pi can reset it independently.
+  MIC:
+    type: INMP441 I2S microphone
+    pinlabels:
+    - VDD 3V3
+    - GND
+    - SCK
+    - WS
+    - SD
+    - L/R
+    notes: L/R tied to GND = left channel. On the post front face, 120 mm up (assembly.py).
+  PULL:
+    type: 2 × 4.7 kΩ i2c3 pull-ups (only if the MLX module has none)
+    pinlabels:
+    - 3V3
+    - SDA
+    - SCL
+    notes: 'Meter the module first: SDA to GND must read ≤ 3.3 V when powered alone.'
+cables:
+  W_MLX:
+    gauge: 26 AWG
+    length: 0.35
+    colors:
+    - RD
+    - BK
+    - YE
+    - BU
+    category: bundle
+    notes: 'to the turret: leave a service loop for tilt'
+  W_TOF_F:
+    gauge: 26 AWG
+    length: 0.25
+    colors:
+    - RD
+    - BK
+    - BU
+    - YE
+    - WH
+    category: bundle
+  W_TOF_R:
+    gauge: 26 AWG
+    length: 0.35
+    colors:
+    - RD
+    - BK
+    - BU
+    - YE
+    - WH
+    category: bundle
+  W_MIC:
+    gauge: 26 AWG
+    length: 0.25
+    colors:
+    - RD
+    - BK
+    - GN
+    - OG
+    - VT
+    - BK
+    category: bundle
+  W_PULL:
+    gauge: 26 AWG
+    length: 0.05
+    colors:
+    - RD
+    - BU
+    - YE
+    category: bundle
+connections:
+- - PI:
+    - 1 3V3
+  - W_MLX:
+    - 1
+  - MLX:
+    - VIN 3V3
+- - PI:
+    - 9 GND
+  - W_MLX:
+    - 2
+  - MLX:
+    - GND
+- - PI:
+    - 29 BCM5 i2c3-SCL
+  - W_MLX:
+    - 3
+  - MLX:
+    - SCL
+- - PI:
+    - 7 BCM4 i2c3-SDA
+  - W_MLX:
+    - 4
+  - MLX:
+    - SDA
+- - PI:
+    - 17 3V3
+  - W_TOF_F:
+    - 1
+  - TOF_F:
+    - VIN 3V3
+- - PI:
+    - 14 GND
+  - W_TOF_F:
+    - 2
+  - TOF_F:
+    - GND
+- - PI:
+    - 3 SDA1 BCM2
+  - W_TOF_F:
+    - 3
+  - TOF_F:
+    - SDA
+- - PI:
+    - 5 SCL1 BCM3
+  - W_TOF_F:
+    - 4
+  - TOF_F:
+    - SCL
+- - PI:
+    - 15 BCM22 XSHUT-front
+  - W_TOF_F:
+    - 5
+  - TOF_F:
+    - XSHUT
+- - PI:
+    - 17 3V3
+  - W_TOF_R:
+    - 1
+  - TOF_R:
+    - VIN 3V3
+- - PI:
+    - 20 GND
+  - W_TOF_R:
+    - 2
+  - TOF_R:
+    - GND
+- - PI:
+    - 3 SDA1 BCM2
+  - W_TOF_R:
+    - 3
+  - TOF_R:
+    - SDA
+- - PI:
+    - 5 SCL1 BCM3
+  - W_TOF_R:
+    - 4
+  - TOF_R:
+    - SCL
+- - PI:
+    - 13 BCM27 XSHUT-rear
+  - W_TOF_R:
+    - 5
+  - TOF_R:
+    - XSHUT
+- - PI:
+    - 17 3V3
+  - W_MIC:
+    - 1
+  - MIC:
+    - VDD 3V3
+- - PI:
+    - 39 GND
+  - W_MIC:
+    - 2
+  - MIC:
+    - GND
+- - PI:
+    - 12 BCM18 I2S-BCLK
+  - W_MIC:
+    - 3
+  - MIC:
+    - SCK
+- - PI:
+    - 35 BCM19 I2S-LRCLK
+  - W_MIC:
+    - 4
+  - MIC:
+    - WS
+- - PI:
+    - 38 BCM20 I2S-DIN
+  - W_MIC:
+    - 5
+  - MIC:
+    - SD
+- - PI:
+    - 30 GND
+  - W_MIC:
+    - 6
+  - MIC:
+    - L/R
+- - PI:
+    - 1 3V3
+  - W_PULL:
+    - 1
+  - PULL:
+    - 3V3
+- - MLX:
+    - SDA
+  - W_PULL:
+    - 2
+  - PULL:
+    - SDA
+- - MLX:
+    - SCL
+  - W_PULL:
+    - 3
+  - PULL:
+    - SCL
+options:
+  bgcolor: '#ffffff'

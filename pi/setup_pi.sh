@@ -14,7 +14,7 @@ cd "$HOME/rover"
 [ -d venv ] || python3 -m venv --system-site-packages venv
 venv/bin/pip install -q --upgrade pip
 venv/bin/pip install -q pyserial adafruit-blinka adafruit-circuitpython-pca9685 adafruit-circuitpython-motor \
-  numpy scipy adafruit-circuitpython-mlx90640 opencv-python-headless        # sensing: vitals DSP, thermal array, MobileNet-SSD camera
+  numpy scipy adafruit-circuitpython-mlx90640 adafruit-extended-bus opencv-python-headless        # sensing: vitals DSP, thermal array, MobileNet-SSD camera
 # MobileNet-SSD (Caffe) for the camera person detector, ~23 MB
 [ -f "$HOME/rover/MobileNetSSD_deploy.caffemodel" ] || curl -fsSL -o "$HOME/rover/MobileNetSSD_deploy.caffemodel" \
   "https://github.com/chuanqi305/MobileNet-SSD/raw/master/mobilenet_iter_73000.caffemodel" || true
@@ -32,3 +32,10 @@ arduino-cli core update-index >/dev/null
 arduino-cli core install arduino:renesas_uno >/dev/null
 
 echo "setup complete on $(hostname): $(python3 --version), arduino-cli $(arduino-cli version | awk '{print $3}'), I2C: $(ls /dev/i2c-* 2>/dev/null | tr '\n' ' ')"
+
+# ── I2C buses as wired: I2C-1 (BCM 2/3: PCA9685, ToF ×2) and i2c3 (BCM 4/5: MLX90640 alone). Idempotent. ──
+CFG=/boot/firmware/config.txt; [ -f "$CFG" ] || CFG=/boot/config.txt
+grep -q '^dtparam=i2c_arm=on' "$CFG" || echo 'dtparam=i2c_arm=on' | sudo tee -a "$CFG" >/dev/null
+grep -q '^dtoverlay=i2c3' "$CFG"      || echo 'dtoverlay=i2c3' | sudo tee -a "$CFG" >/dev/null      # BCM 4/5 → /dev/i2c-3 (reboot once)
+grep -q '^dtoverlay=w1-gpio' "$CFG" && echo "WARNING: w1-gpio overlay is on and claims BCM 4 — remove it from $CFG"
+echo "I2C: i2c_arm on, i2c3 overlay on (takes effect after a reboot)"

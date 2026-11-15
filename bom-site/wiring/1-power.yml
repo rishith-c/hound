@@ -1,0 +1,302 @@
+metadata:
+  title: Hound 1 — power distribution (pack side and logic island)
+connectors:
+  PACK:
+    type: HOOVO 3S 2200 mAh 80C LiPo — T-plug (Deans)
+    pinlabels:
+    - V+
+    - GND
+    notes: '11.1 V nominal, 12.6 V full, 10.5 V floor (cutoff V 10.5 in firmware). A pack that reads 6.8 V is dead: never charge it.'
+  ESTOP:
+    type: E-STOP — NC mushroom switch in the + lead
+    pinlabels:
+    - IN
+    - OUT
+    notes: Latching, twist-release, mounted at deck X −140 (assembly.py). Breaks EVERYTHING on the pack side; the Pi keeps running on the bank.
+  WAGO_P:
+    type: Wago 221-415 5-way — PACK + (11.1 V)
+    pinlabels:
+    - pigtail +
+    - shield VMOT
+    - XL4015 IN+
+    - LM2596 IN+
+    - 47k divider
+    notes: Lever nut, 24–12 AWG. Slot 1 takes the 14 AWG pigtail, the rest 22 AWG. This and its twin are the ONLY pack-side splices.
+  WAGO_N:
+    type: Wago 221-415 5-way — PACK − = STAR GROUND
+    pinlabels:
+    - pigtail −
+    - shield GND
+    - XL4015 IN−
+    - LM2596 IN−
+    - 10k divider
+    notes: Every return comes back here on its own wire. Never through a board GND pin, never through a USB cable.
+  SHIELD_PWR:
+    type: CNC Shield v3 — power screw terminal
+    pinlabels:
+    - VMOT
+    - GND
+    notes: 1000 µF 25 V electrolytic across VMOT/GND at the terminal, stripe (−) to GND. Reversed = vents on first power-up.
+  XL4015:
+    type: XL4015 5 A buck — trim OUT to 6.0 V
+    pinlabels:
+    - IN+
+    - IN−
+    - OUT+
+    - OUT−
+    notes: Screw terminals. Set 6.00 V on the meter with nothing on OUT, then wire the PCA9685. Heatsink on. 4 A continuous derated.
+  LM2596:
+    type: LM2596 3 A buck — trim OUT to 5.0 V
+    pinlabels:
+    - IN+
+    - IN−
+    - OUT+
+    - OUT−
+    notes: 'Screw terminals. Set 5.00 V on the meter with nothing on OUT. 2 A continuous without a fan. Vin must stay ≥ 6.5 V (pack floor 10.5 V: fine).'
+  PCA_PWR:
+    type: PCA9685 servo-power screw terminal
+    pinlabels:
+    - V+
+    - GND
+    notes: The big 2-pin terminal at the end of the board = servo rail, NOT logic VCC.
+  FAN:
+    type: 40 mm 5 V fan on the driver heatsinks
+    pinlabels:
+    - 5V (red)
+    - GND (black)
+    notes: Must be a 5 V fan. A 12 V fan goes on the pack Wagos instead — read the label.
+  WAGO5_P:
+    type: Wago 221-415 5-way — 5 V rail +
+    pinlabels:
+    - LM2596 OUT+
+    - LD2410C LEFT VCC
+    - LD2410C RIGHT VCC
+    - LD2450 5V
+    - ESP32-S3 no.3 5V
+    notes: Feeds the four sensor loads; the fan takes its own wire straight off the LM2596 OUT terminal.
+  WAGO5_N:
+    type: Wago 221-415 5-way — 5 V rail −
+    pinlabels:
+    - LM2596 OUT−
+    - LD2410C LEFT GND
+    - LD2410C RIGHT GND
+    - LD2450 GND
+    - ESP32-S3 no.3 GND
+    notes: 'Power returns for the sensors. Each radar ALSO grounds to its CP2102 (signal reference): two GND wires per radar.'
+  DIV:
+    type: Pack-voltage divider on perfboard — 47 kΩ / 10 kΩ
+    pinlabels:
+    - PACK+
+    - A3
+    - GND
+    notes: 47 kΩ between PACK+ and A3; 10 kΩ between A3 and GND. 12.6 V → 2.21 V at A3 (R4 ADC ref 5 V, VBAT_RATIO 57/10). A3 = the shield's CoolEn pin.
+  SHIELD_A3:
+    type: CNC Shield v3 — CoolEn header pin (= R4 A3)
+    pinlabels:
+    - A3
+    - GND
+    notes: The 4-pin block Abort/Hold/Resume/CoolEn on the shield's edge; CoolEn is A3. Its GND is the neighbouring GND pin.
+  BANK:
+    type: USB power bank 5 V / 3 A (logic island)
+    pinlabels:
+    - USB-A out
+    notes: Genuine 3 A bank. Cable ≤ 0.3 m, ≥ 24 AWG power conductors. Powers ONLY the Pi; the Pi powers the R4, the hub, the adapters and the webcam.
+  PI_PWR:
+    type: Raspberry Pi 4 — USB-C power in
+    pinlabels:
+    - USB-C
+    notes: Under-voltage warning at 4.63 V. Early Pi 4 (rev 1.1) needs an A-to-C or non-e-marked cable.
+cables:
+  W_PACK:
+    gauge: 14 AWG
+    length: 0.3
+    colors:
+    - RD
+    - BK
+    category: bundle
+    notes: HOOVO T-plug → OliRC extension → pigtail. Both conductors 14 AWG.
+  W_ESTOP:
+    gauge: 14 AWG
+    length: 0.1
+    colors:
+    - RD
+    category: bundle
+  W_SHIELD:
+    gauge: 22 AWG
+    length: 0.15
+    colors:
+    - RD
+    - BK
+    category: bundle
+    notes: 'Motor bus: 4 A ramp burst, 20 mV drop'
+  W_XL_IN:
+    gauge: 22 AWG
+    length: 0.15
+    colors:
+    - RD
+    - BK
+    category: bundle
+  W_LM_IN:
+    gauge: 22 AWG
+    length: 0.15
+    colors:
+    - RD
+    - BK
+    category: bundle
+  W_SERVO:
+    gauge: 22 AWG
+    length: 0.12
+    colors:
+    - RD
+    - BK
+    category: bundle
+    notes: '6.0 V servo rail. OUT− → PCA9685 GND terminal is the servo RETURN: its own wire, always.'
+  W_LM_OUT:
+    gauge: 22 AWG
+    length: 0.1
+    colors:
+    - RD
+    - BK
+    category: bundle
+    notes: 5.0 V rail into the sensor Wagos
+  W_FAN:
+    gauge: 24 AWG
+    length: 0.15
+    colors:
+    - RD
+    - BK
+    category: bundle
+    notes: Fan straight off the LM2596 OUT terminals (second wire in the same screw)
+  W_DIV:
+    gauge: 24 AWG
+    length: 0.1
+    colors:
+    - RD
+    - YE
+    - BK
+    category: bundle
+    notes: 'Divider: red to Wago +, yellow to A3, black to Wago −'
+  W_BANK:
+    gauge: 24 AWG
+    length: 0.3
+    colors:
+    - RD
+    category: bundle
+    notes: USB-A → USB-C, '3 A fast-charge' cable, ≤ 0.3 m
+connections:
+- - PACK:
+    - V+
+  - W_PACK:
+    - 1
+  - ESTOP:
+    - IN
+- - ESTOP:
+    - OUT
+  - W_ESTOP:
+    - 1
+  - WAGO_P:
+    - pigtail +
+- - PACK:
+    - GND
+  - W_PACK:
+    - 2
+  - WAGO_N:
+    - pigtail −
+- - WAGO_P:
+    - shield VMOT
+  - W_SHIELD:
+    - 1
+  - SHIELD_PWR:
+    - VMOT
+- - WAGO_N:
+    - shield GND
+  - W_SHIELD:
+    - 2
+  - SHIELD_PWR:
+    - GND
+- - WAGO_P:
+    - XL4015 IN+
+  - W_XL_IN:
+    - 1
+  - XL4015:
+    - IN+
+- - WAGO_N:
+    - XL4015 IN−
+  - W_XL_IN:
+    - 2
+  - XL4015:
+    - IN−
+- - WAGO_P:
+    - LM2596 IN+
+  - W_LM_IN:
+    - 1
+  - LM2596:
+    - IN+
+- - WAGO_N:
+    - LM2596 IN−
+  - W_LM_IN:
+    - 2
+  - LM2596:
+    - IN−
+- - XL4015:
+    - OUT+
+  - W_SERVO:
+    - 1
+  - PCA_PWR:
+    - V+
+- - XL4015:
+    - OUT−
+  - W_SERVO:
+    - 2
+  - PCA_PWR:
+    - GND
+- - LM2596:
+    - OUT+
+  - W_LM_OUT:
+    - 1
+  - WAGO5_P:
+    - LM2596 OUT+
+- - LM2596:
+    - OUT−
+  - W_LM_OUT:
+    - 2
+  - WAGO5_N:
+    - LM2596 OUT−
+- - LM2596:
+    - OUT+
+  - W_FAN:
+    - 1
+  - FAN:
+    - 5V (red)
+- - LM2596:
+    - OUT−
+  - W_FAN:
+    - 2
+  - FAN:
+    - GND (black)
+- - WAGO_P:
+    - 47k divider
+  - W_DIV:
+    - 1
+  - DIV:
+    - PACK+
+- - DIV:
+    - A3
+  - W_DIV:
+    - 2
+  - SHIELD_A3:
+    - A3
+- - WAGO_N:
+    - 10k divider
+  - W_DIV:
+    - 3
+  - DIV:
+    - GND
+- - BANK:
+    - USB-A out
+  - W_BANK:
+    - 1
+  - PI_PWR:
+    - USB-C
+options:
+  bgcolor: '#ffffff'

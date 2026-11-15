@@ -631,7 +631,7 @@
   {
    "level": "PROCEDURE",
    "id": "microstep",
-   "text": "DRV8825 1/16 = M2 only → ONE cap on MS3 under each driver, MS1/MS2 open. Four caps, plus the D12 and D13 jumpers on the A header = six jumpers total. Caps go on before the drivers."
+   "text": "AS BUILT (v1.0 best drive): DRV8825 1/32 = M0 + M2 → caps on MS1 and MS3 under each driver, MS2 open (eight caps), plus the D12 and D13 jumpers on the A header = ten jumpers total. Caps go on before the drivers. 1/16 (one cap, MS3 only, firmware m 16) is the faster alternative — a drive-setting change, ask first."
   },
   {
    "level": "PROCEDURE",
@@ -647,6 +647,11 @@
    "level": "PROCEDURE",
    "id": "sequence",
    "text": "Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. DRV8825 nENABLE floats LOW = enabled; with VMOT alone four motors sit at full holding current with nothing commanding them."
+  },
+  {
+   "level": "PROCEDURE",
+   "id": "vbat",
+   "text": "Pack-voltage sense: 47 kΩ from the Wago + to the shield CoolEn pin (A3), 10 kΩ from A3 to the shield GND pin. 12.6 V → 2.21 V at A3 (R4 ADC ref 5 V). Then enable the cutoff with V 10.5 over serial; until the divider exists vcut stays 0."
   },
   {
    "level": "PROCEDURE",
@@ -896,7 +901,7 @@
   {
    "level": "PASS",
    "id": "pins",
-   "text": "UNO R4 / shield: 9 pins, all distinct, none on [9, 10, 11, 14, 15, 16, 17]"
+   "text": "UNO R4 / shield: 10 pins, all distinct, none on [9, 10, 11, 14, 15, 16]"
   },
   {
    "level": "PASS",
@@ -990,7 +995,7 @@
    "FAIL": 0,
    "WARN": 7,
    "VERIFY": 5,
-   "PROCEDURE": 11,
+   "PROCEDURE": 12,
    "PASS": 64
   }
  }

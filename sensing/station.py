@@ -98,8 +98,13 @@ class CsiSink:
 
 class Thermal:
     def __init__(self):
-        import board, busio, adafruit_mlx90640
-        i2c = busio.I2C(board.SCL, board.SDA, frequency=400000)  # i2c3 on BCM 4/5 is exposed as another bus id; set in config
+        import adafruit_mlx90640
+        try:                                     # as wired: i2c3 on BCM 4/5 (dtoverlay=i2c3), the thermal array alone on it
+            from adafruit_extended_bus import ExtendedI2C
+            i2c = ExtendedI2C(3)
+        except Exception:                        # bench fallback: I2C-1 on BCM 2/3 (shared with PCA9685 + ToF, slower frames)
+            import board, busio
+            i2c = busio.I2C(board.SCL, board.SDA, frequency=400000)
         self.mlx = adafruit_mlx90640.MLX90640(i2c)
         self.mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_4_HZ
 

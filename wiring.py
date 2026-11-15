@@ -94,8 +94,9 @@ SIGNALS = [
 ]
 
 PI_BCM = {"I2C1 SDA": 2, "I2C1 SCL": 3, "i2c3 SDA": 4, "i2c3 SCL": 5, "I2S BCLK": 18, "I2S LRCLK": 19, "I2S DIN": 20, "XSHUT front": 22, "XSHUT rear": 27}
-R4_PINS = {"X STEP": 2, "Y STEP": 3, "Z STEP": 4, "X DIR": 5, "Y DIR": 6, "Z DIR": 7, "ENABLE": 8, "A STEP (jumper SpnEn)": 12, "A DIR (jumper SpnDir)": 13}
-R4_RESERVED_BY_SHIELD = {9: "X limit", 10: "Y limit", 11: "Z limit", 14: "A0 abort", 15: "A1 hold", 16: "A2 resume", 17: "A3 coolant"}
+R4_PINS = {"X STEP": 2, "Y STEP": 3, "Z STEP": 4, "X DIR": 5, "Y DIR": 6, "Z DIR": 7, "ENABLE": 8, "A STEP (jumper SpnEn)": 12, "A DIR (jumper SpnDir)": 13,
+           "VBAT sense (shield CoolEn pin, 47k/10k divider)": 17}
+R4_RESERVED_BY_SHIELD = {9: "X limit", 10: "Y limit", 11: "Z limit", 14: "A0 abort", 15: "A1 hold", 16: "A2 resume"}   # A3 (17) is taken by the divider
 ESP1_GPIO = {}   # ESP32 #1 is now the spare: the radars reach the Pi through CP2102 adapters
 ESP32S3_AVOID = {0: "strap", 3: "strap", 45: "strap", 46: "strap", 19: "USB D-", 20: "USB D+", 43: "UART0 TX (console)", 44: "UART0 RX (console)"}
 I2C_BUSES = {
@@ -206,12 +207,13 @@ out(PROC, "ground", "Servo return: PCA9685 V+ GND terminal → XL4015 OUT− (it
 # 10. things a checker cannot check but a build must do
 out(PROC, "sequence", "Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. DRV8825 nENABLE floats LOW = enabled; with VMOT alone four motors sit at full holding current with nothing commanding them.")
 out(PROC, "vref", "Read the sense resistor on one driver: R100 → Vref = 0.75 V for 1.5 A; R200 → 1.50 V. Set all four with the multimeter, motors unplugged, before any motor is connected.")
-out(PROC, "microstep", "DRV8825 1/16 = M2 only → ONE cap on MS3 under each driver, MS1/MS2 open. Four caps, plus the D12 and D13 jumpers on the A header = six jumpers total. Caps go on before the drivers.")
+out(PROC, "microstep", "AS BUILT (v1.0 best drive): DRV8825 1/32 = M0 + M2 → caps on MS1 and MS3 under each driver, MS2 open (eight caps), plus the D12 and D13 jumpers on the A header = ten jumpers total. Caps go on before the drivers. 1/16 (one cap, MS3 only, firmware m 16) is the faster alternative — a drive-setting change, ask first.")
 out(PROC, "phases", "Motor coil pairs by multimeter: the two leads that show ~2 Ω are one coil. A coil split across the 2B/2A–1A/1B header halves makes a motor buzz and not turn.")
 out(WARN, "protection", "No fuse on the pack and no cell alarm (declined). A 2200 mAh 80C pack delivers >70 A into a short; the T-plug is a disconnect, not protection. Listed under Safety as reviewer-recommended.")
 out(WARN, "connector", f"Motor phases run 1.5 A through Dupont 2.54 contacts rated {CONNECTOR_A['Dupont 2.54']} A — inside rating but the crimp quality is the margin. A contact that heats in the wheels-up test gets re-crimped or soldered.")
 out(VERIFY, "bank", "Load-test the bank at 2.5 A for 60 s with the meter on the Pi's 5 V pin: below 4.8 V the bank is not a 3 A bank.")
 out(PROC, "csi-nodes", "CSI v2: ESP32 #2 runs csi_tx OFF the rover (dropped as far along the wall as the room allows, any USB 5 V, channel 6, 100 Hz probes). ESP32 #3 runs csi_rx_udp ON the rover from the LM2596 5 V pin — USB never connected while the 5 V pin is fed — and streams the CSI of every probe to the Pi hotspot, which must be on channel 6, UDP port 5005. ESP32 #1 is the spare.")
+out(PROC, "vbat", "Pack-voltage sense: 47 kΩ from the Wago + to the shield CoolEn pin (A3), 10 kΩ from A3 to the shield GND pin. 12.6 V → 2.21 V at A3 (R4 ADC ref 5 V). Then enable the cutoff with V 10.5 over serial; until the divider exists vcut stays 0.")
 out(PASS, "bulk-cap", "1000 µF 25 V across VMOT at the shield terminal (consumables) — protects the drivers from the pack lead's inductance on connect.")
 
 # 11. voltage chain: bank → cable → Pi → USB port → the farthest device (webcam on its captive 1.5 m cable)

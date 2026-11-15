@@ -1,0 +1,305 @@
+metadata:
+  title: Hound 5 — radars on CP2102 adapters, the USB tree, and the double ground
+connectors:
+  PI_USB:
+    type: Raspberry Pi 4 — USB-A ports
+    pinlabels:
+    - 'USB 1: webcam'
+    - 'USB 2: hub'
+    - 'USB 3: free'
+    - 'USB 4: free'
+    notes: 1.2 A shared across all four ports (peak here 0.80 A). Webcam on its own port, everything else through the hub.
+  HUB:
+    type: 4-port USB hub (unpowered)
+    pinlabels:
+    - upstream
+    - 'port 1: UNO R4'
+    - 'port 2: CP2102 no.1'
+    - 'port 3: CP2102 no.2'
+    - 'port 4: CP2102 no.3'
+  CAM:
+    type: Webcam (C920-class) — captive 1.5 m cable
+    pinlabels:
+    - USB-A
+    notes: On the turret beside the thermal array. If it drops out at 1080p, run 720p.
+  R4_USB:
+    type: UNO R4 WiFi — USB-C
+    pinlabels:
+    - USB-C
+    notes: 'USB CDC serial to the Pi: /dev/serial/by-id/*Arduino*'
+  CP1:
+    type: CP2102 USB-UART no.1 → LD2410C LEFT
+    pinlabels:
+    - 3V3
+    - 5V
+    - GND
+    - TXD
+    - RXD
+    - DTR
+    notes: 'Only GND, TXD, RXD are used. 5V and 3V3 pins stay EMPTY (the radar is powered from the LM2596 rail, not the Pi''s USB budget). Jumper on 3.3 V logic if the adapter has one. Label the adapter
+      body: LD2410C LEFT.'
+  CP2:
+    type: CP2102 USB-UART no.2 → LD2410C RIGHT
+    pinlabels:
+    - 3V3
+    - 5V
+    - GND
+    - TXD
+    - RXD
+    - DTR
+    notes: 'Only GND, TXD, RXD are used. 5V and 3V3 pins stay EMPTY (the radar is powered from the LM2596 rail, not the Pi''s USB budget). Jumper on 3.3 V logic if the adapter has one. Label the adapter
+      body: LD2410C RIGHT.'
+  CP3:
+    type: CP2102 USB-UART no.3 → LD2450 (when the third adapter arrives)
+    pinlabels:
+    - 3V3
+    - 5V
+    - GND
+    - TXD
+    - RXD
+    - DTR
+    notes: 'Only GND, TXD, RXD are used. 5V and 3V3 pins stay EMPTY (the radar is powered from the LM2596 rail, not the Pi''s USB budget). Jumper on 3.3 V logic if the adapter has one. Label the adapter
+      body: LD2450 (when the third adapter arrives).'
+  LDL:
+    type: HLK-LD2410C LEFT (toed +30° out, deck Y +50)
+    pinlabels:
+    - 1 TX
+    - 2 RX
+    - 3 OUT
+    - 4 GND
+    - 5 VCC
+    notes: 'Pins per Hi-Link manual table 1: 1 UART_Tx, 2 UART_Rx, 3 OUT, 4 GND, 5 VCC (5–12 V, 5 V advised). IO 3.3 V, 256000 baud. OUT unused.'
+  LDR:
+    type: HLK-LD2410C RIGHT (toed −30° out, deck Y −50)
+    pinlabels:
+    - 1 TX
+    - 2 RX
+    - 3 OUT
+    - 4 GND
+    - 5 VCC
+    notes: 'Pins per Hi-Link manual table 1: 1 UART_Tx, 2 UART_Rx, 3 OUT, 4 GND, 5 VCC (5–12 V, 5 V advised). IO 3.3 V, 256000 baud. OUT unused.'
+  LD2450:
+    type: HLK-LD2450 (centre, x/y tracker)
+    pinlabels:
+    - 5V
+    - GND
+    - TX
+    - RX
+    notes: Silkscreen 5V GND TX RX; 5 V supply, 3.3 V UART, 256000 baud. Needs the THIRD CP2102 — until it arrives, leave power and data unplugged.
+  WAGO5_P:
+    type: Wago 221-415 5-way — 5 V rail +
+    pinlabels:
+    - LM2596 OUT+
+    - LD2410C LEFT VCC
+    - LD2410C RIGHT VCC
+    - LD2450 5V
+    - ESP32-S3 no.3 5V
+    notes: Feeds the four sensor loads; the fan takes its own wire straight off the LM2596 OUT terminal.
+  WAGO5_N:
+    type: Wago 221-415 5-way — 5 V rail −
+    pinlabels:
+    - LM2596 OUT−
+    - LD2410C LEFT GND
+    - LD2410C RIGHT GND
+    - LD2450 GND
+    - ESP32-S3 no.3 GND
+    notes: 'Power returns for the sensors. Each radar ALSO grounds to its CP2102 (signal reference): two GND wires per radar.'
+cables:
+  W_CAM:
+    gauge: 28 AWG
+    length: 1.5
+    colors:
+    - WH
+    category: bundle
+    notes: captive
+  W_HUB:
+    gauge: 28 AWG
+    length: 0.3
+    colors:
+    - WH
+    category: bundle
+  W_R4:
+    gauge: 28 AWG
+    length: 0.3
+    colors:
+    - WH
+    category: bundle
+    notes: USB-A → USB-C
+  W_CPA:
+    gauge: 28 AWG
+    length: 0.15
+    colors:
+    - WH
+    category: bundle
+  W_CPB:
+    gauge: 28 AWG
+    length: 0.15
+    colors:
+    - WH
+    category: bundle
+  W_CPC:
+    gauge: 28 AWG
+    length: 0.15
+    colors:
+    - WH
+    category: bundle
+  W_LDL:
+    gauge: 26 AWG
+    length: 0.25
+    colors:
+    - GN
+    - WH
+    - BK
+    - RD
+    - BK
+    category: bundle
+    notes: TX, RX, signal-GND to the adapter; VCC and power-GND to the Wagos
+  W_LDR:
+    gauge: 26 AWG
+    length: 0.25
+    colors:
+    - GN
+    - WH
+    - BK
+    - RD
+    - BK
+    category: bundle
+  W_LD2450:
+    gauge: 26 AWG
+    length: 0.25
+    colors:
+    - GN
+    - WH
+    - BK
+    - RD
+    - BK
+    category: bundle
+connections:
+- - PI_USB:
+    - 'USB 1: webcam'
+  - W_CAM:
+    - 1
+  - CAM:
+    - USB-A
+- - PI_USB:
+    - 'USB 2: hub'
+  - W_HUB:
+    - 1
+  - HUB:
+    - upstream
+- - HUB:
+    - 'port 1: UNO R4'
+  - W_R4:
+    - 1
+  - R4_USB:
+    - USB-C
+- - HUB:
+    - 'port 2: CP2102 no.1'
+  - W_CPA:
+    - 1
+  - CP1:
+    - 5V
+- - HUB:
+    - 'port 3: CP2102 no.2'
+  - W_CPB:
+    - 1
+  - CP2:
+    - 5V
+- - HUB:
+    - 'port 4: CP2102 no.3'
+  - W_CPC:
+    - 1
+  - CP3:
+    - 5V
+- - LDL:
+    - 1 TX
+  - W_LDL:
+    - 1
+  - CP1:
+    - RXD
+- - LDL:
+    - 2 RX
+  - W_LDL:
+    - 2
+  - CP1:
+    - TXD
+- - LDL:
+    - 4 GND
+  - W_LDL:
+    - 3
+  - CP1:
+    - GND
+- - WAGO5_P:
+    - LD2410C LEFT VCC
+  - W_LDL:
+    - 4
+  - LDL:
+    - 5 VCC
+- - WAGO5_N:
+    - LD2410C LEFT GND
+  - W_LDL:
+    - 5
+  - LDL:
+    - 4 GND
+- - LDR:
+    - 1 TX
+  - W_LDR:
+    - 1
+  - CP2:
+    - RXD
+- - LDR:
+    - 2 RX
+  - W_LDR:
+    - 2
+  - CP2:
+    - TXD
+- - LDR:
+    - 4 GND
+  - W_LDR:
+    - 3
+  - CP2:
+    - GND
+- - WAGO5_P:
+    - LD2410C RIGHT VCC
+  - W_LDR:
+    - 4
+  - LDR:
+    - 5 VCC
+- - WAGO5_N:
+    - LD2410C RIGHT GND
+  - W_LDR:
+    - 5
+  - LDR:
+    - 4 GND
+- - LD2450:
+    - TX
+  - W_LD2450:
+    - 1
+  - CP3:
+    - RXD
+- - LD2450:
+    - RX
+  - W_LD2450:
+    - 2
+  - CP3:
+    - TXD
+- - LD2450:
+    - GND
+  - W_LD2450:
+    - 3
+  - CP3:
+    - GND
+- - WAGO5_P:
+    - LD2450 5V
+  - W_LD2450:
+    - 4
+  - LD2450:
+    - 5V
+- - WAGO5_N:
+    - LD2450 GND
+  - W_LD2450:
+    - 5
+  - LD2450:
+    - GND
+options:
+  bgcolor: '#ffffff'
