@@ -99,7 +99,8 @@ def main():
     stepper_m = d.design_mass()[1]
     print(f"\nDC DRIVE STUDY — Hound at the firmware's ramps (starts {d.A_FW_ACCEL} m/s²), pack sagged to {V_SAG} V")
     print("=" * 100)
-    print(f"Stepper build today: {stepper_m:.2f} kg, motors draw ~1.96 A from the pack whether moving or not (drivetrain.py, 1.5 A/phase)\n")
+    print(f"Stepper build today: {stepper_m:.2f} kg, motors draw ~1.96 A from the pack whenever energised, at any speed or load"
+          f" (drivetrain.py, 1.5 A/phase); the R4 releases them 3 s after a stop unless 'hold' is on\n")
     rows = [evaluate(m) for m in MOTORS]
     for r in rows:
         print(f"{'PASS' if r['ok'] else 'FAIL'}  {r['name']:30s} {r['mass']:.2f} kg   cruise {r['t_cruise'] / KGCM:.2f} · strafe start "
