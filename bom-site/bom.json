@@ -125,7 +125,8 @@
    "EXTERNAL REVIEW: 'overall width 390' was the frame; over the wheels it is 462 mm. Both now reported.",
    "EXTERNAL REVIEW: fuse and in-run cell monitoring were declined; the reviewer calls them unresolved requirements. Both restored as an optional Safety group so the decision is visible, not buried.",
    "EXTERNAL REVIEW, pushed back: the 400 mm post was an option under test, not a commitment, and the bearing/torque assumptions were already labelled ASSUMED — those two are restated, not changed.",
-   "Battery swapped to the user's HOOVO 3S 2200 80C shorty 2-pack: it is Deans, not XT60. Rather than an adapter in the 4 A path, the T-plug pigtail line became two Deans 30 cm extensions (one whole for the pack lead, one cut into a pigtail of each gender). Cradle re-drawn 75 × 33.8 × 26.4, mass 190 → 140 g, ramp margin 1.27 → 1.28, 0 collisions. The optional XT60 extension went away with it."
+   "Battery swapped to the user's HOOVO 3S 2200 80C shorty 2-pack: it is Deans, not XT60. Rather than an adapter in the 4 A path, the T-plug pigtail line became two Deans 30 cm extensions (one whole for the pack lead, one cut into a pigtail of each gender). Cradle re-drawn 75 × 33.8 × 26.4, mass 190 → 140 g, ramp margin 1.27 → 1.28, 0 collisions. The optional XT60 extension went away with it.",
+   "Motor bracket checked against its drawing, not its bullets: foot is 50 × 51 (was guessed 42 × 35), slots are 4.3 mm wide (M4 only — an M5 T-nut screw would not pass), and each screw lands at the inner end of its slot because the rail's bottom slot sits 10 mm from the outer face. The Ø22 bore is nominal against a Ø22 boss (check it slips), the motor's tapped holes are ~4.5 mm deep so M3×6 not M3×8, and the axle-to-foot offset is 31 ±1.5 pending a ruler on the real part."
   ],
   "mesh": [
    "Motor shaft 5 mm with flat → wheel-kit 5 mm coupler (grub screw on the flat) → 80 mm mecanum hub. Same nominal bore on both sides; verify the coupler's set screw lands on the flat.",
@@ -176,7 +177,7 @@
    "item": "Anndason 6× steel NEMA 17 L-brackets with screws",
    "qty": 1,
    "price": 16.99,
-   "note": "Four used, two spare. 3 mm steel, 113 g each. Base slots are 4.3 mm: M4 T-nuts, not M5. The screws in the box may be M3×8: through a 3 mm leg that leaves 5 mm into a flange hole that is ~4.5 mm deep — they bottom out and never clamp. Use M3×6 from the M3 kit, or add a washer."
+   "note": "Checked against the listing's dimension drawing: face 4× M3 on 31 mm + Ø22 bore = the NEMA 17 pattern; 3 mm steel plain L (no gussets, whatever the bullet says); foot 50 × 51 with two 4.3 × 34 mm slots 25.73 apart — that is an M4 slot, so the foot takes M4 T-nuts from the T-nut kit, not M5. Inverted under the side rail, leg flush with the outer face, motor in the corner of the L with 7 mm between its top and the foot. Six in the box, four used, two spare. Axle sits 31 ±1.5 mm below the rail: measure on receipt and set BRK_OFFSET."
   },
   {
    "id": "RAIL",
