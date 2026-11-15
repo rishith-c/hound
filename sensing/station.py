@@ -38,9 +38,9 @@ LOG = os.path.expanduser("~/rover/stations.jsonl")
 
 # ── real drivers (Pi) ────────────────────────────────────────────────────────
 class RadarUSB:
-    """Each radar's UART goes through its own CP2102 USB-serial adapter straight into the Pi (TX/RX/GND only; the
-    radars are powered from the 5 V rail). Ports are matched by /dev/serial/by-id, which encodes the adapter's serial
-    number, so label each adapter once: which one is LEFT, RIGHT, and the LD2450. Frames parsed by Walleye's ld2410.py."""
+    """One radar's serial link. Each LD2410C talks through its own CP2102 USB-serial adapter (four wires; the radar is
+    powered from the adapter's +5V pin); the LD2450 uses the Pi's own UART (/dev/serial0 → ttyAMA0 after
+    pi/enable_gpio_uart.sh). Frames parsed by Walleye's ld2410.py."""
 
     def __init__(self, port: str, baud=256000):
         import serial
@@ -61,15 +61,21 @@ class RadarUSB:
         return np.array(t), np.array(rows, float)
 
 
-def radar_ports():
-    """CP2102 adapters as the Pi sees them, sorted by serial number so the mapping is stable across reboots.
-    Write the mapping into ~/rover/radars.json once: {"left": "<by-id path>", "right": "...", "ld2450": "..."}."""
+def radar_ports(by_id="/dev/serial/by-id", serial0="/dev/serial0", cfg="~/rover/radars.json"):
+    """Radar serial ports as the Pi sees them. The two LD2410Cs are the CP2102 adapters, sorted by serial number so
+    the order is stable across reboots (first = left, second = right); the LD2450 is the Pi's own UART, taken only when
+    /dev/serial0 is the PL011 (ttyAMA0) — on a stock Pi 4 that UART belongs to Bluetooth. ~/rover/radars.json
+    overrides any entry, e.g. {"left": "<by-id path>", "right": "...", "ld2450": "/dev/ttyAMA0"}: label each adapter
+    once and write down which is which."""
     import glob
-    cfg = os.path.expanduser("~/rover/radars.json")
+    found = sorted(p for p in glob.glob(os.path.join(by_id, "*")) if "CP210" in p)
+    ports = dict(zip(("left", "right"), found))
+    if os.path.basename(os.path.realpath(serial0)) == "ttyAMA0":
+        ports["ld2450"] = serial0
+    cfg = os.path.expanduser(cfg)
     if os.path.exists(cfg):
-        return json.load(open(cfg))
-    found = sorted(p for p in glob.glob("/dev/serial/by-id/*") if "CP2102" in p or "CP210" in p)
-    return dict(zip(("left", "right", "ld2450"), found))
+        ports.update(json.load(open(cfg)))
+    return ports
 
 
 class CsiSink:

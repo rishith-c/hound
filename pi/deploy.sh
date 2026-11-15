@@ -9,7 +9,7 @@ PI="${PI_HOST:-rishithc@rishithc.local}"
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
 command rsync -az --delete --exclude venv --exclude '__pycache__' --exclude web.key --exclude pan_trim --exclude motions.json --exclude tunnel_url.sh --exclude radars.json --exclude stations.jsonl --exclude 'MobileNetSSD*' "$DIR/rover/" "$PI:rover/"
-command rsync -az "$DIR/setup_pi.sh" "$PI:rover/setup_pi.sh"
+command rsync -az "$DIR/setup_pi.sh" "$DIR/enable_gpio_uart.sh" "$PI:rover/"
 
 case "$1" in
   --setup) command ssh "$PI" 'sh rover/setup_pi.sh' ;;
