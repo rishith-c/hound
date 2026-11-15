@@ -26,7 +26,8 @@ def test_servo_channels_agree():
     assert {c for c, _ in linked("PAN")} == {f"PCA_CH{pan}"}, "net list pan channel ≠ firmware PAN_CH"
     wiring = read("wiring.py")
     assert f"tilt servo on PCA9685 channel {tilt}" in wiring and f"channels {tilt} / {pan}" in wiring
-    assert f"ch {tilt}" in json.dumps(json.load(open(os.path.join(ROOT, "assembly.json"))), ensure_ascii=False)
+    parts = {p["id"]: p for p in json.load(open(os.path.join(ROOT, "assembly.json")))["parts"]}
+    assert f"Tilt ch {tilt}, pan ch {pan}" in parts["PCA"]["note"], "assembly.py's PCA9685 note names other channels"
 
 
 def test_tilt_limits_agree():

@@ -162,14 +162,14 @@ on_deck("BANK", "→ Pi", "USB power bank, compact (owned)", (100.0, 60.0, 15.0)
         "printed lip on the deck tile + 2 cable ties through printed slots", "hand-tight", 0.130, verify="WEIGH IT: ≤ 130 g, footprint",
         note="USB-C to the Pi. Must deliver 5 V at 3 A. Centred to keep the CG on the axis.")
 on_deck("XL4015", "→ servo + fan 5.0 V", "HiLetgo XL4015 5 A buck (owned)", BUCK, -44.5, 110.5, "deck top, ahead of the R4",
-        "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 5.0 V unloaded. IN from the shield's VMOT/GND screws (second wire each); tilt servo red/brown and fan leads soldered to the OUT pads.")
+        "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 5.0 V unloaded. IN from the shield's VMOT/GND screws (second wire each); OUT pads → the PCA9685's V+/GND terminal, which feeds both servos and the fan.")
 on_deck("T-plug", "e-stop", "T-plug mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -140.0, -132.0, "deck top, rear edge beside the Pi",
         "printed saddle + 1 cable tie on the fixed half", "hand-tight", 0.010, note="The pack lead comes up through the rear slot to here. One-handed disconnect from above = the emergency stop.")
 on_deck("ESP32", "#3 CSI receiver", "ESP32-S3 DevKitC", ESP32, 60.0, 120.0, "deck top, front-left, antenna toward +X, nothing metal within 20 mm",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
         note="csi_rx_udp firmware: USB-C from its own small power bank beside it, streams CSI to the Pi hotspot on channel 6. ESP32 #2 (csi_tx) is dropped on a 10 cm stand as far along the wall as the room allows.")
 on_deck("PCA", "→ pan/tilt", "PCA9685 servo driver (Ceres)", PCA9685, 30.0, -75.0, "deck top, front-right, beside the turret base",
-        "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Tilt ch 0, pan ch 2 (continuous, Ceres nudges), fan on ch 15's V+/GND pins.")
+        "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Tilt ch 3, pan ch 2 (continuous, timed nudges), fan on ch 15's V+/GND pins.")
 on_deck("BANK2", "→ ESP32 #3", "small USB power bank (ESP32 only)", (90.0, 26.0, 26.0), 60.0, 165.0, "deck top, front-left, outboard of ESP32 #3",
         "velcro strap", "hand-tight", 0.090, verify="any ≥ 1 A bank; weigh it",
         note="Its only load is the CSI node; nothing else plugs into it.")
