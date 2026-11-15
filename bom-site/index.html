@@ -3,16 +3,16 @@
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1180px;margin:48px auto;padding:0 24px 60px}h1{font-size:30px;line-height:1.25}h2{font-size:22px;margin-top:36px}a{color:#165bc4;text-underline-offset:3px}table{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}th,td{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}th{background:#f5f6f7}code{background:#f3f4f5;padding:2px 4px;border-radius:3px}.table-wrap{overflow-x:auto}p{margin:16px 0}.note{font-size:13px;color:#555;margin-top:4px}.where{font-size:13px;white-space:nowrap}td.where{white-space:normal;min-width:180px}tr.group th{background:#e9ecef;font-weight:600}.tag{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}.grp{font-size:12px;color:#777;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}table.totals{font-size:16px}table.totals tr.big td{font-size:20px;padding:14px 12px;background:#f5f6f7}em{color:#8a4b00;font-style:normal;font-size:13px}@media(max-width:600px){main{margin:28px auto;padding:0 16px 36px}h1{font-size:26px}table{min-width:620px}}@media print{main{max-width:none;margin:0;padding:0}a{color:inherit}}
 input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}.have-cell{text-align:center;white-space:nowrap}tr.owned td{background:#eff8f0}#checklist-note{font-size:14px;color:#555}
 </style></head><body><main><h1>Indoor search rover — practical BOM</h1>
-<p><strong>Buy: $229.78 USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): $299.12. Already owned: 15 items.</strong> One list, everything on the rover, including what you already own. Owned rows are pre-ticked and cost $0. The buy list is only what the rover cannot work without; everything else is in the optional groups below it with a plain reason. Every part has a position in millimetres and the fastener that holds it, computed in assembly.py — not eyeballed. Prices observed September 4–5, 2026. Physical validation is still outstanding.</p>
+<p><strong>Buy: $219.79 USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): $299.12. Already owned: 15 items.</strong> One list, everything on the rover, including what you already own. Owned rows are pre-ticked and cost $0. The buy list is only what the rover cannot work without; everything else is in the optional groups below it with a plain reason. Every part has a position in millimetres and the fastener that holds it, computed in assembly.py — not eyeballed. Prices observed September 4–5, 2026. Physical validation is still outstanding.</p>
 <p><a href="bom.csv" download>Download the BOM as CSV</a> · <a href="assembly.csv" download>Download every placement as CSV</a> · <a href="drivetrain.txt">Read the full drivetrain calculation</a></p>
 <h2>The design I would build</h2>
 <p>Four independently driven 80 mm mecanum wheels on the four owned NEMA 17 steppers, a low 350 × 390 mm 2020 frame, the battery slung under the deck for a low centre of gravity, the Ceres pan/tilt turret at the front carrying your webcam and a thermal array so it can look around and track, and both radars on a 200 mm post at the rear looking forward over the turret. Two short-range ToF sensors guard front and rear. The fifth motor and TB6600 stay spare.</p>
 <p>No kit does this. Every mecanum chassis kit on Amazon is built for TT or DC gearmotors; none has a NEMA 17 mount. Steel L-brackets under the rails are the cleanest way to put your steppers on mecanum wheels, and the 5 mm couplers in the wheel set match the 5 mm flatted shaft on your motors.</p>
-<p>Power is one pack — your gel-blaster LiPo to start. It feeds the motor drivers directly, a 5 V buck for the Pi, and the Ceres 6 V buck for the servos. The power bank is gone: 350 g of unknown mass was the difference between passing and failing the ramp case.</p>
+<p>Power is one pack — your gel-blaster LiPo to start. It feeds the motor drivers directly and two of your LM2596 bucks: 5.1 V for the Pi, 6.0 V for the servos. The USB power bank stays off the rover: 350 g of unknown mass was the difference between passing and failing the ramp case, and an LM2596 does the same job at 20 g.</p>
 <p>Finding people is a four-sensor job, and that is how professional search-and-rescue kit is built: CO2 to narrow the area, thermal to confirm a body, a microphone for voice and knocking, radar for behind obstacles. The rover had only the radar leg. So the pan/tilt turret now carries a thermal array beside the camera — a warm body is unmistakable in 768 pixels, in the dark or in smoke, and thermal-plus-visible on one sweep is the strongest line-of-sight detector on the vehicle. A CO2 sensor rides the radar post for closed rooms, and an I2S microphone listens when the motors are stopped. The Pi runs MobileNet-SSD person detection on the camera at roughly 25 frames per second; fusing that with the thermal blob is the demo.</p>
 <p>LD2410C is the primary presence sensor for anyone the camera cannot see: stationary or micro-moving people behind a door or a stud wall, plus breathing. LD2450 adds positions and speeds of moving targets and loses motionless bodies beyond about 2 m; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements — and the 60 GHz breathing/heartbeat modules on the market were skipped: their heart-rate figure benchmarks at a 0.33 correlation against a chest strap, and the owned LD2410C already covers breathing. Start with one radar powered; test the two radar types separately, then together for interference. These sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present.</p>
 <h2>Can four motors carry it?</h2>
-<p>Design mass 5.21 kg. Four load cases; the 5° carpet ramp at 0.3 m/s² governs. Lowest passing setting: <strong>DRV8825, no cooling</strong>.</p>
+<p>Design mass 5.17 kg. Four load cases; the 5° carpet ramp at 0.3 m/s² governs. Lowest passing setting: <strong>DRV8825, no cooling</strong>.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -26,16 +26,16 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 </thead>
 <tbody>
 <tr>
-<td>A4988, no cooling</td><td align="right">0.170 N·m</td><td align="right">1.32</td><td align="right">1.10</td><td align="right">0.84</td><td>FAIL ramp</td>
+<td>A4988, no cooling</td><td align="right">0.170 N·m</td><td align="right">1.33</td><td align="right">1.11</td><td align="right">0.85</td><td>FAIL ramp</td>
 </tr>
 <tr>
-<td>A4988, heatsink + fan</td><td align="right">0.203 N·m</td><td align="right">1.59</td><td align="right">1.32</td><td align="right">1.01</td><td>FAIL ramp</td>
+<td>A4988, heatsink + fan</td><td align="right">0.203 N·m</td><td align="right">1.60</td><td align="right">1.34</td><td align="right">1.02</td><td>FAIL ramp</td>
 </tr>
 <tr>
-<td>DRV8825, no cooling</td><td align="right">0.254 N·m</td><td align="right">1.98</td><td align="right">1.65</td><td align="right">1.26</td><td>PASS</td>
+<td>DRV8825, no cooling</td><td align="right">0.254 N·m</td><td align="right">2.00</td><td align="right">1.67</td><td align="right">1.27</td><td>PASS</td>
 </tr>
 <tr>
-<td>DRV8825, heatsink + fan</td><td align="right">0.288 N·m</td><td align="right">2.25</td><td align="right">1.88</td><td align="right">1.43</td><td>PASS</td>
+<td>DRV8825, heatsink + fan</td><td align="right">0.288 N·m</td><td align="right">2.27</td><td align="right">1.89</td><td align="right">1.44</td><td>PASS</td>
 </tr>
 </tbody></table></div>
 <p>Margin = torque available ÷ torque required; acceptance ≥ 1.25 because the running torque is calculated, not measured. At 5.23 kg with your C920-class webcam the ramp margin at 1.5 A is 1.26 — passing by a hair. If the camera weighs more than 170 g, or anything else gets added, either run 1.7 A with the fan or swap to the 50 g ELP board camera. The one measurement that matters most: pull-out torque at 24 rpm, 1.5 A, on the real battery.</p>
@@ -131,20 +131,13 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">owned</td>
 <td class="where">—</td>
 <td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="BUCK5" data-owned="0" aria-label="I have all required quantities of DROK 8–35 V to 5 V 3 A buck converter"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07P663XJV">DROK 8–35 V to 5 V 3 A buck converter</a><div class="grp">Power</div><div class="note">Replaces the power bank (−310 g). Feeds the Pi on GPIO 5 V. Set 5.10 V before connecting.</div></td>
-<td align="right">1</td>
-<td align="right">$9.99</td>
-<td align="right">$9.99</td>
-<td class="where">(-44, +80, 113)</td>
-<td class="where">2× M3×8 into deck (or VHB + zip tie)</td>
 </tr><tr class=owned>
-<td class="have-cell"><input type="checkbox" data-item="BUCK6" data-owned="1" aria-label="I have all required quantities of 6 V servo buck converter (Ceres)"></td><td>6 V servo buck converter (Ceres)<div class="grp">Power</div><div class="note">From the Ceres turret rail. Confirm it is still in the box; feeds PCA9685 V+.</div></td>
-<td align="right">1</td>
+<td class="have-cell"><input type="checkbox" data-item="LM2596" data-owned="1" aria-label="I have all required quantities of DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)"></td><td>DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)<div class="grp">Power</div><div class="note">Two used: one set to 5.10 V for the Pi, one set to 6.0 V for the servos; three spare. SET THE VOLTAGE WITH A MULTIMETER BEFORE CONNECTING ANYTHING — these ship at a random output, often above 12 V, which kills a Pi instantly. Rated ~2 A continuous without a heatsink; keep the Pi&#x27;s USB load (camera, ESP32) in mind.</div></td>
+<td align="right">5</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">(-44, +110, 113)</td>
-<td class="where">2× M3×8 into deck</td>
+<td class="where">#1 → Pi 5.1 V (-44, +80, 113); #2 → servos 6.0 V (-44, +110, 113)</td>
+<td class="where">printed bosses + 2 cable ties (or 2× M3×8 into deck); printed bosses + 2 cable ties</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="SW" data-owned="1" aria-label="I have all required quantities of Three-pin switch"></td><td>Three-pin switch<div class="grp">Power</div><div class="note">Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch.</div></td>
 <td align="right">1</td>
@@ -377,10 +370,10 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr>
-<tr><th colspan="4">Buy</th><th align="right">$229.78</th><th colspan="2">Optional $299.12 · 15 items already owned</th></tr>
+<tr><th colspan="4">Buy</th><th align="right">$219.79</th><th colspan="2">Optional $299.12 · 15 items already owned</th></tr>
 </tbody></table></div>
 <h2>Where every part goes</h2>
-<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 440 mm, wheelbase 250 mm. Centre of gravity at x -3.4, y +3.3, z 79.7 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 70° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
+<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 440 mm, wheelbase 250 mm. Centre of gravity at x -3.0, y +2.5, z 79.4 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 58° pitch, 70° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -488,10 +481,10 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>PCA</code></td><td>—</td><td>PCA9685 servo driver (Ceres)</td><td align="right">-29.0</td><td align="right">-97.5</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, beside the Pi</td><td>printed bosses + 2× M2 + nut</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>BUCK5</code></td><td>—</td><td>5 V 3 A buck → Pi</td><td align="right">-44.5</td><td align="right">+80.5</td><td align="right">113.0</td><td>flat on 10 mm standoffs</td><td>deck top, front of the Uno</td><td>2× M3×8 into deck (or VHB + zip tie)</td><td>hand-tight</td><td>module footprint</td>
+<td><code>LM2596</code></td><td>#1 → Pi 5.1 V</td><td>LM2596 buck (owned)</td><td align="right">-44.5</td><td align="right">+80.5</td><td align="right">113.0</td><td>flat on 10 mm standoffs</td><td>deck top, ahead of the R4</td><td>printed bosses + 2 cable ties (or 2× M3×8 into deck)</td><td>hand-tight</td><td>module footprint</td>
 </tr>
 <tr>
-<td><code>BUCK6</code></td><td>—</td><td>6 V buck → servos (Ceres)</td><td align="right">-44.5</td><td align="right">+110.5</td><td align="right">113.0</td><td>flat on 10 mm standoffs</td><td>deck top, beside the 5 V buck</td><td>2× M3×8 into deck</td><td>hand-tight</td><td>—</td>
+<td><code>LM2596</code></td><td>#2 → servos 6.0 V</td><td>LM2596 buck (owned)</td><td align="right">-44.5</td><td align="right">+110.5</td><td align="right">113.0</td><td>flat on 10 mm standoffs</td><td>deck top, beside #1</td><td>printed bosses + 2 cable ties</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
 <td><code>ESP32</code></td><td>#1 radar bridge</td><td>ESP32-S3 DevKitC</td><td align="right">-100.0</td><td align="right">-17.3</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-centre, just ahead of the radar post</td><td>printed bosses + 2 cable ties through printed slots</td><td>hand-tight</td><td>devkit hole positions</td>
@@ -541,9 +534,9 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 </tbody></table></div>
 <h2>Power and connections</h2>
 <ul>
-<li>Pack -&gt; XT60 (or the pack&#x27;s own connector) -&gt; three 22 AWG branches: shield VMOT (four DRV8825 -&gt; four motors), 5 V buck IN, 6 V buck IN. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the connector is the disconnect, so keep the pack leads short and sleeved.</li>
-<li>5 V buck OUT -&gt; Pi GPIO pins 2/4 (5 V) and 6 (GND). Set it to 5.10 V unloaded with a multimeter before the Pi is connected. Pi USB-A -&gt; UNO R4 USB-C for logic power and serial.</li>
-<li>6 V buck OUT -&gt; PCA9685 V+ terminal (Ceres). Set to 6.0 V before connecting. Servo current returns through the PCA9685 terminal, never through a USB ground.</li>
+<li>Pack -&gt; XT60 (or the pack&#x27;s own connector) -&gt; three 22 AWG branches: shield VMOT (four DRV8825 -&gt; four motors), LM2596 #1 IN, LM2596 #2 IN. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the connector is the disconnect, so keep the pack leads short and sleeved.</li>
+<li>LM2596 #1 OUT -&gt; Pi GPIO pins 2/4 (5 V) and 6 (GND). Turn the trimmer to 5.10 V with a multimeter, unloaded, before the Pi is connected — an LM2596 out of the bag can be sitting at 12 V or more. Pi USB-A -&gt; UNO R4 USB-C for logic power and serial.</li>
+<li>LM2596 #2 OUT -&gt; PCA9685 V+ terminal. Set to 6.0 V before connecting. Servo current returns through the PCA9685 terminal, never through a USB ground.</li>
 <li>Pi -&gt; camera by USB. Pi -&gt; ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.</li>
 <li>Four VL53L1X share I2C only after XSHUT (GPIO 5, 6, 13, 19) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.</li>
 <li>Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail.</li>
@@ -566,13 +559,13 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <tr><th>What</th><th align="right">Lines</th><th align="right">Cost</th></tr>
 </thead>
 <tbody>
-<tr class="big"><td><strong>Required — the rover does not work without these</strong></td><td align="right">13</td><td align="right"><strong>$229.78</strong></td></tr>
+<tr class="big"><td><strong>Required — the rover does not work without these</strong></td><td align="right">12</td><td align="right"><strong>$219.79</strong></td></tr>
 <tr><td>Optional: Only if the gel-blaster pack falls short</td><td align="right">7</td><td align="right">$125.54</td></tr><tr><td>Optional: Only if you lack it</td><td align="right">3</td><td align="right">$40.67</td></tr><tr><td>Optional: Extra senses, if budget allows</td><td align="right">2</td><td align="right">$35.48</td></tr><tr><td>Optional: Tools</td><td align="right">6</td><td align="right">$97.43</td></tr>
 <tr><td>All optional together</td><td align="right">18</td><td align="right">$299.12</td></tr>
 <tr><td>Already owned</td><td align="right">15</td><td align="right">$0.00</td></tr>
-<tr class="big"><td><strong>Everything, if you buy it all</strong></td><td align="right">31</td><td align="right"><strong>$528.90</strong></td></tr>
+<tr class="big"><td><strong>Everything, if you buy it all</strong></td><td align="right">30</td><td align="right"><strong>$518.91</strong></td></tr>
 </tbody></table></div>
-<p>Before tax and shipping, Amazon US prices observed Sept 4–5, 2026. The required figure assumes your gel-blaster pack, its charger, your webcam, the UNO R4, the Ceres turret and the 22 AWG wire all check out. If the pack is the first thing that fails, add the battery group: $355.32.</p>
+<p>Before tax and shipping, Amazon US prices observed Sept 4–5, 2026. The required figure assumes your gel-blaster pack, its charger, your webcam, the UNO R4, the Ceres turret and the 22 AWG wire all check out. If the pack is the first thing that fails, add the battery group: $345.33.</p>
 <h2>What I did NOT analyze</h2>
 <p>Fatigue, buckling, impact, vibration, roller wear, uneven floors and wheel unloading, combined-slip mecanum behaviour, motor and driver thermal equilibrium, battery sag under stall, firmware timing, fastener pull-out in PETG, deck deflection under the turret, servo torque with the camera fitted, motor-bearing radial rating (assumed 28 N — thinnest margin in the design), and radar detection at 300 mm height (Walleye measured floor-level radar as blind; this is a compromise to test). No physical test has been run.</p>
 <p>Sources: <a target="_blank" rel="noopener noreferrer" href="https://static.jkongmotor.com/JK42HS40-1704-13A-aidlnBprKrkloSRilikkrllkn.pdf">motor drawing</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/2133">DRV8825 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/1182">A4988 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.hlktech.com/en/Goods-239.html">LD2410C manufacturer</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.skyrc.com/download/100200%20B6ACneo%20Instruction%20Manual%20V1.3.pdf">SKYRC B6AC Neo manual</a>, <a href="drivetrain.txt">drivetrain.txt</a> and <a href="assembly.csv">assembly.csv</a> (all arithmetic and positions).</p>

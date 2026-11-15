@@ -40,7 +40,7 @@ UNO = (68.6, 53.3, 12.0)
 SHIELD_STACK_H = 45.0       # Uno + shield + DRV8825 with heatsinks           VERIFY
 PI = (85.0, 56.0, 20.0)
 PCA9685 = (62.0, 25.0, 12.0)
-BUCK = (61.0, 21.0, 14.0)   # DROK-style                                     VERIFY
+BUCK = (43.0, 21.0, 14.0)   # LM2596 module                                  VERIFY
 ESP32 = (63.0, 25.4, 12.0)
 LIPO = (132.0, 43.0, 25.0)  # MEASURED (listing)
 CRADLE_T = 3.0
@@ -56,7 +56,7 @@ RADAR_Z = DECK_TOP + POST[2] + 4.0    # 300: antenna faces horizontal, forward
 
 # ── Masses, kg, for CG (same figures as drivetrain.py) ─────────────────────
 M = dict(motor=0.240, rail=0.350 * 0.50, wheel=0.150, bracket=0.113, corner=0.012,
-         uno_stack=0.117, pi=0.070, lipo=0.343, buck=0.040, radar=0.010, esp32=0.015,
+         uno_stack=0.117, pi=0.070, lipo=0.343, buck=0.020, radar=0.010, esp32=0.015,
          cam=0.162, tof=0.005, deck=0.300, cradle=0.060, post=0.100, turret=0.250,
          pca=0.010, fan=0.030, strapwire=0.150)
 
@@ -149,11 +149,11 @@ on_deck("PI", "—", "Raspberry Pi", PI, -107.5, -88.0, "deck top, rear-right",
         note="Spans X −150..−65, Y −116..−60. USB ports face −X (rear). Powered from the 5 V buck on GPIO 2/4 (+) and 6 (−).")
 on_deck("PCA", "—", "PCA9685 servo driver (Ceres)", PCA9685, -29.0, -97.5, "deck top, beside the Pi",
         "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the 6 V buck. I2C from Pi. Servo cables run forward to the turret.")
-on_deck("BUCK5", "—", "5 V 3 A buck → Pi", BUCK, -44.5, 80.5, "deck top, front of the Uno",
-        "2× M3×8 into deck (or VHB + zip tie)", "hand-tight", M["buck"], verify="module footprint",
-        note="IN from the XT60 pigtail. Set to 5.10 V unloaded with the multimeter BEFORE connecting the Pi.")
-on_deck("BUCK6", "—", "6 V buck → servos (Ceres)", BUCK, -44.5, 110.5, "deck top, beside the 5 V buck",
-        "2× M3×8 into deck", "hand-tight", M["buck"], note="Set to 6.0 V before connecting the PCA9685. Own return to the shield GND.")
+on_deck("LM2596", "#1 → Pi 5.1 V", "LM2596 buck (owned)", BUCK, -44.5, 80.5, "deck top, ahead of the R4",
+        "printed bosses + 2 cable ties (or 2× M3×8 into deck)", "hand-tight", M["buck"], verify="module footprint",
+        note="IN from the pack branch. Trim to 5.10 V unloaded with a multimeter BEFORE the Pi is connected — ships at a random voltage.")
+on_deck("LM2596", "#2 → servos 6.0 V", "LM2596 buck (owned)", BUCK, -44.5, 110.5, "deck top, beside #1",
+        "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 6.0 V before connecting the PCA9685. Own return to the shield GND.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
         note="UART1 → LD2410C, UART2 → LD2450. USB-C to the Pi.")
