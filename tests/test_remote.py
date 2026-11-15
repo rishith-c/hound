@@ -222,3 +222,15 @@ def test_senses_api_needs_the_key_and_returns_lines(web, tmp_path):
         assert j["senses"] == {"running": False, "lines": ["WARN  csi  12 CSI packets/s"]}
     finally:
         srv.shutdown()
+
+
+def test_r4_busy_port_says_what_holds_it(monkeypatch):
+    class Busy(Exception): pass
+    def Serial(*a, **k): raise Busy("Could not exclusively lock port /dev/ttyACM0: [Errno 11] Resource temporarily unavailable")
+    monkeypatch.setitem(sys.modules, "serial", types.SimpleNamespace(Serial=Serial, SerialException=Busy))
+    monkeypatch.syspath_prepend(os.path.join(ROOT, "pi", "rover"))
+    sys.modules.pop("r4", None)
+    r4 = importlib.import_module("r4")
+    with pytest.raises(Busy, match="systemctl stop rover-web"):
+        r4.R4(port="/dev/ttyACM0")
+    sys.modules.pop("r4", None)
