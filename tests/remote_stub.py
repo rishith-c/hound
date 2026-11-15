@@ -28,6 +28,7 @@ class FakeR4:
     def _send(self, cmd):
         print(f"{time.strftime('%H:%M:%S')}  R4 ← {cmd}", flush=True)
         if cmd.startswith("T "): self.status["ptrim"] = int(cmd.split()[1])
+        if cmd.startswith("K "): self.status["show"] = int(float(cmd.split()[1]) > 0.5)     # the R4 reports its show state
 
     def tilt(self, d): self._send(f"t {int(d)}"); self.status.update(tilt=int(d), tilton=int(d) >= 0)
     def nudge_pan(self, d, ms=300): self._send(f"n {1 if d > 0 else -1} {int(ms)}")
