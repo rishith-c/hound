@@ -1,0 +1,8 @@
+assets/
+meshes/
+tex/
+frames/
+chunks/
+logs/
+__pycache__/
+*.mp4
