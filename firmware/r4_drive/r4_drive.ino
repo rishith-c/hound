@@ -51,6 +51,10 @@ const uint32_t WATCHDOG_TICKS = TICK_HZ * 4 / 10;   // 400 ms
 const uint32_t IDLE_DISABLE_MS = 3000;       // drivers off after 3 s of zero velocity
 
 uint8_t  microsteps = 32;                    // M0+M2 caps = 1/32; M2 alone = 1/16
+float    kMaxSps    = 0;                     // 'k <steps/s>': runtime top wheel rate, 0 = firmware cap (Fetch: sweep it to find the quiet band)
+float    aSlew      = 0;                     // 'a <steps/s²>': runtime slew, 0 = ACCEL_MM_S2
+int      speedPct   = 60;                    // single-key teleop speed, '+' / '-' in steps of 10
+bool     circleOn   = false; uint32_t circleT0 = 0; float circleR = 300, circleT = 8;
 uint8_t  inv[4]     = { 0, 0, 0, 0 };        // per-wheel direction flip (EEPROM)
 bool     holdEnable = false;                 // keep drivers energised while parked
 
@@ -87,8 +91,11 @@ void stepIsr(timer_callback_args_t*) {
     bool moving = false;
     for (int i = 0; i < 4; i++) {
       int32_t t = targetRate[i], c = curRate[i];
-      if (c < t) { c += d; if (c > t) c = t; }
-      else if (c > t) { c -= d; if (c < t) c = t; }
+      bool opposing = (t > 0 && c < 0) || (t < 0 && c > 0);
+      if (opposing) c = 0;                                   // reversal: through zero, then ramp the other way
+      else if ((t >= 0 ? t : -t) <= (c >= 0 ? c : -c)) c = t; // slowing never stalls a stepper; STOP stays instant
+      else if (c < t) { c += d; if (c > t) c = t; }
+      else { c -= d; if (c < t) c = t; }
       curRate[i] = c;
       if (c) moving = true;
     }
@@ -125,8 +132,9 @@ bool startTimer() {
 
 // ───────────────────────── motion commands ───────────────────────
 float stepsPerMm() { return FULL_STEPS * (float)microsteps / (3.14159265f * WHEEL_D_MM); }
-float maxMm()       { float m = MAX_RATE / stepsPerMm(); return m < V_MAX_MM ? m : V_MAX_MM; }
-void  updateAccel() { int32_t a = (int32_t)(ACCEL_MM_S2 * stepsPerMm()); if (a < 1000) a = 1000; accelSteps = a; }
+float capSps()      { float c = MAX_RATE; if (kMaxSps > 0 && kMaxSps < c) c = kMaxSps; float p = V_MAX_MM * stepsPerMm(); return p < c ? p : c; }
+float maxMm()       { return capSps() / stepsPerMm(); }
+void  updateAccel() { int32_t a = (int32_t)(aSlew > 0 ? aSlew : ACCEL_MM_S2 * stepsPerMm()); if (a < 1000) a = 1000; accelSteps = a; }
 
 void kick() { wdTicks = 0; wdTripped = false; }
 
@@ -139,7 +147,7 @@ void setVelocity(float vx, float vy, float wz) {
   w[BL] = vx + vy - wz * k;
   w[BR] = vx - vy + wz * k;
   const float spm = stepsPerMm();
-  const float cap = maxMm() * spm;             // steps/s: the lower of the ISR budget and the physics ceiling
+  const float cap = capSps();                  // steps/s: the lowest of the ISR budget, the physics ceiling and 'k'
   float scale = 1.0f;
   for (int i = 0; i < 4; i++) {
     float s = fabsf(w[i]) * spm;
@@ -151,7 +159,7 @@ void setVelocity(float vx, float vy, float wz) {
 
 void jog(int wheel, int dir, float mmps) {
   float r = mmps * stepsPerMm();
-  const float cap = maxMm() * stepsPerMm();
+  const float cap = capSps();
   if (r > cap) r = cap;
   for (int i = 0; i < 4; i++) targetRate[i] = 0;
   if (wheel >= 0 && wheel < 4) targetRate[wheel] = (int32_t)(dir < 0 ? -r : r);
@@ -181,12 +189,12 @@ const char* statusJson() {
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"tmr\":%d,\"ticks\":%lu,\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"tmr\":%d,\"ticks\":%lu,\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), maxMm(), timerOk ? 1 : 0, (unsigned long)isrTicks, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -308,12 +316,22 @@ void handleSerial() {
       char cmd = line[0]; float a = 0, b = 0, d = 0;
       char* p = (char*)line.c_str() + 1;          // newlib-nano has no float scanf: parse by hand
       a = strtof(p, &p); b = strtof(p, &p); d = strtof(p, &p);
+      float sp = speedPct / 100.0f * maxMm(), wr = sp / (LX_MM + LY_MM);
+      if (cmd != 'c') circleOn = false;
       switch (cmd) {
         case 'v': setVelocity(a, b, d); break;
+        case 'f': setVelocity( sp, 0, 0); break;   case 'b': setVelocity(-sp, 0, 0); break;
+        case 'l': setVelocity(0,  sp, 0); break;   case 'r': setVelocity(0, -sp, 0); break;
+        case 'q': setVelocity(0, 0,  wr); break;
+        case 'e': if (line.length() == 1) setVelocity(0, 0, -wr); else holdEnable = a > 0.5f; break;
+        case '+': speedPct = speedPct + 10 > 100 ? 100 : speedPct + 10; break;
+        case '-': speedPct = speedPct - 10 < 10 ? 10 : speedPct - 10; break;
+        case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
+        case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
+        case 'c': circleR = a > 0 ? a : 300.0f; circleT = b > 0 ? b : 8.0f; circleT0 = millis(); circleOn = true; kick(); break;
         case 'j': jog((int)a, (int)b, d); break;
         case 's': stopAll(); break;
         case 'i': if (a >= 0 && a < 4) { inv[(int)a] ^= 1; saveSettings(); } break;
-        case 'e': holdEnable = a > 0.5f; break;
         case 'm': if (a == 8 || a == 16 || a == 32) { microsteps = (uint8_t)a; updateAccel(); saveSettings(); } break;
         default: break;
       }
@@ -345,8 +363,19 @@ void setup() {
 #endif
 }
 
+void runCircle() {
+  if (!circleOn) return;
+  float t = (millis() - circleT0) / 1000.0f;
+  if (t >= circleT) { circleOn = false; stopAll(); return; }
+  float V = 2 * 3.14159265f * circleR / circleT, vmax = maxMm() * 0.7071f; if (V > vmax) V = vmax;
+  float ramp = t / 0.8f; float tail = (circleT - t) / 0.8f; if (tail < ramp) ramp = tail; if (ramp > 1) ramp = 1; if (ramp < 0) ramp = 0;
+  float ang = 2 * 3.14159265f * t / circleT;
+  setVelocity(V * ramp * cosf(ang), V * ramp * sinf(ang), 0);
+}
+
 void loop() {
   static uint32_t lastMotionMs = 0;
+  runCircle();
 #if ENABLE_WIFI
   handleHttp();
 #endif
