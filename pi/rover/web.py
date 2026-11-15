@@ -214,6 +214,7 @@ def senses_start():
         senses.update(running=True, lines=[])
     radar_stop(wait=True)                      # bringup reads the LD2450's port too: two readers would split its frames
     thermal_stop(wait=True)                    # ...and the thermal array's I2C address: interleaved transactions corrupt a frame
+    cam_stop(wait=True)                        # ...and the webcam: only one program can hold the device
     threading.Thread(target=senses_thread, daemon=True).start()
 
 
@@ -354,6 +355,77 @@ def thermal_stop(wait=False):
         time.sleep(0.6)                        # a frame read takes up to ~0.5 s; the reader leaves at its next check
 
 
+# ── webcam view: the USB webcam's own MJPEG stream (ffmpeg copies it, no re-encode), live, only while the page asks ─────
+cam = {"on": False, "id": 0, "jpg": None, "fps": 0.0, "err": ""}
+
+
+def cam_device():
+    import glob
+    found = sorted(glob.glob("/dev/v4l/by-id/usb-*-video-index0"))    # the USB webcam, not the Pi's codec nodes
+    return found[0] if found else "/dev/video0"
+
+
+def cam_thread(cid):
+    dev = cam_device()
+    try:
+        p = subprocess.Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "v4l2", "-input_format", "mjpeg",
+                              "-video_size", "1280x720", "-framerate", "30", "-i", dev, "-c:v", "copy", "-f", "mjpeg", "-"],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except Exception as e:
+        with lock:
+            if cam["id"] == cid:
+                cam.update(on=False, err=f"{dev}: {e.__class__.__name__}: {e}")
+        return
+    buf, n, t0 = b"", 0, time.time()
+    try:
+        while True:
+            with lock:
+                if cam["id"] != cid:
+                    break
+            if page_gone():
+                break
+            chunk = p.stdout.read1(65536)
+            if not chunk:
+                err = p.stderr.read().decode(errors="replace").strip().splitlines()
+                with lock:
+                    cam["err"] = f"{dev}: " + (err[-1] if err else "stream ended") + " — webcam plugged in?"
+                break
+            buf += chunk
+            while True:                                    # whole JPEGs: FFD8 … FFD9 (FF inside the data is stuffed)
+                s = buf.find(b"\xff\xd8")
+                e = buf.find(b"\xff\xd9", s + 2) if s >= 0 else -1
+                if e < 0:
+                    buf = buf[s:] if s >= 0 else buf[-1:]      # keep a partial picture; drop bytes before any start
+                    break
+                n += 1
+                with lock:
+                    cam["jpg"] = buf[s:e + 2]
+                    if time.time() - t0 >= 1.0:
+                        cam["fps"], n, t0 = round(n / (time.time() - t0), 1), 0, time.time()
+                buf = buf[e + 2:]
+    finally:
+        p.kill(); p.wait()
+        with lock:
+            if cam["id"] == cid:
+                cam.update(on=False, jpg=None)
+
+
+def cam_start():
+    with lock:
+        if cam["on"] or senses["running"]:     # a senses check is using the camera: wait for it
+            return
+        cam["id"] += 1; cam.update(on=True, jpg=None, fps=0.0, err=""); cid = cam["id"]
+    threading.Thread(target=cam_thread, args=(cid,), daemon=True).start()
+
+
+def cam_stop(wait=False):
+    with lock:
+        was = cam["on"]
+        cam["id"] += 1; cam.update(on=False, jpg=None)
+    if was and wait:
+        time.sleep(0.5)                        # ffmpeg is killed at the reader's next frame and lets go of the device
+
+
 def status():
     s = dict(r4.status)
     with lock:
@@ -364,6 +436,8 @@ def status():
             s["thermal"] = {"on": thermal["on"], "frame": thermal["frame"], "fps": thermal["fps"], "err": thermal["err"]}
         if radar["on"] or radar["err"]:
             s["radar"] = {"on": radar["on"], "targets": list(radar["targets"]), "fps": radar["fps"], "err": radar["err"]}
+        if cam["on"] or cam["err"]:
+            s["cam"] = {"on": cam["on"], "fps": cam["fps"], "err": cam["err"]}
     return s
 
 
@@ -418,6 +492,9 @@ input[type=range]{width:200px;max-width:36vw}label small{white-space:nowrap}sele
 <h1 style="margin-top:16px">Senses</h1>
 <div class=row><button id=sns style="padding:6px 12px">▶ check senses</button><span style="color:#93a1ae;font-size:12px">radars, Wi-Fi CSI, thermal, ToFs, camera, I2C · about 20 s · motors not touched</span></div>
 <pre id=snsout style="font:12px ui-monospace,monospace;white-space:pre-wrap;margin:4px 0"></pre>
+<h1 style="margin-top:16px">Webcam view</h1>
+<div class=row><button id=cmb style="padding:6px 12px">▶ webcam live</button><span id=cmst style="color:#93a1ae;font-size:12px">USB webcam, 1280×720</span></div>
+<img id=cmi alt="" style="width:640px;max-width:100%;background:#172029;border-radius:8px;display:none">
 <h1 style="margin-top:16px">Thermal view</h1>
 <div class=row><button id=thb style="padding:6px 12px">▶ thermal live</button><button id=thr style="padding:6px 12px">⟳ rotate</button><span id=thst style="color:#93a1ae;font-size:12px">MLX90640, 32×24 pixels, 55° wide · bright = warm · a person reads ~28–36 °C</span></div>
 <canvas id=thc width=320 height=240 style="width:320px;max-width:100%;background:#172029;border-radius:8px;display:none;image-rendering:pixelated"></canvas>
@@ -495,7 +572,16 @@ function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];docum
  if(s.ptrim!=null&&!ptrimSeen){ptrimSeen=true;ptrim=s.ptrim;document.getElementById('ptv').textContent=ptrim;}
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';
- showRec(s);drawThermal(s.thermal);drawRadar(s.radar);autoStart(s);}
+ showRec(s);drawThermal(s.thermal);drawRadar(s.radar);showCam(s.cam);autoStart(s);}
+// Webcam: the next picture is asked for only when the last one has arrived, so a slow link shows fewer frames, never a backlog.
+const cmb=document.getElementById('cmb'),cmi=document.getElementById('cmi'),cmst=document.getElementById('cmst');let cmOn=false,cmT=-1e9,cmN=0,cmN0=0,cmT0=performance.now();
+function nextCam(){if(!cmOn)return;cmi.src='/api/cam.jpg?k='+encodeURIComponent(K)+'&t='+Date.now();}
+cmi.onload=()=>{cmN++;setTimeout(nextCam,30);};cmi.onerror=()=>setTimeout(nextCam,400);
+function showCam(c){const on=!!(c&&c.on);if(performance.now()-cmT>1500&&cmOn!==on){cmOn=on;cmb.textContent=on?'■ stop webcam':'▶ webcam live';cmi.style.display=on?'':'none';if(on)nextCam();}
+ if(c&&c.err){cmst.textContent=c.err;cmst.style.color='#ff8a4c';return;}
+ if(!on)return;const t=performance.now();if(t-cmT0>=1000){cmN0=Math.round((cmN)*1000/(t-cmT0));cmN=0;cmT0=t;}
+ cmst.style.color='#93a1ae';cmst.textContent='camera '+c.fps+' frames/s · shown here '+cmN0+' frames/s';}
+cmb.onclick=()=>{cmOn=!cmOn;cmT=performance.now();cmb.textContent=cmOn?'■ stop webcam':'▶ webcam live';cmi.style.display=cmOn?'':'none';api('cam?on='+(cmOn?1:0)).then(()=>{if(cmOn)setTimeout(nextCam,400);});};
 const sns=document.getElementById('sns'),snsout=document.getElementById('snsout');let snsT=null;
 function showSns(j){const s=j.senses;if(!s)return;
  snsout.innerHTML=s.lines.map(l=>{const c=/^PASS/.test(l)?'#7fd18b':/^WARN/.test(l)?'#ffcf5c':/^FAIL/.test(l)?'#ff8a4c':'#93a1ae';
@@ -570,6 +656,13 @@ class H(BaseHTTPRequestHandler):
         last_poll["t"] = time.time()
         f = lambda k, d=0.0: float(q.get(k, d))
         ep = u.path[5:]
+        if ep == "cam.jpg":
+            with lock:
+                jpg = cam["jpg"]
+            if not jpg:
+                self._json({"error": "no picture yet"}, 503); return
+            self.send_response(200); self.send_header("Content-Type", "image/jpeg"); self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(jpg))); self.end_headers(); self.wfile.write(jpg); return
         try:
             if ep == "status":
                 pass
@@ -619,6 +712,8 @@ class H(BaseHTTPRequestHandler):
                 thermal_start() if q.get("on") == "1" else thermal_stop(wait=True)
             elif ep == "radar":
                 radar_start() if q.get("on") == "1" else radar_stop(wait=True)   # port closed before a quick re-start
+            elif ep == "cam":
+                cam_start() if q.get("on") == "1" else cam_stop(wait=True)
             elif ep == "senses":
                 if q.get("go") == "1":
                     senses_start()
