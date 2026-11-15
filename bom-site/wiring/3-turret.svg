@@ -342,30 +342,30 @@
 <polygon fill="none" stroke="black" points="3533.12,-449.62 3533.12,-473.38 4087.12,-473.38 4087.12,-449.62 3533.12,-449.62"/>
 <text xml:space="preserve" text-anchor="start" x="3537.12" y="-456.62" font-family="arial" font-size="14.00">Plugs onto channel 0. Limits 65–150° in the firmware (&#39;t 90&#39;), Ceres mapping 600 + 10 µs/°.</text>
 </g>
-<!-- PCA_CH1 -->
+<!-- PCA_CH2 -->
 <g id="node7" class="node">
-<title>PCA_CH1</title>
-<polygon fill="#ffffff" stroke="black" points="1484,-804.12 1005,-804.12 1005,-661.62 1484,-661.62 1484,-804.12"/>
-<polygon fill="none" stroke="black" points="1005,-780.38 1005,-804.12 1484,-804.12 1484,-780.38 1005,-780.38"/>
-<text xml:space="preserve" text-anchor="start" x="1213.38" y="-787.38" font-family="arial" font-size="14.00">PCA_CH1</text>
-<polygon fill="none" stroke="black" points="1005,-756.62 1005,-780.38 1313.88,-780.38 1313.88,-756.62 1005,-756.62"/>
-<text xml:space="preserve" text-anchor="start" x="1075.06" y="-763.62" font-family="arial" font-size="14.00">PCA9685 channel 1 — PAN</text>
-<polygon fill="none" stroke="black" points="1313.88,-756.62 1313.88,-780.38 1484,-780.38 1484,-756.62 1313.88,-756.62"/>
-<text xml:space="preserve" text-anchor="start" x="1383.94" y="-763.62" font-family="arial" font-size="14.00">3&#45;pin</text>
-<polygon fill="none" stroke="black" points="1005,-732.88 1005,-756.62 1258,-756.62 1258,-732.88 1005,-732.88"/>
-<text xml:space="preserve" text-anchor="start" x="1114.25" y="-739.88" font-family="arial" font-size="14.00">PWM</text>
-<polygon fill="none" stroke="black" points="1258,-732.88 1258,-756.62 1484,-756.62 1484,-732.88 1258,-732.88"/>
-<text xml:space="preserve" text-anchor="start" x="1367.25" y="-739.88" font-family="arial" font-size="14.00">1</text>
-<polygon fill="none" stroke="black" points="1005,-709.12 1005,-732.88 1258,-732.88 1258,-709.12 1005,-709.12"/>
-<text xml:space="preserve" text-anchor="start" x="1122.88" y="-716.12" font-family="arial" font-size="14.00">V+</text>
-<polygon fill="none" stroke="black" points="1258,-709.12 1258,-732.88 1484,-732.88 1484,-709.12 1258,-709.12"/>
-<text xml:space="preserve" text-anchor="start" x="1367.25" y="-716.12" font-family="arial" font-size="14.00">2</text>
-<polygon fill="none" stroke="black" points="1005,-685.38 1005,-709.12 1258,-709.12 1258,-685.38 1005,-685.38"/>
-<text xml:space="preserve" text-anchor="start" x="1116.12" y="-692.38" font-family="arial" font-size="14.00">GND</text>
-<polygon fill="none" stroke="black" points="1258,-685.38 1258,-709.12 1484,-709.12 1484,-685.38 1258,-685.38"/>
-<text xml:space="preserve" text-anchor="start" x="1367.25" y="-692.38" font-family="arial" font-size="14.00">3</text>
-<polygon fill="none" stroke="black" points="1005,-661.62 1005,-685.38 1484,-685.38 1484,-661.62 1005,-661.62"/>
-<text xml:space="preserve" text-anchor="start" x="1009" y="-668.62" font-family="arial" font-size="14.00">Pan servo (continuous&#45;rotation) plugs straight on, brown/black to the GND row.</text>
+<title>PCA_CH2</title>
+<polygon fill="#ffffff" stroke="black" points="1601.75,-804.12 887.25,-804.12 887.25,-661.62 1601.75,-661.62 1601.75,-804.12"/>
+<polygon fill="none" stroke="black" points="887.25,-780.38 887.25,-804.12 1601.75,-804.12 1601.75,-780.38 887.25,-780.38"/>
+<text xml:space="preserve" text-anchor="start" x="1213.38" y="-787.38" font-family="arial" font-size="14.00">PCA_CH2</text>
+<polygon fill="none" stroke="black" points="887.25,-756.62 887.25,-780.38 1313.88,-780.38 1313.88,-756.62 887.25,-756.62"/>
+<text xml:space="preserve" text-anchor="start" x="1016.19" y="-763.62" font-family="arial" font-size="14.00">PCA9685 channel 2 — PAN</text>
+<polygon fill="none" stroke="black" points="1313.88,-756.62 1313.88,-780.38 1601.75,-780.38 1601.75,-756.62 1313.88,-756.62"/>
+<text xml:space="preserve" text-anchor="start" x="1442.81" y="-763.62" font-family="arial" font-size="14.00">3&#45;pin</text>
+<polygon fill="none" stroke="black" points="887.25,-732.88 887.25,-756.62 1258,-756.62 1258,-732.88 887.25,-732.88"/>
+<text xml:space="preserve" text-anchor="start" x="1055.38" y="-739.88" font-family="arial" font-size="14.00">PWM</text>
+<polygon fill="none" stroke="black" points="1258,-732.88 1258,-756.62 1601.75,-756.62 1601.75,-732.88 1258,-732.88"/>
+<text xml:space="preserve" text-anchor="start" x="1426.12" y="-739.88" font-family="arial" font-size="14.00">1</text>
+<polygon fill="none" stroke="black" points="887.25,-709.12 887.25,-732.88 1258,-732.88 1258,-709.12 887.25,-709.12"/>
+<text xml:space="preserve" text-anchor="start" x="1064" y="-716.12" font-family="arial" font-size="14.00">V+</text>
+<polygon fill="none" stroke="black" points="1258,-709.12 1258,-732.88 1601.75,-732.88 1601.75,-709.12 1258,-709.12"/>
+<text xml:space="preserve" text-anchor="start" x="1426.12" y="-716.12" font-family="arial" font-size="14.00">2</text>
+<polygon fill="none" stroke="black" points="887.25,-685.38 887.25,-709.12 1258,-709.12 1258,-685.38 887.25,-685.38"/>
+<text xml:space="preserve" text-anchor="start" x="1057.25" y="-692.38" font-family="arial" font-size="14.00">GND</text>
+<polygon fill="none" stroke="black" points="1258,-685.38 1258,-709.12 1601.75,-709.12 1601.75,-685.38 1258,-685.38"/>
+<text xml:space="preserve" text-anchor="start" x="1426.12" y="-692.38" font-family="arial" font-size="14.00">3</text>
+<polygon fill="none" stroke="black" points="887.25,-661.62 887.25,-685.38 1601.75,-685.38 1601.75,-661.62 887.25,-661.62"/>
+<text xml:space="preserve" text-anchor="start" x="891.25" y="-668.62" font-family="arial" font-size="14.00">Pan servo (continuous&#45;rotation) plugs straight on, brown/black to the GND row (channel 2, as the Ceres sketch had it).</text>
 </g>
 <!-- W_PAN -->
 <g id="node14" class="node">
@@ -380,19 +380,19 @@
 <polygon fill="none" stroke="black" points="2851.88,-788.38 2851.88,-812.12 2956.88,-812.12 2956.88,-788.38 2851.88,-788.38"/>
 <text xml:space="preserve" text-anchor="start" x="2887.12" y="-795.38" font-family="arial" font-size="14.00">0.3 m</text>
 <text xml:space="preserve" text-anchor="start" x="2700.88" y="-773.62" font-family="arial" font-size="14.00"> </text>
-<text xml:space="preserve" text-anchor="start" x="2646.88" y="-753.88" font-family="arial" font-size="14.00">PCA_CH1:1:PWM</text>
+<text xml:space="preserve" text-anchor="start" x="2646.88" y="-753.88" font-family="arial" font-size="14.00">PCA_CH2:1:PWM</text>
 <text xml:space="preserve" text-anchor="start" x="2762.62" y="-753.88" font-family="arial" font-size="14.00"> &#160;&#160;&#160;&#160;OG &#160;&#160;&#160;</text>
 <text xml:space="preserve" text-anchor="start" x="2822.88" y="-753.88" font-family="arial" font-size="14.00">PAN:1:signal (orange)</text>
 <polygon fill="#000000" stroke="none" points="2644.88,-746.88 2644.88,-748.88 2956.88,-748.88 2956.88,-746.88 2644.88,-746.88"/>
 <polygon fill="#ff8000" stroke="none" points="2644.88,-744.88 2644.88,-746.88 2956.88,-746.88 2956.88,-744.88 2644.88,-744.88"/>
 <polygon fill="#000000" stroke="none" points="2644.88,-742.88 2644.88,-744.88 2956.88,-744.88 2956.88,-742.88 2644.88,-742.88"/>
-<text xml:space="preserve" text-anchor="start" x="2655.5" y="-728.12" font-family="arial" font-size="14.00">PCA_CH1:2:V+</text>
+<text xml:space="preserve" text-anchor="start" x="2655.5" y="-728.12" font-family="arial" font-size="14.00">PCA_CH2:2:V+</text>
 <text xml:space="preserve" text-anchor="start" x="2764.12" y="-728.12" font-family="arial" font-size="14.00"> &#160;&#160;&#160;&#160;RD &#160;&#160;&#160;</text>
 <text xml:space="preserve" text-anchor="start" x="2843.12" y="-728.12" font-family="arial" font-size="14.00">PAN:2:V+ (red)</text>
 <polygon fill="#000000" stroke="none" points="2644.88,-721.12 2644.88,-723.12 2956.88,-723.12 2956.88,-721.12 2644.88,-721.12"/>
 <polygon fill="#ff0000" stroke="none" points="2644.88,-719.12 2644.88,-721.12 2956.88,-721.12 2956.88,-719.12 2644.88,-719.12"/>
 <polygon fill="#000000" stroke="none" points="2644.88,-717.12 2644.88,-719.12 2956.88,-719.12 2956.88,-717.12 2644.88,-717.12"/>
-<text xml:space="preserve" text-anchor="start" x="2648.75" y="-702.38" font-family="arial" font-size="14.00">PCA_CH1:3:GND</text>
+<text xml:space="preserve" text-anchor="start" x="2648.75" y="-702.38" font-family="arial" font-size="14.00">PCA_CH2:3:GND</text>
 <text xml:space="preserve" text-anchor="start" x="2764.5" y="-702.38" font-family="arial" font-size="14.00"> &#160;&#160;&#160;&#160;BN &#160;&#160;&#160;</text>
 <text xml:space="preserve" text-anchor="start" x="2827.75" y="-702.38" font-family="arial" font-size="14.00">PAN:3:GND (brown)</text>
 <polygon fill="#000000" stroke="none" points="2644.88,-695.38 2644.88,-697.38 2956.88,-697.38 2956.88,-695.38 2644.88,-695.38"/>
@@ -402,26 +402,26 @@
 <polygon fill="none" stroke="black" points="2644.88,-647.88 2644.88,-671.62 2956.88,-671.62 2956.88,-647.88 2644.88,-647.88"/>
 <text xml:space="preserve" text-anchor="start" x="2739.38" y="-654.88" font-family="arial" font-size="14.00">the servo&#39;s own lead</text>
 </g>
-<!-- PCA_CH1&#45;&#45;W_PAN -->
+<!-- PCA_CH2&#45;&#45;W_PAN -->
 <g id="edge19" class="edge">
-<title>PCA_CH1:e&#45;&#45;W_PAN:w</title>
-<path fill="none" stroke="#000000" stroke-width="2" d="M1485,-742.75C2000.07,-742.75 2128.84,-743.88 2643.88,-743.88"/>
-<path fill="none" stroke="#ff8000" stroke-width="2" d="M1485,-744.75C2000.06,-744.75 2128.82,-745.88 2643.88,-745.87"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M1485,-746.75C2000.04,-746.75 2128.8,-747.87 2643.88,-747.87"/>
+<title>PCA_CH2:e&#45;&#45;W_PAN:w</title>
+<path fill="none" stroke="#000000" stroke-width="2" d="M1602.75,-742.75C2065.49,-742.75 2181.17,-743.88 2643.88,-743.88"/>
+<path fill="none" stroke="#ff8000" stroke-width="2" d="M1602.75,-744.75C2065.47,-744.75 2181.15,-745.88 2643.88,-745.88"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M1602.75,-746.75C2065.45,-746.75 2181.13,-747.87 2643.88,-747.87"/>
 </g>
-<!-- PCA_CH1&#45;&#45;W_PAN -->
+<!-- PCA_CH2&#45;&#45;W_PAN -->
 <g id="edge21" class="edge">
-<title>PCA_CH1:e&#45;&#45;W_PAN:w</title>
-<path fill="none" stroke="#000000" stroke-width="2" d="M1485,-719C2000.04,-719 2128.81,-718.13 2643.88,-718.13"/>
-<path fill="none" stroke="#ff0000" stroke-width="2" d="M1485,-721C2000.06,-721 2128.82,-720.12 2643.88,-720.12"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M1485,-723C2000.07,-723 2128.83,-722.12 2643.88,-722.12"/>
+<title>PCA_CH2:e&#45;&#45;W_PAN:w</title>
+<path fill="none" stroke="#000000" stroke-width="2" d="M1602.75,-719C2065.46,-719 2181.14,-718.13 2643.88,-718.13"/>
+<path fill="none" stroke="#ff0000" stroke-width="2" d="M1602.75,-721C2065.47,-721 2181.15,-720.12 2643.88,-720.12"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M1602.75,-723C2065.49,-723 2181.17,-722.12 2643.88,-722.12"/>
 </g>
-<!-- PCA_CH1&#45;&#45;W_PAN -->
+<!-- PCA_CH2&#45;&#45;W_PAN -->
 <g id="edge23" class="edge">
-<title>PCA_CH1:e&#45;&#45;W_PAN:w</title>
-<path fill="none" stroke="#000000" stroke-width="2" d="M1485,-695.25C2000.01,-695.25 2128.77,-692.38 2643.88,-692.38"/>
-<path fill="none" stroke="#895956" stroke-width="2" d="M1485,-697.25C2000.06,-697.25 2128.82,-694.38 2643.88,-694.37"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M1485,-699.25C2000.1,-699.25 2128.86,-696.37 2643.88,-696.37"/>
+<title>PCA_CH2:e&#45;&#45;W_PAN:w</title>
+<path fill="none" stroke="#000000" stroke-width="2" d="M1602.75,-695.25C2065.42,-695.25 2181.1,-692.38 2643.88,-692.38"/>
+<path fill="none" stroke="#895956" stroke-width="2" d="M1602.75,-697.25C2065.47,-697.25 2181.15,-694.37 2643.88,-694.38"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M1602.75,-699.25C2065.52,-699.25 2181.2,-696.37 2643.88,-696.37"/>
 </g>
 <!-- PAN -->
 <g id="node8" class="node">
@@ -446,7 +446,7 @@
 <polygon fill="none" stroke="black" points="3768.88,-685.38 3768.88,-709.12 4263.75,-709.12 4263.75,-685.38 3768.88,-685.38"/>
 <text xml:space="preserve" text-anchor="start" x="3976.19" y="-692.38" font-family="arial" font-size="14.00">GND (brown)</text>
 <polygon fill="none" stroke="black" points="3356.5,-661.62 3356.5,-685.38 4263.75,-685.38 4263.75,-661.62 3356.5,-661.62"/>
-<text xml:space="preserve" text-anchor="start" x="3360.5" y="-668.62" font-family="arial" font-size="14.00">Plugs onto channel 1. It cannot hold an angle: the firmware only nudges it Ceres&#45;style, &#39;n DIR MS&#39; = 1250/1750 µs for 300 ms then pulse cut; &#39;p&#39; stops.</text>
+<text xml:space="preserve" text-anchor="start" x="3360.5" y="-668.62" font-family="arial" font-size="14.00">Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it Ceres&#45;style, &#39;n DIR MS&#39; = 1250/1750 µs for 300 ms then pulse cut; &#39;p&#39; stops.</text>
 </g>
 <!-- PCA_CH15 -->
 <g id="node9" class="node">

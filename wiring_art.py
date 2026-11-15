@@ -94,12 +94,12 @@ HOSTPINS = {
     "PCA_LOGIC": ("PCA", {"GND": "connector42", "OE": "connector41", "SCL": "connector40", "SDA": "connector39", "VCC": "connector38", "V+": "connector37"}),
     "PCA_PWR": ("PCA", {"V+": "connector7", "GND": "connector8"}),
     "PCA_CH0": ("PCA", {"PWM": "connector34", "V+": "connector35", "GND": "connector36"}),
-    "PCA_CH1": ("PCA", {"PWM": "connector31", "V+": "connector32", "GND": "connector33"}),
+    "PCA_CH2": ("PCA", {"PWM": "connector28", "V+": "connector29", "GND": "connector30"}),
     "PCA_CH15": ("PCA", {"PWM": "connector49", "V+": "connector50", "GND": "connector51"}),
 }
 SUBST = {"1-power": {"PI_PWR": "PI_MINI"}, "5-radars-usb": {"R4_USB": "R4_MINI"}}
 DIR = {"X_MOT": (-1, 0), "Z_MOT": (-1, 0), "Y_MOT": (1, 0), "A_MOT": (1, 0), "SHIELD_PWR": (-1, 0), "SHIELD_I2C": (1, 0),
-       "SHIELD_I2C": (1, 0), "PCA_LOGIC": (-1, 0), "PCA_PWR": (0, -1), "PCA_CH0": (0, 1), "PCA_CH1": (0, 1), "PCA_CH15": (0, 1), "PI": (0, -1), "PI_USB": (1, 0), "PI_PWR": (0, 1)}
+       "SHIELD_I2C": (1, 0), "PCA_LOGIC": (-1, 0), "PCA_PWR": (0, -1), "PCA_CH0": (0, 1), "PCA_CH2": (0, 1), "PCA_CH15": (0, 1), "PI": (0, -1), "PI_USB": (1, 0), "PI_PWR": (0, 1)}
 
 LAYOUT = {
     "1-power": {"PACK": (40, 60), "PLUG": (190, 80), "SHIELD": (380, 40), "R4": (392, 54), "XL4015": (60, 420), "BANK": (900, 60), "PI_MINI": (1160, 60)},

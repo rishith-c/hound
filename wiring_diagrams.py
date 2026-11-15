@@ -59,10 +59,10 @@ PCA_PWR = C("PCA9685 servo-power screw terminal", ["V+", "GND"], "The big 2-pin 
 PCA_LOGIC = C("PCA9685 logic header (6 pins, either end)", ["GND", "OE", "SCL", "SDA", "VCC", "V+"],
               "Adafruit-pattern silkscreen: GND OE SCL SDA VCC V+. OE left open. VCC = 5 V from the shield, so the board's I2C pull-ups sit at 5 V — correct for the R4, and why this board must NOT also touch the Pi's SDA/SCL. Address 0x40.")
 PCA_CH0 = C("PCA9685 channel 0 — TILT", ["PWM", "V+", "GND"], "Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row (as the Ceres turret was wired).")
-PCA_CH1 = C("PCA9685 channel 1 — PAN", ["PWM", "V+", "GND"], "Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row.")
+PCA_CH2 = C("PCA9685 channel 2 — PAN", ["PWM", "V+", "GND"], "Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row (channel 2, as the Ceres sketch had it).")
 PCA_CH15 = C("PCA9685 channel 15 — used as a 5 V tap", ["PWM", "V+", "GND"], "Only V+ and GND are used: the fan's red to V+, black to GND. PWM pin stays empty.")
 TILT = C("MG996R TILT servo (positional)", ["signal (orange)", "V+ (red)", "GND (brown)"], "Plugs onto channel 0. Limits 65–150° in the firmware ('t 90'), Ceres mapping 600 + 10 µs/°.")
-PAN = C("MG996R PAN servo (continuous-rotation)", ["signal (orange)", "V+ (red)", "GND (brown)"], "Plugs onto channel 1. It cannot hold an angle: the firmware only nudges it Ceres-style, 'n DIR MS' = 1250/1750 µs for 300 ms then pulse cut; 'p' stops.")
+PAN = C("MG996R PAN servo (continuous-rotation)", ["signal (orange)", "V+ (red)", "GND (brown)"], "Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it Ceres-style, 'n DIR MS' = 1250/1750 µs for 300 ms then pulse cut; 'p' stops.")
 FAN = C("40 mm 5 V fan on the driver heatsinks", ["5V (red)", "GND (black)"], "5 V 0.15 A (listing). Plugs onto channel 15's V+/GND pins.")
 SHIELD_I2C = C("CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)", ["SDA", "SCL", "5V", "GND"],
                "A4/A5 are the R4's primary I2C ('Wire'), 5 V logic. Four Dupont wires to the PCA9685 logic header. NOT the R4's Qwiic socket (that is Wire1, 3.3 V).")
@@ -144,8 +144,8 @@ D["2-drive"] = dict(
 )
 
 D["3-turret"] = dict(
-    metadata=dict(title="Hound 3 — turret: PCA9685 on the CNC Shield's I2C pins, tilt ch 0, pan ch 1, fan on ch 15, powered by the XL4015"),
-    connectors=dict(SHIELD_I2C=SHIELD_I2C, PCA_LOGIC=PCA_LOGIC, PCA_PWR=PCA_PWR, XL4015=XL4015, PCA_CH0=PCA_CH0, PAN=PAN, PCA_CH1=PCA_CH1, TILT=TILT, PCA_CH15=PCA_CH15, FAN=FAN),
+    metadata=dict(title="Hound 3 — turret: PCA9685 on the CNC Shield's I2C pins, tilt ch 0, pan ch 2, fan on ch 15, powered by the XL4015"),
+    connectors=dict(SHIELD_I2C=SHIELD_I2C, PCA_LOGIC=PCA_LOGIC, PCA_PWR=PCA_PWR, XL4015=XL4015, PCA_CH0=PCA_CH0, TILT=TILT, PCA_CH2=PCA_CH2, PAN=PAN, PCA_CH15=PCA_CH15, FAN=FAN),
     cables=dict(
         W_I2C=B(24, 0.15, ["BK", "YE", "BU", "RD"], "GND, SCL (yellow), SDA (blue), 5V (red) — Dupont"),
         W_SERVO=B(22, 0.15, ["RD", "BK"], "5.0 V rail: XL4015 OUT pads → the PCA9685 terminal"),
@@ -163,9 +163,9 @@ D["3-turret"] = dict(
         link(("PCA_CH0", "PWM"), ("W_TILT", 1), ("TILT", "signal (orange)")),
         link(("PCA_CH0", "V+"), ("W_TILT", 2), ("TILT", "V+ (red)")),
         link(("PCA_CH0", "GND"), ("W_TILT", 3), ("TILT", "GND (brown)")),
-        link(("PCA_CH1", "PWM"), ("W_PAN", 1), ("PAN", "signal (orange)")),
-        link(("PCA_CH1", "V+"), ("W_PAN", 2), ("PAN", "V+ (red)")),
-        link(("PCA_CH1", "GND"), ("W_PAN", 3), ("PAN", "GND (brown)")),
+        link(("PCA_CH2", "PWM"), ("W_PAN", 1), ("PAN", "signal (orange)")),
+        link(("PCA_CH2", "V+"), ("W_PAN", 2), ("PAN", "V+ (red)")),
+        link(("PCA_CH2", "GND"), ("W_PAN", 3), ("PAN", "GND (brown)")),
         link(("PCA_CH15", "V+"), ("W_FAN", 1), ("FAN", "5V (red)")),
         link(("PCA_CH15", "GND"), ("W_FAN", 2), ("FAN", "GND (black)")),
     ],
@@ -282,7 +282,7 @@ problems = []
 def need(cond, msg):
     if not cond: problems.append(msg)
 
-RAIL_SRC = {"PACK": {"PACK", "PLUG", "SHIELD_PWR"}, "V_SERVO": {"XL4015", "PCA_PWR", "PCA_CH0", "PCA_CH1", "PCA_CH15"},
+RAIL_SRC = {"PACK": {"PACK", "PLUG", "SHIELD_PWR"}, "V_SERVO": {"XL4015", "PCA_PWR", "PCA_CH0", "PCA_CH2", "PCA_CH15"},
             "V5_BANK": {"BANK"}, "V5_BANK2": {"BANK2"}, "V5_PI_USB": {"PI_USB", "HUB", "CP1", "CP2", "CP3", "SHIELD_I2C"}, "V3_PI": {"PI"}}
 LOAD_CONN = {"4× DRV8825": "SHIELD_PWR", "XL4015": "XL4015", "MG996R tilt": "TILT", "MG996R pan": "PAN", "40 mm": "FAN", "PCA9685 logic": "PCA_LOGIC", "ESP32-S3 #3": "ESP3",
              "Raspberry Pi 4": "PI_PWR", "Webcam": "CAM", "UNO R4": "R4_USB", "3× CP2102": "HUB",
@@ -336,7 +336,7 @@ for bus, devs in I2C.items():
     addrs = [a for _, a, _ in devs]
     need(len(addrs) == len(set(addrs)), f"{bus}: duplicate I2C address")
 need((("PI", "3 SDA1 BCM2"), ("MLX", "SDA")) in edges, "MLX90640 must hang on I2C-1 (BCM 2/3), as wiring.py says")
-need((("SHIELD_I2C", "SDA"), ("PCA_LOGIC", "SDA")) in edges and (("PCA_CH0", "PWM"), ("TILT", "signal (orange)")) in edges and (("PCA_CH1", "PWM"), ("PAN", "signal (orange)")) in edges, "the PCA9685 must hang on the shield's SDA/SCL with tilt on ch 0 and pan on ch 1")
+need((("SHIELD_I2C", "SDA"), ("PCA_LOGIC", "SDA")) in edges and (("PCA_CH0", "PWM"), ("TILT", "signal (orange)")) in edges and (("PCA_CH2", "PWM"), ("PAN", "signal (orange)")) in edges, "the PCA9685 must hang on the shield's SDA/SCL with tilt on ch 0 and pan on ch 2")
 need((("SHIELD_PWR", "VMOT"), ("XL4015", "IN+")) in edges and (("PLUG", "rover +"), ("SHIELD_PWR", "VMOT")) in edges, "the shield terminal must be the single pack splice")
 
 print("\nCROSS-CHECK vs wiring.py:", "OK — every load fed, every signal wired, pins match" if not problems else f"{len(problems)} problem(s)")

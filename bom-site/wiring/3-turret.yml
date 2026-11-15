@@ -1,5 +1,5 @@
 metadata:
-  title: 'Hound 3 — turret: PCA9685 on the CNC Shield''s I2C pins, tilt ch 0, pan ch 1, fan on ch 15, powered by the XL4015'
+  title: 'Hound 3 — turret: PCA9685 on the CNC Shield''s I2C pins, tilt ch 0, pan ch 2, fan on ch 15, powered by the XL4015'
 connectors:
   SHIELD_I2C:
     type: CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)
@@ -43,20 +43,6 @@ connectors:
     - V+
     - GND
     notes: 'Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row (as the Ceres turret was wired).'
-  PAN:
-    type: MG996R PAN servo (continuous-rotation)
-    pinlabels:
-    - signal (orange)
-    - V+ (red)
-    - GND (brown)
-    notes: 'Plugs onto channel 1. It cannot hold an angle: the firmware only nudges it Ceres-style, ''n DIR MS'' = 1250/1750 µs for 300 ms then pulse cut; ''p'' stops.'
-  PCA_CH1:
-    type: PCA9685 channel 1 — PAN
-    pinlabels:
-    - PWM
-    - V+
-    - GND
-    notes: Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row.
   TILT:
     type: MG996R TILT servo (positional)
     pinlabels:
@@ -64,6 +50,20 @@ connectors:
     - V+ (red)
     - GND (brown)
     notes: Plugs onto channel 0. Limits 65–150° in the firmware ('t 90'), Ceres mapping 600 + 10 µs/°.
+  PCA_CH2:
+    type: PCA9685 channel 2 — PAN
+    pinlabels:
+    - PWM
+    - V+
+    - GND
+    notes: Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row (channel 2, as the Ceres sketch had it).
+  PAN:
+    type: MG996R PAN servo (continuous-rotation)
+    pinlabels:
+    - signal (orange)
+    - V+ (red)
+    - GND (brown)
+    notes: 'Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it Ceres-style, ''n DIR MS'' = 1250/1750 µs for 300 ms then pulse cut; ''p'' stops.'
   PCA_CH15:
     type: PCA9685 channel 15 — used as a 5 V tap
     pinlabels:
@@ -177,19 +177,19 @@ connections:
     - 3
   - TILT:
     - GND (brown)
-- - PCA_CH1:
+- - PCA_CH2:
     - PWM
   - W_PAN:
     - 1
   - PAN:
     - signal (orange)
-- - PCA_CH1:
+- - PCA_CH2:
     - V+
   - W_PAN:
     - 2
   - PAN:
     - V+ (red)
-- - PCA_CH1:
+- - PCA_CH2:
     - GND
   - W_PAN:
     - 3

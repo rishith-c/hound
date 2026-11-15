@@ -84,9 +84,9 @@ static const uint32_t ACC_PER_STEP_PER_SEC = (uint32_t)(4294967296.0 / TICK_HZ);
 
 FspTimer stepTimer;
 // ── pan/tilt: PCA9685 (0x40) on the CNC shield's SDA/SCL comms header, driven by the R4.
-// Channels as the Ceres turret is plugged: TILT = channel 0 (positional MG996R, floor ~62–70°), PAN = channel 1 (continuous).
+// Channels as the Ceres turret is plugged: TILT = channel 0 (positional MG996R, floor ~62–70°), PAN = channel 2 (continuous).
 // Servo power (V+ terminal) comes from the XL4015 at 5.0 V; the fan sits on channel 15's V+/GND pins. 50 Hz, 500–2500 µs.
-const uint8_t PCA = 0x40; const uint8_t TILT_CH = 0, PAN_CH = 1;
+const uint8_t PCA = 0x40; const uint8_t TILT_CH = 0, PAN_CH = 2;   // Ceres: tilt ch 0, pan ch 2
 bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; bool showRight = true;   // Ceres turret_duet "kinematic show"
 const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; Ceres mechanical floor ~62°
 const int PAN_L_US = 1250, PAN_R_US = 1750, PAN_NUDGE_MS = 300;   // Ceres turret_duet.ino: the pan is CONTINUOUS-ROTATION — timed nudges only, then cut the pulse (coast to stop)
