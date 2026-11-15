@@ -3,10 +3,10 @@
 #   pi/deploy.sh                 rsync pi/rover/ → ~/rover/ and sensing/ → ~/rover/sensing/ on the Pi
 #   pi/deploy.sh --setup         also run setup_pi.sh there (first time; installs libs + arduino-cli)
 #   pi/deploy.sh --demo [arg]    then run demo.py on the Pi
-# Host: $PI_HOST or the default below.
+# Host: $PI_HOST, else pi/find_pi.sh finds the Pi on this network.
 set -e
-PI="${PI_HOST:-rishithc@rishithc.local}"
 DIR="$(cd "$(dirname "$0")" && pwd)"
+PI="${PI_HOST:-$(sh "$DIR/find_pi.sh")}"           # the Pi's address moves: found by its MAC unless PI_HOST is set
 
 command rsync -az --delete --exclude venv --exclude '__pycache__' --exclude web.key --exclude pan_trim --exclude motions.json --exclude tunnel_url.sh --exclude radars.json --exclude stations.jsonl --exclude 'MobileNetSSD*' --exclude sensing "$DIR/rover/" "$PI:rover/"
 command rsync -az "$DIR/setup_pi.sh" "$DIR/enable_gpio_uart.sh" "$PI:rover/"

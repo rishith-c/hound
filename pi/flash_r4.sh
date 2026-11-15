@@ -4,9 +4,9 @@
 #   pi/flash_r4.sh              flashes firmware/r4_drive
 #   pi/flash_r4.sh all_forward  flashes a different sketch folder under firmware/
 set -e
-PI="${PI_HOST:-rishithc@rishithc.local}"
 SKETCH="${1:-r4_drive}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PI="${PI_HOST:-$(sh "$ROOT/pi/find_pi.sh")}"      # the Pi's address moves: found by its MAC unless PI_HOST is set
 FQBN=arduino:renesas_uno:unor4wifi
 
 arduino-cli compile --fqbn "$FQBN" --export-binaries "$ROOT/firmware/$SKETCH" | grep -E "Sketch uses|error" || true
