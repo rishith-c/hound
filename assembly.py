@@ -42,7 +42,7 @@ PI = (85.0, 56.0, 20.0)
 PCA9685 = (62.0, 25.0, 12.0)
 BUCK = (54.0, 23.0, 18.0)   # XL4015 module                                  VERIFY
 ESP32 = (63.0, 25.4, 12.0)
-LIPO = (105.0, 33.0, 20.0)  # OVONIC 2200 mAh                                MEASURED (listing)
+LIPO = (106.0, 34.0, 24.0)  # Gens ace 2200 mAh 3S                           VERIFY
 CRADLE_T = 3.0
 CAM = (29.0, 94.0, 24.0)    # owned C920-class webcam: depth, width, height  VERIFY
 TURRET_BASE = (100.0, 60.0, 6.0)      # Ceres pan base plate (rover_parts.py make_turret_pan_base)
@@ -56,7 +56,7 @@ RADAR_Z = DECK_TOP + POST[2] + 4.0    # 300: antenna faces horizontal, forward
 
 # ── Masses, kg, for CG (same figures as drivetrain.py) ─────────────────────
 M = dict(motor=0.240, rail=0.350 * 0.50, wheel=0.150, bracket=0.113, corner=0.012,
-         uno_stack=0.117, pi=0.070, lipo=0.179, buck=0.030, radar=0.010, esp32=0.015,
+         uno_stack=0.117, pi=0.070, lipo=0.190, buck=0.030, radar=0.010, esp32=0.015,
          cam=0.162, tof=0.005, deck=0.300, cradle=0.060, post=0.100, turret=0.250,
          pca=0.010, fan=0.030, strapwire=0.150)
 
@@ -126,7 +126,7 @@ add("PETG", "battery cradle", f"PETG cradle {LIPO[0]+8:.0f}×{LIPO[1]+6:.0f}×{L
     LIPO[0] + 8, LIPO[1] + 6, LIPO[2] + 2 * CRADLE_T, "hangs from deck underside, open at both ends for the strap",
     "deck underside", "4× M3×12 through deck + 4× M3 nut (M3 kit), at X ±46, Y ±14 — 179 g hangs on them", "1.0 N·m", M["cradle"],
     note=f"Cradle bottom at Z = {cradle_z - (LIPO[2]+2*CRADLE_T)/2:.0f}: 61 mm ground clearance, above the 18.9 mm motor bottoms.")
-add("LIPO", "—", "OVONIC 3S 2200 mAh 105×33×20", 0, 0, cradle_z, *LIPO, "long axis X, T-plug lead exits −X (rear)",
+add("LIPO", "—", "Gens ace 3S 2200 mAh, XT60", 0, 0, cradle_z, *LIPO, "long axis X, XT60 lead exits −X (rear)",
     "battery cradle", "printed retaining bar + 2 cable ties", "hand-tight", M["lipo"],
     note="Lowest heavy part → h_CG. Balance lead to the cell alarm, velcro alarm to cradle side.")
 add("PETG", "cradle retaining bar", "printed bar 140×12×6 across the cradle mouth", 0, 0, cradle_z - (LIPO[2] + 2 * CRADLE_T) / 2 + 3, 140, 12, 6,

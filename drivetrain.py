@@ -73,7 +73,7 @@ MASS_ITEMS = [
     ("8x 2020 corner bracket + T-nuts",        8 * 0.012,         "ALLOCATED"),
     ("Uno + CNC Shield + 4 drivers + fan",     0.117,             "ALLOCATED"),
     ("Raspberry Pi + case",                    0.070,             "ALLOCATED"),
-    ("OVONIC 3S 2200 mAh LiPo (or gel-blaster pack)", 0.179,      "MEASURED"),   # listing: 179 g ±5
+    ("Gens ace 3S 2200 mAh 35C LiPo",           0.190,             "ALLOCATED"),  # VERIFY on receipt
     ("2x LD2410C + LD2450 + 2x ESP32-S3",      0.060,             "ALLOCATED"),
     ("Owned USB webcam (C920-class)",          0.162,             "ALLOCATED"),  # Ceres DESIGN.md envelope
     ("2x VL53L1X",                             0.010,             "ALLOCATED"),
