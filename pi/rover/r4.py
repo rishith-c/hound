@@ -26,7 +26,7 @@ class R4:
 
     def __init__(self, port=None, baud=115200):
         self.port = port or self.find_port()
-        self.ser = serial.Serial(self.port, baud, timeout=0.05)
+        self.ser = serial.Serial(self.port, baud, timeout=0.05, exclusive=True)   # one owner: two would override each other's commands
         self.ser.dtr = True
         time.sleep(1.0)
         self.ser.reset_input_buffer()

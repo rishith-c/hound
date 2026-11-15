@@ -30,6 +30,7 @@ import time
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # on the Pi: ~/rover, where r4.py lives
 from detectors import radar_features, csi_features, thermal_features, camera_features  # noqa: E402
 from fusion import Calibration, fuse, sentence  # noqa: E402
 
@@ -269,7 +270,9 @@ if __name__ == "__main__":
         try:
             from r4 import R4
             r4 = R4()
-        except Exception:
+        except Exception as e:                 # say so: without the R4 the motors are not released and there is no sweep
             r4 = None
+            print(f"  R4: absent ({e.__class__.__name__}: {e}) — motors NOT released, no pan sweep."
+                  " If rover-web holds the port: sudo systemctl stop rover-web")
         rec = run_station(a.name, open_drivers(False), False, r4=r4)
     print(json.dumps(rec["result"], indent=1)); print(rec["sentence"])
