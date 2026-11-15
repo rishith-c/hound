@@ -67,12 +67,13 @@ own("CAM", "webcam", 2100, 400, "Webcam (turret)", {"USB-A": (0, 40)})
 own("HUB", "hub", 2100, 560, "4-port USB hub", {"upstream": (0, 30), "port 1: UNO R4": (150, 12), "port 2: CP2102 no.1": (150, 26), "port 3: CP2102 no.2": (150, 40), "port 4: CP2102 no.3": (150, 54)})
 own("CP1", "cp2102", 2350, 380, "CP2102 no.1", CPP); own("CP2", "cp2102", 2460, 380, "CP2102 no.2", CPP); own("CP3", "cp2102", 2570, 380, "CP2102 no.3", CPP)
 own("BANK", "bank", 1300, 690, "USB power bank 5 V / 3 A", {"USB-A out": (170, 35)})
-own("FAN", "fan", 420, 960, "40 mm 5 V fan", {"5V (red)": (0, 30), "GND (black)": (0, 50)})
+part("PCA", "pca9685", 330, 960, 1.25, "PCA9685 servo driver (on the shield's I2C)", {})
+own("FAN", "fan", 800, 1180, "40 mm 5 V fan", {"5V (red)": (0, 30), "GND (black)": (0, 50)})
 part("ESP3", "esp32c3", 2100, 830, 0.9, "ESP32-S3 no.3 csi_rx_udp (drawn as a C3 devkit)", {"USB-C": (60, 207)})
 own("BANK2", "bank2", 2250, 1080, "second power bank — ESP32 only", {"USB-A out": (0, 35)})
 part("ESP2", "esp32c3", 2350, 830, 0.9, "ESP32-S3 no.2 csi_tx — OFF the rover", {"USB-C from any 5 V charger": (60, 207)}, ghost=True)
-part("TILT", "servo", 60, 980, 1.25, "MG996R TILT servo", {"signal (orange)": "connector2", "V+ (red)": "connector1", "GND (brown)": "connector0"})
-part("PAN", "servo", 60, 1160, 1.25, "MG996R PAN servo", {"signal (orange)": "connector2", "V+ (red)": "connector1", "GND (brown)": "connector0"})
+part("TILT", "servo", 300, 1180, 1.25, "MG996R TILT servo", {"signal (orange)": "connector2", "V+ (red)": "connector1", "GND (brown)": "connector0"})
+part("PAN", "servo", 60, 1180, 1.25, "MG996R PAN servo", {"signal (orange)": "connector2", "V+ (red)": "connector1", "GND (brown)": "connector0"})
 part("LDL", "ld2410", 2350, 620, 1.25, "LD2410C LEFT (+30°)", LD); part("LDR", "ld2410", 2520, 620, 1.25, "LD2410C RIGHT (−30°)", LD)
 own("LD2450", "ld2450", 2690, 620, "LD2450 (3rd adapter)", {"5V": (30, 0), "GND": (50, 0), "TX": (70, 0), "RX": (90, 0)})
 own("PI_MINI", "pi_mini", 0, 0, "Raspberry Pi 4 (power in)", {"USB-C": (0, 34)})
@@ -89,17 +90,21 @@ HOSTPINS = {
     "R4_USB": ("R4", {"USB-C": (14, 44)}),
     "PI_USB": ("PI", {"USB 1: webcam": (410, 118), "USB 2: hub": (410, 150), "USB 3: free": (410, 208), "USB 4: free": (410, 242)}),
     "PI_PWR": ("PI", {"USB-C": (55, 268)}),
-    "SHIELD_ZLIM": ("SHIELD", {"Z+ signal": "connector79", "GND": "connector80"}),
-    "SHIELD_XLIM": ("SHIELD", {"X+ signal": "connector87", "GND": "connector88"}),
+    "SHIELD_I2C": ("SHIELD", {"SDA": "connector74", "SCL": "connector72", "5V": "connector75", "GND": "connector76"}),
+    "PCA_LOGIC": ("PCA", {"GND": "connector42", "OE": "connector41", "SCL": "connector40", "SDA": "connector39", "VCC": "connector38", "V+": "connector37"}),
+    "PCA_PWR": ("PCA", {"V+": "connector7", "GND": "connector8"}),
+    "PCA_CH0": ("PCA", {"PWM": "connector34", "V+": "connector35", "GND": "connector36"}),
+    "PCA_CH1": ("PCA", {"PWM": "connector31", "V+": "connector32", "GND": "connector33"}),
+    "PCA_CH15": ("PCA", {"PWM": "connector49", "V+": "connector50", "GND": "connector51"}),
 }
 SUBST = {"1-power": {"PI_PWR": "PI_MINI"}, "5-radars-usb": {"R4_USB": "R4_MINI"}}
 DIR = {"X_MOT": (-1, 0), "Z_MOT": (-1, 0), "Y_MOT": (1, 0), "A_MOT": (1, 0), "SHIELD_PWR": (-1, 0), "SHIELD_I2C": (1, 0),
-       "SHIELD_ZLIM": (1, 0), "SHIELD_XLIM": (1, 0), "PI": (0, -1), "PI_USB": (1, 0), "PI_PWR": (0, 1)}
+       "SHIELD_I2C": (1, 0), "PCA_LOGIC": (-1, 0), "PCA_PWR": (0, -1), "PCA_CH0": (0, 1), "PCA_CH1": (0, 1), "PCA_CH15": (0, 1), "PI": (0, -1), "PI_USB": (1, 0), "PI_PWR": (0, 1)}
 
 LAYOUT = {
     "1-power": {"PACK": (40, 60), "PLUG": (190, 80), "SHIELD": (380, 40), "R4": (392, 54), "XL4015": (60, 420), "BANK": (900, 60), "PI_MINI": (1160, 60)},
     "2-drive": {"M_BL": (60, 40), "M_BR": (60, 560), "SHIELD": (520, 300), "R4": (532, 314), "M_FL": (1120, 40), "M_FR": (1120, 560)},
-    "3-turret": {"SHIELD": (40, 40), "R4": (52, 54), "XL4015": (620, 60), "TILT": (620, 340), "FAN": (960, 360), "PAN": (620, 540)},
+    "3-turret": {"SHIELD": (40, 40), "R4": (52, 54), "PCA": (560, 120), "XL4015": (1000, 100), "PAN": (560, 420), "TILT": (780, 420), "FAN": (1040, 440)},
     "4-pi-sensors": {"MLX": (60, 40), "TOF_F": (260, 40), "TOF_R": (460, 40), "MIC": (660, 60), "PI": (200, 340)},
     "5-radars-usb": {"R4_MINI": (40, 60), "PI": (40, 300), "CAM": (700, 60), "HUB": (700, 300), "CP1": (950, 60), "CP2": (1060, 60), "CP3": (1170, 60), "LDL": (950, 520), "LDR": (1120, 520), "LD2450": (1290, 520)},
     "6-csi": {"ESP3": (300, 40), "BANK2": (420, 300), "ESP2": (700, 40)},

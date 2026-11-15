@@ -12,8 +12,8 @@
   "track": 431.0,
   "wheelbase": 250.0,
   "cg": [
-   -2.6,
-   3.8,
+   -2.5,
+   3.7,
    82.2
   ],
   "ground_clearance": 18.85,
@@ -633,6 +633,24 @@
    "mass_kg": 0.015,
    "verify": "devkit hole positions",
    "note": "csi_rx_udp firmware: USB-C from its own small power bank beside it, streams CSI to the Pi hotspot on channel 6. ESP32 #2 (csi_tx) is dropped on a 10 cm stand as far along the wall as the room allows."
+  },
+  {
+   "id": "PCA",
+   "instance": "\u2192 pan/tilt",
+   "part": "PCA9685 servo driver (Ceres)",
+   "x": 30.0,
+   "y": -75.0,
+   "z": 112.0,
+   "l": 62.0,
+   "w": 25.0,
+   "h": 12.0,
+   "orientation": "flat on 10 mm standoffs",
+   "mounts_to": "deck top, front-right, beside the turret base",
+   "fasteners": "printed bosses + 2\u00d7 M2 + nut",
+   "torque": "hand-tight",
+   "mass_kg": 0.01,
+   "verify": "",
+   "note": "V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Pan ch 0, tilt ch 1, fan on ch 15's V+/GND pins."
   },
   {
    "id": "BANK2",

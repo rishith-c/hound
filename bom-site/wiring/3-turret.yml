@@ -1,19 +1,31 @@
 metadata:
-  title: 'Hound 3 — turret: pan and tilt servos straight off the shield''s X+ and Z+ pins, powered by the XL4015 (no servo board)'
+  title: 'Hound 3 — turret: PCA9685 on the CNC Shield''s I2C pins, pan ch 0, tilt ch 1, fan on ch 15, powered by the XL4015'
 connectors:
-  SHIELD_ZLIM:
-    type: CNC Shield v3 — Z+ end-stop header (= R4 D11, hardware PWM)
+  SHIELD_I2C:
+    type: CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)
     pinlabels:
-    - Z+ signal
+    - SDA
+    - SCL
+    - 5V
     - GND
-    notes: The 2-pin 'Z+' pair in the END STOPS column. Only the signal pin is used (5 V PWM, 50 Hz, 500–2500 µs); the servo's ground goes to the XL4015 instead. D11 is free because no limit switches are
-      fitted.
-  SHIELD_XLIM:
-    type: CNC Shield v3 — X+ end-stop header (= R4 D9, hardware PWM)
+    notes: A4/A5 are the R4's primary I2C ('Wire'), 5 V logic. Four Dupont wires to the PCA9685 logic header. NOT the R4's Qwiic socket (that is Wire1, 3.3 V).
+  PCA_LOGIC:
+    type: PCA9685 logic header (6 pins, either end)
     pinlabels:
-    - X+ signal
     - GND
-    notes: The 2-pin 'X+' pair in the END STOPS column. Signal only; the servo's ground goes to the XL4015. D9 is free because no limit switches are fitted.
+    - OE
+    - SCL
+    - SDA
+    - VCC
+    - V+
+    notes: 'Adafruit-pattern silkscreen: GND OE SCL SDA VCC V+. OE left open. VCC = 5 V from the shield, so the board''s I2C pull-ups sit at 5 V — correct for the R4, and why this board must NOT also touch
+      the Pi''s SDA/SCL. Address 0x40.'
+  PCA_PWR:
+    type: PCA9685 servo-power screw terminal
+    pinlabels:
+    - V+
+    - GND
+    notes: The big 2-pin terminal = the 5.0 V rail in from the XL4015. Every channel header's middle (V+) and bottom (GND) pin is bussed to it.
   XL4015:
     type: HiLetgo XL4015 5 A buck — trim OUT to 5.0 V
     pinlabels:
@@ -22,58 +34,86 @@ connectors:
     - OUT+
     - OUT−
     notes: 'HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT
-      (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. Three wires per OUT pad: pan, tilt, fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.'
-  TILT:
-    type: MG996R TILT servo
+      (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. OUT goes to the PCA9685 terminal, which distributes it to both servos and the fan. 5.0 V (not 6) so the fan can share this rail; the
+      MG996R runs 4.8–7.2 V.'
+  PCA_CH0:
+    type: PCA9685 channel 0 — PAN
     pinlabels:
-    - signal (orange)
-    - V+ (red)
-    - GND (brown)
-    notes: 'Cut the 3-pin plug off or use a servo extension: orange to the shield''s Z+ pin, red/brown soldered to the XL4015 OUT pads. Limits 65–150° in the firmware (''t 90'').'
+    - PWM
+    - V+
+    - GND
+    notes: 'Rows: PWM (top), V+ (middle), GND (bottom). Pan servo plugs straight on, brown/black to the GND row.'
   PAN:
     type: MG996R PAN servo
     pinlabels:
     - signal (orange)
     - V+ (red)
     - GND (brown)
-    notes: Orange to the shield's X+ pin, red/brown soldered to the XL4015 OUT pads beside the tilt servo's. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit).
+    notes: Plugs onto channel 0. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit).
+  PCA_CH1:
+    type: PCA9685 channel 1 — TILT
+    pinlabels:
+    - PWM
+    - V+
+    - GND
+    notes: Tilt servo plugs straight on, brown/black to the GND row.
+  TILT:
+    type: MG996R TILT servo
+    pinlabels:
+    - signal (orange)
+    - V+ (red)
+    - GND (brown)
+    notes: Plugs onto channel 1. Limits 65–150° in the firmware ('t 90').
+  PCA_CH15:
+    type: PCA9685 channel 15 — used as a 5 V tap
+    pinlabels:
+    - PWM
+    - V+
+    - GND
+    notes: 'Only V+ and GND are used: the fan''s red to V+, black to GND. PWM pin stays empty.'
   FAN:
     type: 40 mm 5 V fan on the driver heatsinks
     pinlabels:
     - 5V (red)
     - GND (black)
-    notes: 5 V 0.15 A (listing). Leads soldered to the XL4015 OUT pads beside the servo's.
+    notes: 5 V 0.15 A (listing). Plugs onto channel 15's V+/GND pins.
 cables:
-  W_SIG:
+  W_I2C:
     gauge: 24 AWG
-    length: 0.3
+    length: 0.15
     colors:
-    - OG
+    - BK
+    - YE
+    - BU
+    - RD
     category: bundle
-    notes: tilt's orange lead (or a servo extension) to the Z+ pin
-  W_PSIG:
-    gauge: 24 AWG
-    length: 0.3
-    colors:
-    - OG
-    category: bundle
-    notes: pan's orange lead to the X+ pin
+    notes: GND, SCL (yellow), SDA (blue), 5V (red) — Dupont
   W_SERVO:
     gauge: 22 AWG
-    length: 0.3
+    length: 0.15
     colors:
     - RD
-    - BN
+    - BK
     category: bundle
-    notes: tilt red/brown to the XL4015 OUT+ / OUT− pads; 2 A at stall
+    notes: '5.0 V rail: XL4015 OUT pads → the PCA9685 terminal'
   W_PAN:
     gauge: 22 AWG
     length: 0.3
     colors:
+    - OG
     - RD
     - BN
     category: bundle
-    notes: pan red/brown to the same pads
+    notes: the servo's own lead
+  W_TILT:
+    gauge: 22 AWG
+    length: 0.3
+    colors:
+    - OG
+    - RD
+    - BN
+    category: bundle
+    notes: the servo's own lead
   W_FAN:
     gauge: 24 AWG
     length: 0.2
@@ -81,52 +121,88 @@ cables:
     - RD
     - BK
     category: bundle
-    notes: fan on the same two pads
+    notes: Dupont onto the channel-15 header
 connections:
-- - SHIELD_ZLIM:
-    - Z+ signal
-  - W_SIG:
+- - SHIELD_I2C:
+    - GND
+  - W_I2C:
     - 1
-  - TILT:
-    - signal (orange)
-- - SHIELD_XLIM:
-    - X+ signal
-  - W_PSIG:
-    - 1
-  - PAN:
-    - signal (orange)
+  - PCA_LOGIC:
+    - GND
+- - SHIELD_I2C:
+    - SCL
+  - W_I2C:
+    - 2
+  - PCA_LOGIC:
+    - SCL
+- - SHIELD_I2C:
+    - SDA
+  - W_I2C:
+    - 3
+  - PCA_LOGIC:
+    - SDA
+- - SHIELD_I2C:
+    - 5V
+  - W_I2C:
+    - 4
+  - PCA_LOGIC:
+    - VCC
 - - XL4015:
     - OUT+
   - W_SERVO:
     - 1
-  - TILT:
-    - V+ (red)
+  - PCA_PWR:
+    - V+
 - - XL4015:
     - OUT−
   - W_SERVO:
     - 2
-  - TILT:
-    - GND (brown)
-- - XL4015:
-    - OUT+
+  - PCA_PWR:
+    - GND
+- - PCA_CH0:
+    - PWM
   - W_PAN:
     - 1
   - PAN:
-    - V+ (red)
-- - XL4015:
-    - OUT−
+    - signal (orange)
+- - PCA_CH0:
+    - V+
   - W_PAN:
     - 2
   - PAN:
+    - V+ (red)
+- - PCA_CH0:
+    - GND
+  - W_PAN:
+    - 3
+  - PAN:
     - GND (brown)
-- - XL4015:
-    - OUT+
+- - PCA_CH1:
+    - PWM
+  - W_TILT:
+    - 1
+  - TILT:
+    - signal (orange)
+- - PCA_CH1:
+    - V+
+  - W_TILT:
+    - 2
+  - TILT:
+    - V+ (red)
+- - PCA_CH1:
+    - GND
+  - W_TILT:
+    - 3
+  - TILT:
+    - GND (brown)
+- - PCA_CH15:
+    - V+
   - W_FAN:
     - 1
   - FAN:
     - 5V (red)
-- - XL4015:
-    - OUT−
+- - PCA_CH15:
+    - GND
   - W_FAN:
     - 2
   - FAN:

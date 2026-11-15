@@ -113,7 +113,7 @@ sh = board("SHIELD", "CNC Shield v3 + DRV8825 ×4", "cnc", (u["x"] + 2, u["y"], 
            pins={"VMOT": "connector30", "GND": "connector29", "Z+ signal": "connector79", "Z+ GND": "connector80",
                  "X 2B": "connector37", "X 2A": "connector38", "X 1A": "connector39", "X 1B": "connector40",
                  "Y 2B": "connector57", "Y 2A": "connector58", "Y 1A": "connector59", "Y 1B": "connector60",
-                 "X+ signal": "connector87", "X+ GND": "connector88",
+                 "SDA": "connector74", "SCL": "connector72", "5V": "connector75", "GND c": "connector76",
                  "Z 2B": "connector47", "Z 2A": "connector48", "Z 1A": "connector49", "Z 1B": "connector50",
                  "A 2B": "connector67", "A 2A": "connector68", "A 1A": "connector69", "A 1B": "connector70"})
 for ax, (px, py) in {"X": (104, 68), "Y": (205, 68), "Z": (104, 180), "A": (205, 180)}.items():
@@ -171,6 +171,10 @@ simple_pins("FAN", {"5V (red)": ((fa["x"] - 18, fa["y"] + 18, fa["z"]), (-1, 0, 
 pt = find("PT")
 tz = pt["z"] + pt["h"] / 2 + 18
 add("PT", "Ceres turret base", "box", (pt["x"], pt["y"], pt["z"]), (pt["l"], pt["w"], pt["h"]), color="#d9d2c5")
+pc = find("PCA")
+board("PCA", "PCA9685 servo driver", "pca9685", (pc["x"], pc["y"], pc["z"] - pc["h"] / 2 + 6 + 0.8), yaw=0, note=pc.get("note", ""),
+      pins={"GND": "connector42", "OE": "connector41", "SCL": "connector40", "SDA": "connector39", "VCC": "connector38", "V+": "connector7", "GND T": "connector8",
+            "ch0 PWM": "connector34", "ch0 V+": "connector35", "ch0 GND": "connector36", "ch1 PWM": "connector31", "ch1 V+": "connector32", "ch1 GND": "connector33", "ch15 V+": "connector50", "ch15 GND": "connector51"})
 add("PAN", "MG996R pan servo (drawn as a Futaba S3003)", "stl", (pt["x"], pt["y"], pt["z"] + pt["h"] / 2 + 12), (40, 20, 36), model="models/servo.stl", color="#1f1f1f")
 simple_pins("PAN", {"signal (orange)": ((pt["x"] - 20, pt["y"] + 4, pt["z"] + 8), (-1, 0, 0)), "V+ (red)": ((pt["x"] - 20, pt["y"], pt["z"] + 8), (-1, 0, 0)), "GND (brown)": ((pt["x"] - 20, pt["y"] - 4, pt["z"] + 8), (-1, 0, 0))})
 tz += 30
@@ -185,7 +189,9 @@ add("CO2", "SCD41 CO2 (optional)", "box", (co2["x"], co2["y"], co2["z"]), (co2["
 
 # ── wires from the net list ────────────────────────────────────────────────────────────────────────────────
 ALIAS = {   # net-list connector id → (scene part, pin label mapping)
-    "SHIELD_PWR": ("SHIELD", {}), "SHIELD_ZLIM": ("SHIELD", {"Z+ signal": "Z+ signal", "GND": "Z+ GND"}), "SHIELD_XLIM": ("SHIELD", {"X+ signal": "X+ signal", "GND": "X+ GND"}),
+    "SHIELD_PWR": ("SHIELD", {}), "SHIELD_I2C": ("SHIELD", {"GND": "GND c"}),
+    "PCA_LOGIC": ("PCA", {}), "PCA_PWR": ("PCA", {"GND": "GND T"}), "PCA_CH0": ("PCA", {"PWM": "ch0 PWM", "V+": "ch0 V+", "GND": "ch0 GND"}),
+    "PCA_CH1": ("PCA", {"PWM": "ch1 PWM", "V+": "ch1 V+", "GND": "ch1 GND"}), "PCA_CH15": ("PCA", {"V+": "ch15 V+", "GND": "ch15 GND"}),
     "X_MOT": ("SHIELD", {"2B": "X 2B", "2A": "X 2A", "1A": "X 1A", "1B": "X 1B"}), "Y_MOT": ("SHIELD", {"2B": "Y 2B", "2A": "Y 2A", "1A": "Y 1A", "1B": "Y 1B"}),
     "Z_MOT": ("SHIELD", {"2B": "Z 2B", "2A": "Z 2A", "1A": "Z 1A", "1B": "Z 1B"}), "A_MOT": ("SHIELD", {"2B": "A 2B", "2A": "A 2A", "1A": "A 1A", "1B": "A 1B"}),
     "R4_USB": ("R4", {}), "PI_USB": ("PI", {}), "PI_PWR": ("PI", {}), "PI": ("PI", "pinnum"),

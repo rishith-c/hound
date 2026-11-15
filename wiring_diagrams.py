@@ -54,12 +54,18 @@ def link(*hops):
 
 # ── shared connectors (pin order = silkscreen / datasheet order) ─────────────────────────────────────────────
 XL4015 = C("HiLetgo XL4015 5 A buck — trim OUT to 5.0 V", ["IN+", "IN−", "OUT+", "OUT−"],
-           "HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. Three wires per OUT pad: pan, tilt, fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.")
-TILT = C("MG996R TILT servo", ["signal (orange)", "V+ (red)", "GND (brown)"], "Cut the 3-pin plug off or use a servo extension: orange to the shield's Z+ pin, red/brown soldered to the XL4015 OUT pads. Limits 65–150° in the firmware ('t 90').")
-PAN = C("MG996R PAN servo", ["signal (orange)", "V+ (red)", "GND (brown)"], "Orange to the shield's X+ pin, red/brown soldered to the XL4015 OUT pads beside the tilt servo's. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit).")
-SHIELD_XLIM = C("CNC Shield v3 — X+ end-stop header (= R4 D9, hardware PWM)", ["X+ signal", "GND"], "The 2-pin 'X+' pair in the END STOPS column. Signal only; the servo's ground goes to the XL4015. D9 is free because no limit switches are fitted.")
-FAN = C("40 mm 5 V fan on the driver heatsinks", ["5V (red)", "GND (black)"], "5 V 0.15 A (listing). Leads soldered to the XL4015 OUT pads beside the servo's.")
-SHIELD_ZLIM = C("CNC Shield v3 — Z+ end-stop header (= R4 D11, hardware PWM)", ["Z+ signal", "GND"], "The 2-pin 'Z+' pair in the END STOPS column. Only the signal pin is used (5 V PWM, 50 Hz, 500–2500 µs); the servo's ground goes to the XL4015 instead. D11 is free because no limit switches are fitted.")
+           "HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. OUT goes to the PCA9685 terminal, which distributes it to both servos and the fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.")
+PCA_PWR = C("PCA9685 servo-power screw terminal", ["V+", "GND"], "The big 2-pin terminal = the 5.0 V rail in from the XL4015. Every channel header's middle (V+) and bottom (GND) pin is bussed to it.")
+PCA_LOGIC = C("PCA9685 logic header (6 pins, either end)", ["GND", "OE", "SCL", "SDA", "VCC", "V+"],
+              "Adafruit-pattern silkscreen: GND OE SCL SDA VCC V+. OE left open. VCC = 5 V from the shield, so the board's I2C pull-ups sit at 5 V — correct for the R4, and why this board must NOT also touch the Pi's SDA/SCL. Address 0x40.")
+PCA_CH0 = C("PCA9685 channel 0 — PAN", ["PWM", "V+", "GND"], "Rows: PWM (top), V+ (middle), GND (bottom). Pan servo plugs straight on, brown/black to the GND row.")
+PCA_CH1 = C("PCA9685 channel 1 — TILT", ["PWM", "V+", "GND"], "Tilt servo plugs straight on, brown/black to the GND row.")
+PCA_CH15 = C("PCA9685 channel 15 — used as a 5 V tap", ["PWM", "V+", "GND"], "Only V+ and GND are used: the fan's red to V+, black to GND. PWM pin stays empty.")
+TILT = C("MG996R TILT servo", ["signal (orange)", "V+ (red)", "GND (brown)"], "Plugs onto channel 1. Limits 65–150° in the firmware ('t 90').")
+PAN = C("MG996R PAN servo", ["signal (orange)", "V+ (red)", "GND (brown)"], "Plugs onto channel 0. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit).")
+FAN = C("40 mm 5 V fan on the driver heatsinks", ["5V (red)", "GND (black)"], "5 V 0.15 A (listing). Plugs onto channel 15's V+/GND pins.")
+SHIELD_I2C = C("CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)", ["SDA", "SCL", "5V", "GND"],
+               "A4/A5 are the R4's primary I2C ('Wire'), 5 V logic. Four Dupont wires to the PCA9685 logic header. NOT the R4's Qwiic socket (that is Wire1, 3.3 V).")
 
 
 def CP(n, role):
@@ -120,7 +126,7 @@ D["1-power"] = dict(
 D["2-drive"] = dict(
     metadata=dict(title="Hound 2 — UNO R4 WiFi + CNC Shield v3 + DRV8825 ×4 + NEMA 17 ×4 (frozen v1.0 drive)"),
     connectors=dict(
-        R4=C("Arduino UNO R4 WiFi — under the shield (stacked, no wires)", ["D2 X STEP", "D5 X DIR", "D3 Y STEP", "D6 Y DIR", "D4 Z STEP", "D7 Z DIR", "D12 A STEP", "D13 A DIR", "D8 EN (all four)", "D11 TILT PWM (Z+ end-stop pin)", "D9 PAN PWM (X+ end-stop pin)", "USB-C → Pi hub"],
+        R4=C("Arduino UNO R4 WiFi — under the shield (stacked, no wires)", ["D2 X STEP", "D5 X DIR", "D3 Y STEP", "D6 Y DIR", "D4 Z STEP", "D7 Z DIR", "D12 A STEP", "D13 A DIR", "D8 EN (all four)", "A4 SDA → PCA9685", "A5 SCL → PCA9685", "USB-C → Pi hub"],
              "Stack the shield on the R4; the pins listed are what the shield takes. Firmware r4_drive v1.0-best-drive: 30 kHz step ISR, 1/32, 415 mm/s. Logic 5 V. USB from the Pi hub; ENABLE_WIFI 0."),
         SHIELD_CTRL=C("CNC Shield v3 — jumpers (no wires)", ["A-axis jumper D12", "A-axis jumper D13", "MS1 cap ×4", "MS2 (open) ×4", "MS3 cap ×4"],
                       "AS BUILT: caps on MS1 + MS3 under every driver = 1/32 (M0+M2 high, M1 low — Pololu table), MS2 open. Two jumpers on the A header = D12/D13 drive the A axis. No EN pull-up: the pack is unplugged whenever the R4 is being flashed or reset."),
@@ -138,24 +144,30 @@ D["2-drive"] = dict(
 )
 
 D["3-turret"] = dict(
-    metadata=dict(title="Hound 3 — turret: pan and tilt servos straight off the shield's X+ and Z+ pins, powered by the XL4015 (no servo board)"),
-    connectors=dict(SHIELD_ZLIM=SHIELD_ZLIM, SHIELD_XLIM=SHIELD_XLIM, XL4015=XL4015, TILT=TILT, PAN=PAN, FAN=FAN),
+    metadata=dict(title="Hound 3 — turret: PCA9685 on the CNC Shield's I2C pins, pan ch 0, tilt ch 1, fan on ch 15, powered by the XL4015"),
+    connectors=dict(SHIELD_I2C=SHIELD_I2C, PCA_LOGIC=PCA_LOGIC, PCA_PWR=PCA_PWR, XL4015=XL4015, PCA_CH0=PCA_CH0, PAN=PAN, PCA_CH1=PCA_CH1, TILT=TILT, PCA_CH15=PCA_CH15, FAN=FAN),
     cables=dict(
-        W_SIG=B(24, 0.30, ["OG"], "tilt's orange lead (or a servo extension) to the Z+ pin"),
-        W_PSIG=B(24, 0.30, ["OG"], "pan's orange lead to the X+ pin"),
-        W_SERVO=B(22, 0.30, ["RD", "BN"], "tilt red/brown to the XL4015 OUT+ / OUT− pads; 2 A at stall"),
-        W_PAN=B(22, 0.30, ["RD", "BN"], "pan red/brown to the same pads"),
-        W_FAN=B(24, 0.20, ["RD", "BK"], "fan on the same two pads"),
+        W_I2C=B(24, 0.15, ["BK", "YE", "BU", "RD"], "GND, SCL (yellow), SDA (blue), 5V (red) — Dupont"),
+        W_SERVO=B(22, 0.15, ["RD", "BK"], "5.0 V rail: XL4015 OUT pads → the PCA9685 terminal"),
+        W_PAN=B(22, 0.30, ["OG", "RD", "BN"], "the servo's own lead"),
+        W_TILT=B(22, 0.30, ["OG", "RD", "BN"], "the servo's own lead"),
+        W_FAN=B(24, 0.20, ["RD", "BK"], "Dupont onto the channel-15 header"),
     ),
     connections=[
-        link(("SHIELD_ZLIM", "Z+ signal"), ("W_SIG", 1), ("TILT", "signal (orange)")),
-        link(("SHIELD_XLIM", "X+ signal"), ("W_PSIG", 1), ("PAN", "signal (orange)")),
-        link(("XL4015", "OUT+"), ("W_SERVO", 1), ("TILT", "V+ (red)")),
-        link(("XL4015", "OUT−"), ("W_SERVO", 2), ("TILT", "GND (brown)")),
-        link(("XL4015", "OUT+"), ("W_PAN", 1), ("PAN", "V+ (red)")),
-        link(("XL4015", "OUT−"), ("W_PAN", 2), ("PAN", "GND (brown)")),
-        link(("XL4015", "OUT+"), ("W_FAN", 1), ("FAN", "5V (red)")),
-        link(("XL4015", "OUT−"), ("W_FAN", 2), ("FAN", "GND (black)")),
+        link(("SHIELD_I2C", "GND"), ("W_I2C", 1), ("PCA_LOGIC", "GND")),
+        link(("SHIELD_I2C", "SCL"), ("W_I2C", 2), ("PCA_LOGIC", "SCL")),
+        link(("SHIELD_I2C", "SDA"), ("W_I2C", 3), ("PCA_LOGIC", "SDA")),
+        link(("SHIELD_I2C", "5V"), ("W_I2C", 4), ("PCA_LOGIC", "VCC")),
+        link(("XL4015", "OUT+"), ("W_SERVO", 1), ("PCA_PWR", "V+")),
+        link(("XL4015", "OUT−"), ("W_SERVO", 2), ("PCA_PWR", "GND")),
+        link(("PCA_CH0", "PWM"), ("W_PAN", 1), ("PAN", "signal (orange)")),
+        link(("PCA_CH0", "V+"), ("W_PAN", 2), ("PAN", "V+ (red)")),
+        link(("PCA_CH0", "GND"), ("W_PAN", 3), ("PAN", "GND (brown)")),
+        link(("PCA_CH1", "PWM"), ("W_TILT", 1), ("TILT", "signal (orange)")),
+        link(("PCA_CH1", "V+"), ("W_TILT", 2), ("TILT", "V+ (red)")),
+        link(("PCA_CH1", "GND"), ("W_TILT", 3), ("TILT", "GND (brown)")),
+        link(("PCA_CH15", "V+"), ("W_FAN", 1), ("FAN", "5V (red)")),
+        link(("PCA_CH15", "GND"), ("W_FAN", 2), ("FAN", "GND (black)")),
     ],
 )
 
@@ -270,9 +282,9 @@ problems = []
 def need(cond, msg):
     if not cond: problems.append(msg)
 
-RAIL_SRC = {"PACK": {"PACK", "PLUG", "SHIELD_PWR"}, "V_SERVO": {"XL4015"},
-            "V5_BANK": {"BANK"}, "V5_BANK2": {"BANK2"}, "V5_PI_USB": {"PI_USB", "HUB", "CP1", "CP2", "CP3"}, "V3_PI": {"PI"}}
-LOAD_CONN = {"4× DRV8825": "SHIELD_PWR", "XL4015": "XL4015", "MG996R tilt": "TILT", "MG996R pan": "PAN", "40 mm": "FAN", "ESP32-S3 #3": "ESP3",
+RAIL_SRC = {"PACK": {"PACK", "PLUG", "SHIELD_PWR"}, "V_SERVO": {"XL4015", "PCA_PWR", "PCA_CH0", "PCA_CH1", "PCA_CH15"},
+            "V5_BANK": {"BANK"}, "V5_BANK2": {"BANK2"}, "V5_PI_USB": {"PI_USB", "HUB", "CP1", "CP2", "CP3", "SHIELD_I2C"}, "V3_PI": {"PI"}}
+LOAD_CONN = {"4× DRV8825": "SHIELD_PWR", "XL4015": "XL4015", "MG996R tilt": "TILT", "MG996R pan": "PAN", "40 mm": "FAN", "PCA9685 logic": "PCA_LOGIC", "ESP32-S3 #3": "ESP3",
              "Raspberry Pi 4": "PI_PWR", "Webcam": "CAM", "UNO R4": "R4_USB", "3× CP2102": "HUB",
              "LD2410C radar LEFT": "LDL", "LD2410C radar RIGHT": "LDR", "LD2450": "LD2450",
              "MLX90640": "MLX", "VL53L1X ToF front": "TOF_F", "VL53L1X ToF rear": "TOF_R", "INMP441": "MIC", "SCD41": None}
@@ -286,7 +298,7 @@ for load in LOADS:
 
 SIG_CONN = {"UNO R4 (5 V logic)": "X_MOT", "DRV8825 ×4": "M_BL", "LD2410C left TX": "LDL", "CP2102 #1": "CP1", "LD2410C left": "LDL",
             "LD2410C right TX": "LDR", "CP2102 #2": "CP2", "LD2410C right": "LDR", "LD2450 TX": "LD2450", "CP2102 #3": "CP3", "LD2450": "LD2450",
-            "Pi I2C-1": "PI", "MLX90640 0x33": "MLX", "UNO R4 D11": "SHIELD_ZLIM", "MG996R tilt servo": "TILT", "UNO R4 D9": "SHIELD_XLIM", "MG996R pan servo": "PAN", "Pi BCM 22 / 27": "PI", "VL53L1X front / rear": "TOF_F",
+            "Pi I2C-1": "PI", "MLX90640 0x33": "MLX", "UNO R4 Wire": "SHIELD_I2C", "PCA9685 0x40": "PCA_LOGIC", "PCA9685 (VCC 5 V) channels": "PCA_CH0", "MG996R pan / tilt servos": "PAN", "Pi BCM 22 / 27": "PI", "VL53L1X front / rear": "TOF_F",
             "Pi I2S": "PI", "INMP441": "MIC", "Pi ↔ UNO R4": "HUB", "UNO R4": "R4_USB", "Pi ↔ 3× CP2102": "HUB", "radars at 256000 baud": "CP1"}
 def sc(s):
     return next((v for k, v in sorted(SIG_CONN.items(), key=lambda kv: -len(kv[0])) if s.startswith(k)), None)
@@ -304,7 +316,8 @@ need(used_bcm == set(PI_BCM.values()), f"Pi BCM pins differ: diagrams {sorted(us
 
 r4_lab = " ".join(D["2-drive"]["connectors"]["R4"]["pinlabels"])
 for k, v in R4_PINS.items():
-    need(f"D{v} " in r4_lab, f"R4 pin D{v} ({k}) missing from the drive diagram")
+    tag = f"A{v - 14} " if v >= 14 else f"D{v} "
+    need(tag in r4_lab, f"R4 pin {tag.strip()} ({k}) missing from the drive diagram")
 
 gnd_of = {}
 for name, doc in D.items():
@@ -315,7 +328,7 @@ for name, doc in D.items():
                 gnd_of.setdefault(c, []).append((name, p))
 for c in ("LDL", "LDR", "LD2450"):
     need(len(gnd_of.get(c, [])) == 1, f"{c} needs exactly one GND wire (to its adapter), has {len(gnd_of.get(c, []))}")
-for c in ("MLX", "TOF_F", "TOF_R", "MIC", "FAN", "TILT", "PAN", "XL4015", "SHIELD_PWR", "PLUG"):
+for c in ("MLX", "TOF_F", "TOF_R", "MIC", "FAN", "TILT", "PAN", "PCA_LOGIC", "PCA_PWR", "XL4015", "SHIELD_PWR", "PLUG"):
     need(c in gnd_of, f"{c} has no GND wire")
 
 I2C = W["I2C_BUSES"]
@@ -323,7 +336,7 @@ for bus, devs in I2C.items():
     addrs = [a for _, a, _ in devs]
     need(len(addrs) == len(set(addrs)), f"{bus}: duplicate I2C address")
 need((("PI", "3 SDA1 BCM2"), ("MLX", "SDA")) in edges, "MLX90640 must hang on I2C-1 (BCM 2/3), as wiring.py says")
-need((("SHIELD_ZLIM", "Z+ signal"), ("TILT", "signal (orange)")) in edges, "the tilt signal must come from the shield's Z+ pin (D11)")
+need((("SHIELD_I2C", "SDA"), ("PCA_LOGIC", "SDA")) in edges and (("PCA_CH0", "PWM"), ("PAN", "signal (orange)")) in edges and (("PCA_CH1", "PWM"), ("TILT", "signal (orange)")) in edges, "the PCA9685 must hang on the shield's SDA/SCL with pan on ch 0 and tilt on ch 1")
 need((("SHIELD_PWR", "VMOT"), ("XL4015", "IN+")) in edges and (("PLUG", "rover +"), ("SHIELD_PWR", "VMOT")) in edges, "the shield terminal must be the single pack splice")
 
 print("\nCROSS-CHECK vs wiring.py:", "OK — every load fed, every signal wired, pins match" if not problems else f"{len(problems)} problem(s)")
