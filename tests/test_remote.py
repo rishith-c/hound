@@ -394,3 +394,8 @@ def test_an_api_request_keeps_the_views_alive_and_status_says_if_a_check_runs(we
 def test_page_starts_both_views_by_itself_and_respects_a_manual_stop(web):
     for needle in ("function autoStart", "api(ep+'?on=1')", "auto.th.off=thOn", "auto.rd.off=rdOn", "autoStart(s);}", "s.senses_running"):
         assert needle in web.PAGE, needle
+
+
+def test_thermal_view_has_a_rotate_button_that_remembers(web):
+    for needle in ("id=thr", "function thermalSrc", "localStorage.getItem('thRot')", "localStorage.setItem('thRot'", "let thRot=1"):
+        assert needle in web.PAGE, needle
