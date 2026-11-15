@@ -77,9 +77,10 @@ def evaluate(m):
 STEPPER_NEW = [("5× NEMA 17 0.41 N·m 1.5 A (JK42HS40 class)", "B0FHHY2D7B", 43.19), ("CNC Shield V3 + 4× DRV8825", "B0B24YS695", 15.99),
                ("Anndason 6× steel NEMA 17 brackets", "B073QW9RPZ", 16.99), ("80 mm mecanum × 4 + 5 mm couplings", "B0DWSWQV4T", 29.99),
                ("2× 40 mm 5 V fans (driver cooling)", "B0DY6GQMJX", 5.99)]
-DC_NEW = [("4× JGA25-370 12 V encoder gearmotor ('170 RPM_12V', torque unpublished)", "B0H5TV2DRN", 4 * 10.56),
-          ("3× TB6612FNG dual driver (two used)", "B0BLRSWTLM", 7.82), ("4× 25 mm motor bracket", "B0DCZVTYMY", 7.99),
-          ("97 mm mecanum × 4 + 4 mm couplings", "B0F9TK5FSW", 36.99)]
+DC_NEW = [("4× JGA25-370 12 V encoder gearmotor ('170 RPM_12V' variant, torque unpublished)", "B0H5TP3KQL", 4 * 10.56),
+          ("3× TB6612FNG dual driver (two used)", "B0BLRSWTLM", 7.82),
+          ("6× 25 mm gearbox bracket, 33 × 26 × 33 mm, M3 (four used)", "B07HHY2BJN", 9.59),   # B0DCZVTYMY said 540/555 motors
+          ("97 mm mecanum × 4 + 4 mm couplings", "B0F9TK5FSW", 40.99)]
 LISTING_N0 = 170                  # the cheapest listing's '170 RPM_12V' variant: no-load at 12 V, torque not published
 
 
