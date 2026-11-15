@@ -37,12 +37,15 @@ def amplitudes(raw: bytes) -> np.ndarray:
 # ── Hound's UDP packets (firmware/csi_rx_udp) ───────────────────────────────────────────────────────────────
 UDP_MAGIC = b"HC"
 LLTF_BYTES = 128                                   # the LLTF block: 64 subcarriers × (imag, real), always first
-LLTF_USED = list(range(1, 27)) + list(range(38, 64))   # ESP32 LLTF order is 0..31 then −32..−1; ±1..±26 carry signal
+# ESP32 LLTF order is 0..31 then −32..−1, and ±1..±26 carry signal. +1 is left out: it sits in the buffer's first 4 bytes,
+# which the radio marks invalid on some frames (first_word_invalid). csi_rx_udp zeroes them, and a subcarrier that is
+# sometimes 0 and sometimes real is a square wave to every variance and periodicity test downstream.
+LLTF_USED = list(range(2, 27)) + list(range(38, 64))
 
 
 def parse_udp(data: bytes) -> dict | None:
     """One csi_rx_udp packet: 'H' 'C' | node u8 | seq u16 | rssi i8 | n u8 | n bytes of (imag, real) int8.
-    Returns node, seq, rssi and the 52 used LLTF subcarrier amplitudes; None if it is not such a packet."""
+    Returns node, seq, rssi and the 51 used LLTF subcarrier amplitudes; None if it is not such a packet."""
     if len(data) < 7 or data[:2] != UDP_MAGIC:
         return None
     n = data[6]

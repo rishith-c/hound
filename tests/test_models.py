@@ -91,8 +91,9 @@ def test_station_runs_a_simulated_stop_to_its_sentence(tmp_path):
     """sensing/station.py --sim: the whole stop (settle, dwell, fuse) on simulated sensors ends in one honest sentence."""
     pytest.importorskip("scipy")
     r = subprocess.run([sys.executable, os.path.join(ROOT, "sensing", "station.py"), "--sim"], cwd=tmp_path,
-                       capture_output=True, text=True, timeout=300)
+                       capture_output=True, text=True, timeout=300, env={**os.environ, "HOME": str(tmp_path)})   # its log is ~/rover/…
     assert r.returncode == 0, r.stderr[-2000:]
+    assert (tmp_path / "rover" / "stations.jsonl").exists()
     last = [l for l in r.stdout.splitlines() if l.strip()][-1]
     assert last.startswith("S1:") and "alive" not in r.stdout.lower(), last
 
@@ -257,10 +258,12 @@ def test_csi_udp_parsing_matches_the_firmware():
     import csi
     r = csi.parse_udp(_csi_packet())
     assert (r["node"], r["seq"], r["rssi"]) == (3, 513, -42)
-    assert len(r["amp"]) == 52 and all(abs(a - 5.0) < 1e-9 for a in r["amp"])      # the 52 used, none of the nulls
+    assert len(r["amp"]) == 51 and all(abs(a - 5.0) < 1e-9 for a in r["amp"])      # the 51 used, none of the nulls
+    junk = bytearray(_csi_packet()); junk[7 + 2:7 + 4] = b"\x7f\x81"                    # garbage in subcarrier +1 (first word)
+    assert all(abs(a - 5.0) < 1e-9 for a in csi.parse_udp(bytes(junk))["amp"])
     assert csi.parse_udp(b"junk" * 40) is None
     assert csi.parse_udp(_csi_packet(n=0)) is None                                   # what the old firmware sent for 256
-    assert len(csi.parse_udp(_csi_packet(n=200))["amp"]) == 52                       # a longer buffer: LLTF block only
+    assert len(csi.parse_udp(_csi_packet(n=200))["amp"]) == 51                       # a longer buffer: LLTF block only
 
 
 class _UdpSock:
@@ -281,7 +284,7 @@ def test_station_csi_sink_reads_real_packets_and_drops_the_backlog():
     sink = object.__new__(station.CsiSink)
     sink.sock = _UdpSock(queued=[_csi_packet(seq=i) for i in range(40)], live=[_csi_packet(seq=100 + i) for i in range(5)] + [b"noise"])
     t, A = sink.collect(0.05)
-    assert A.shape == (5, 52)                          # the 40 stale packets would have been stamped 'now'
+    assert A.shape == (5, 51)                          # the 40 stale packets would have been stamped 'now'
 
 
 def test_station_radar_drops_the_backlog(monkeypatch):
@@ -416,3 +419,14 @@ def test_radar_unplugged_mid_dwell_keeps_what_it_had(monkeypatch):
     port.reset_input_buffer = gone
     t2, rows2 = r.collect(5.0)                                        # the second window on the dead port
     assert len(rows2) == 0
+
+
+def test_dwell_drops_a_failing_stream_not_the_stop():
+    station = pytest.importorskip("station")
+    import numpy as np
+    class Ok:
+        def collect(self, s): return np.arange(3.0), np.ones((3, 9))
+    class Broken:
+        def collect(self, s): raise OSError(101, "Network is unreachable")
+    radars, csi_data = station.dwell({"radar_left": Ok(), "radar_right": Broken(), "csi": Broken()}, window=0.01)
+    assert radars["left"][0][1].shape == (3, 9) and len(radars["right"][0][1]) == 0 and len(csi_data[0]) == 0

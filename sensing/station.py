@@ -108,7 +108,7 @@ def radar_ports(by_id="/dev/serial/by-id", serial0="/dev/serial0", cfg="~/rover/
 
 class CsiSink:
     """ESP32 #3 (firmware/csi_rx_udp) streams one UDP packet per probe to port 5005; csi.parse_udp checks the header
-    and keeps the 52 used subcarriers of the LLTF block."""
+    and keeps the 51 used subcarriers of the LLTF block."""
 
     def __init__(self, port=5005):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -116,7 +116,7 @@ class CsiSink:
         self.sock.bind(("0.0.0.0", port)); self.sock.settimeout(0.2)
 
     def collect(self, seconds: float):
-        """(t, amplitudes[n, 52]) over the next `seconds`; packets already queued are dropped, as in RadarUSB.collect."""
+        """(t, amplitudes[n, 51]) over the next `seconds`; packets already queued are dropped, as in RadarUSB.collect."""
         from csi import parse_udp
         self.sock.settimeout(0)
         try:
@@ -211,10 +211,17 @@ def dwell(drivers: dict, window: float = 30.0):
     Returns ({side: ((t1, g1), (t2, g2))}, (t, A) or None)."""
     from concurrent.futures import ThreadPoolExecutor
     radars = {k[6:]: v for k, v in drivers.items() if k.startswith("radar_") and k != "radar_ld2450"}
-    two = lambda d: (d.collect(window), d.collect(window))
+
+    def safe(d):                                 # one stream failing mid-stop drops that stream, not the stop
+        try:
+            return d.collect(window)
+        except Exception as e:
+            print(f"  {type(d).__name__}: {e.__class__.__name__}: {e} — dropped for this stop")
+            return np.array([]), np.array([])
+    two = lambda d: (safe(d), safe(d))
     with ThreadPoolExecutor(max_workers=len(radars) + 1) as ex:
         fr = {side: ex.submit(two, d) for side, d in radars.items()}
-        fc = ex.submit(drivers["csi"].collect, window) if "csi" in drivers else None
+        fc = ex.submit(safe, drivers["csi"]) if "csi" in drivers else None
         return {side: f.result() for side, f in fr.items()}, (fc.result() if fc else None)
 
 
