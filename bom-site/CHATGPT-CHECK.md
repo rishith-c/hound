@@ -43,6 +43,7 @@ A 350 x 390 mm four-wheel mecanum rover on four owned NEMA 17 steppers, a pan/ti
 Buy total: $261.37
 
 ## Optional, not in the first order
+- 6× MG996R metal-gear servo, 180° (positional) — https://www.amazon.com/dp/B0FGP9ZPJN — ONLY IF the tilt servo is a 360° one: set a tilt on the remote and let go — a 180° servo stops dead, a 360° one keeps turning (it reads the pulse as speed) and cannot hold the camera. TowerPro sells both in the same case, so buy a listing that says 180° and check the new one by hand, unpowered: it stops at about half a turn. The tilt goes on PCA9685 channel 3. LISTING CHECK 2026-09-25: 180° in the title, $3.67 each.
 - Blue threadlocker (Loctite 242/243 or equivalent) — Four coupler grub screws carry the whole drivetrain. Parts box first.
 - Wago 221-415 5-way lever nuts, pack of 10 (or solder + heat-shrink) — NOT NEEDED since v4: the shield's power screw terminal is the only pack splice (pack lead + XL4015 input share each screw).
 - 4× stepper motor cables, 4-pin 2.54 mm Dupont female at the shield end — The motor leads must land on the shield's 4-pin male headers. If the motors came with bare wires, crimp Dupont housings; if with a JST-XH, buy XH-to-Dupont stepper cables. ~400 mm reach needed for the far corner.
