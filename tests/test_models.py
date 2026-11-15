@@ -185,3 +185,14 @@ def test_tofs_come_up_at_two_addresses():
     tof.init_tofs(i2c=object(), pin=bus.pin, sensor=bus.sensor, sleep=lambda s: None)
     assert bus.collisions == 0, "two sensors answered 0x29 while one was being addressed"
     assert bus.dev[tof.FRONT_XSHUT]["addr"] == 0x30 and bus.dev[tof.REAR_XSHUT]["addr"] == 0x29
+
+
+def test_dc_drive_study():
+    """dc_drive.py: the linear motor model, and the verdicts it reports (TT fails, the JGA25-370 1:45 passes)."""
+    import dc_drive as dc
+    rows = {r["name"]: r for r in (dc.evaluate(m) for m in dc.MOTORS)}
+    assert not rows["TT 1:48 (6 V, via a buck)"]["ok"]
+    assert rows["JGA25-370 12 V 1:45"]["ok"] and rows["JGA25-370 12 V 1:45, 97 mm"]["ok"]
+    assert dc.dc_mass(0.1, 0.080) < 0.85 * __import__("drivetrain").design_mass()[1]      # the DC build is lighter
+    assert dc.min_stall_for(170, 0.097) < dc.min_stall_for(170, 0.080)                    # bigger wheels need less speed
+    assert dc.min_stall_for(100, 0.080) is None                                           # too slow at any torque
