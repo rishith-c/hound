@@ -89,7 +89,7 @@ FspTimer stepTimer;
 const uint8_t PCA = 0x40; const uint8_t TILT_CH = 0, PAN_CH = 2;   // Ceres: tilt ch 0, pan ch 2
 bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; bool showRight = true; uint8_t showCount = 0;   // Ceres turret_duet "kinematic show"
 int panDir = 1; uint32_t panT0 = 0, panMs = 300;                 // current nudge, eased: pulse = 1500 ± 250·sin(π·t/T), then cut
-const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; Ceres mechanical floor ~62°
+const int TILT_MIN = 78, TILT_MAX = 150, TILT_PARK = 92;   // degrees; the head hammers the platform below ~75° on this build
 const int PAN_L_US = 1250, PAN_R_US = 1750, PAN_NUDGE_MS = 300;   // Ceres turret_duet.ino: the pan is CONTINUOUS-ROTATION — timed nudges only, then cut the pulse (coast to stop)
 int tiltDeg = TILT_PARK, panDeg = 0; bool tiltOn = false, panOn = false, pcaOk = false; uint32_t panStopAt = 0, pcaRetryAt = 0;
 uint8_t i2cFound[8]; uint8_t i2cN = 0;
@@ -483,9 +483,9 @@ void loop() {
     static uint32_t lastStep = 0; uint32_t now = millis();
     if (now - lastStep >= 20) { lastStep = now;
       float t = (now - showT0) / 1000.0f; float sn = sinf(2 * PI * t / 5.0f);
-      float tilt = 90.0f + (sn > 0 ? 16.0f : 20.0f) * sn;                    // 70..106: less up, a little more down (floor ~62–70)
+      float tilt = 96.0f + (sn > 0 ? 20.0f : 16.0f) * sn;                    // 80..116: more up, less down — it hammered the platform at 70
       pcaPulse(TILT_CH, (int)(600.0f + tilt * 10.0f)); tiltDeg = (int)tilt; tiltOn = true;
-      if (!panStopAt && fabsf(tilt - 90.0f) < 8.0f && now - showLastNudge > 1500) {   // pan turns more: 500 ms eased nudges, two the same way, then two back
+      if (!panStopAt && fabsf(tilt - 96.0f) < 8.0f && now - showLastNudge > 1500) {   // pan turns more: 500 ms eased nudges, two the same way, then two back
         nudgePan(showRight ? 1 : -1, 500); if (++showCount >= 2) { showCount = 0; showRight = !showRight; } showLastNudge = now; }
     }
   }
