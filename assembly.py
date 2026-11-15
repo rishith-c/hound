@@ -129,7 +129,7 @@ for inst, x, y in (("front-left tile", 87.5, 97.5), ("front-right tile", 87.5, -
                    ("rear-left tile", -87.5, 97.5), ("rear-right tile", -87.5, -97.5)):
     add("PETG", inst, "Printed deck tile 175×195×5, half-thickness lap (15 mm tongue / rebate) on the centreline edges", x, y, DECK_Z0 + DECK_T / 2, 175, 195, DECK_T,
         "flat on rail tops", "one side rail + one cross rail", "3× M5×8 + M5 T-nut into the side-rail top slot, 2× into the cross-rail top slot (corner kit) at 1.5 N·m — 3 mm of PLA under the head crushes at the 3.0 the corners take; 3× M3×8 + nut per lap seam",
-        "3.0 N·m", M["deck"] / 4, note="Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 5 perimeters, 30% infill. Wire pass-through slots 20×8 mm beside each motor corner and at the rear centre for the pack lead — the tiles cover the whole frame and every under-deck wire has to come up somewhere.")
+        "3.0 N·m", M["deck"] / 4, note="Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 4 perimeters, 20% infill (~80 g each — the mass budget depends on it). Wire pass-through slots 20×8 mm beside each motor corner and at the rear centre for the pack lead — the tiles cover the whole frame and every under-deck wire has to come up somewhere.")
 
 # ── Battery, slung under the deck ───────────────────────────────────────────
 cradle_z = DECK_Z0 - (LIPO[2] + 2 * CRADLE_T) / 2
@@ -165,6 +165,12 @@ on_deck("BANK", "→ Pi", "USB power bank, compact (owned)", (100.0, 60.0, 15.0)
         note="USB-C to the Pi. Must deliver 5 V at 3 A. Centred to keep the CG on the axis.")
 on_deck("XL4015", "→ servos 6.0 V", "XL4015 5 A buck (owned)", BUCK, -44.5, 110.5, "deck top, ahead of the R4",
         "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 6.0 V before connecting the PCA9685. Own return to the shield GND.")
+on_deck("LM2596", "→ fan + radars 5.0 V", "LM2596 buck (owned)", (43.0, 21.0, 14.0), -44.5, 150.0, "deck top, outboard of the XL4015",
+        "printed bosses + 2 cable ties", "hand-tight", 0.020, note="Trim to 5.0 V unloaded. Feeds the fan and both radars so they stay off the Pi's USB budget; dedicated GND wire to the ESP32 alongside the radar signals.")
+on_deck("WAGO", "pack split", "3× Wago 221 lever nuts in a printed clip", (40.0, 30.0, 18.0), -150.0, -165.0, "deck top, rear-right corner",
+        "printed clip + 1 cable tie", "hand-tight", 0.020, note="XT60 pigtail → shield VMOT, XL4015 IN, LM2596 IN. +, − and a spare.")
+on_deck("XT60", "e-stop", "XT60 mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -150.0, -132.0, "deck top, between the Pi and the Wago",
+        "printed saddle + 1 cable tie on the fixed half", "hand-tight", 0.010, note="The pack lead comes up through the rear slot to here. One-handed disconnect from above = the emergency stop.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
         note="UART1 → LD2410C, UART2 → LD2450. USB-C to the Pi.")
@@ -185,7 +191,7 @@ add("THERM", "above the camera", "MLX90640-D55 thermal array, 55° FoV", TX + 4,
 
 # ── Radar post, rear centre, looking forward over the turret ────────────────
 PX = -CROSS_X
-add("PETG", "radar post", "PETG post 40×40×200 with 60×60×6 flange", PX, 0, DECK_TOP + POST[2] / 2, *POST,
+add("PETG", "radar post", "Printed post 40×40×200 U-channel + separate 60×60×6 flange plate (2× M3×10 + nut) — printed flat, the flange would otherwise stand vertical and need supports", PX, 0, DECK_TOP + POST[2] / 2, *POST,
     "vertical, on the rear cross rail through the deck; PRINT IT FLAT as a 3-wall U-channel, open side rearward as the cable run — a 200 mm upright needs 200 mm of Z that small printers lack", "rear tile → rear cross rail top slot",
     "2× M4×12 (T-nut kit) through flange + deck into 2× M4 T-nuts in the rear rail top slot, at Y ±20; flange and tile counterbored to 3 mm each", "2.0 N·m", M["post"],
     note="Hollow 3 mm walls, print upright. Cable channel down the +X face for the two radar leads.")

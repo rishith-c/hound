@@ -30,7 +30,7 @@ MECANUM_FACTOR = math.sqrt(2)        # roller axis at 45°: only F/√2 of each 
                                      # tangential force acts along the travel direction
 ETA_MECH = 0.85                      # roller bearings + coupling loss            ASSUMED
 WHEELBASE_M = 0.30                   # contact centres, brackets under a 350 mm rail  ALLOCATED
-TRACK_M = 0.45                       # 80 mm wheels outboard of a 390 mm frame       ALLOCATED
+TRACK_M = 0.43                       # wheels 5 mm off the bracket legs                 from assembly.py
 
 # ── Environment ─────────────────────────────────────────────────────────────
 G = 9.81
@@ -78,7 +78,7 @@ MASS_ITEMS = [
     ("Owned USB webcam (C920-class)",          0.162,             "ALLOCATED"),  # Ceres DESIGN.md envelope
     ("2x VL53L1X",                             0.010,             "ALLOCATED"),
     ("MLX90640 thermal + SCD41 CO2 + INMP441 mic", 0.025,         "ALLOCATED"),
-    ("PETG deck, cradle, radar post, clips",   0.500,             "ALLOCATED"),
+    ("Printed parts: 4 tiles, cradle, post, bridge, clips, lock", 0.550, "ALLOCATED"),  # 4×80 g tiles at 20% infill
     ("Cable ties, tape",                       0.030,             "ALLOCATED"),
     ("22 AWG wiring + connectors",             0.080,             "ALLOCATED"),
 ]
