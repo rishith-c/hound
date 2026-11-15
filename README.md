@@ -20,10 +20,11 @@ Named for the rescue dog: it stops, goes quiet, and listens.
 | `dc_drive.py` | What a DC-gearmotor Hound would need and cost: TT motors fail, a JGA25-370 12 V 1:45 passes; priced against the stepper build |
 | `sensing/thermal_arrays.py` | Whether a cheaper thermal array still finds a person: the MLX90641 (−$12.55) does, the AMG8833 (−$41.42) loses a lying person past 2.8 m |
 | `sensing/` | Prior art, sensor models, vitals, fusion, station sequencer, Monte Carlo |
+| `ml/` | The Wi-Fi neural network: people made in Blender, a CSI simulator, a NumPy CNN (person there? still or moving?), recording and fine-tuning on the rover, live in the remote. Results in `ml/results/`, all from simulation so far |
 | `firmware/r4_drive` | The drive firmware (v1.0 tag `v1.0-best-drive`) |
 | `pi/` | Pi-side code, deploy and flash scripts |
 | `cad/` | Deck tiles for an Ender 3 and the full-plate DXF |
-| `tests/` | `python3 -m pytest tests` — the R4 firmware itself compiled on the host (turret, show, drive ramps, watchdog), remote recorder and API (stub R4), cross-file consistency, wiring gate, drivetrain identities, radar ports |
+| `tests/` | `python3 -m pytest tests` — the R4 firmware itself compiled on the host (turret, show, drive ramps, watchdog), remote recorder and API (stub R4), the Wi-Fi network (needs NumPy), cross-file consistency, wiring gate, drivetrain identities, radar ports |
 
 ## The remote
 

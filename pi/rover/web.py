@@ -13,6 +13,7 @@ import json
 import math
 import os
 import secrets
+import socket
 import subprocess
 import sys
 import threading
@@ -215,6 +216,7 @@ def senses_start():
     radar_stop(wait=True)                      # bringup reads the LD2450's port too: two readers would split its frames
     thermal_stop(wait=True)                    # ...and the thermal array's I2C address: interleaved transactions corrupt a frame
     cam_stop(wait=True)                        # ...and the webcam: only one program can hold the device
+    wifi_stop(wait=True)                       # ...and UDP 5005 for the Wi-Fi CSI
     threading.Thread(target=senses_thread, daemon=True).start()
 
 
@@ -426,6 +428,94 @@ def cam_stop(wait=False):
         time.sleep(0.5)                        # ffmpeg is killed at the reader's next frame and lets go of the device
 
 
+# ── Wi-Fi neural network view: ESP32 #3's CSI packets (UDP 5005) through ml/infer.py, only while the page asks ───────
+ML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ml")           # deploy.sh puts ml/ here
+CSI_PORT = 5005
+wifi = {"on": False, "id": 0, "bars": None, "pps": 0, "read": None, "paused": False, "model": "", "err": ""}
+
+
+def driving():
+    """HOUND is moving (commanded, or the wheels still ramping down): the receiver is moving, so the link is."""
+    with lock:
+        mode = state["mode"]
+    return mode != "idle" or any(r4.status.get("rate") or [])
+
+
+def _open_csi():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(("0.0.0.0", CSI_PORT))
+    s.settimeout(0.1)
+    return s
+
+
+def wifi_thread(wid, opener=None):
+    try:
+        if ML not in sys.path:
+            sys.path.insert(0, ML)
+        from infer import LiveNet                      # also puts sensing/ on the path
+        from csi import parse_udp
+        live = LiveNet()
+        sock = (opener or _open_csi)()
+    except Exception as e:
+        with lock:
+            if wifi["id"] == wid:
+                wifi.update(on=False, err=f"Wi-Fi view: {e.__class__.__name__}: {e}")
+        return
+    with lock:
+        wifi["model"] = os.path.basename(live.path)
+    last = 0.0
+    try:
+        while True:
+            with lock:
+                if wifi["id"] != wid:
+                    break
+            if page_gone():
+                break
+            try:
+                data = sock.recv(4096)
+            except socket.timeout:
+                data = None
+            now = time.time()
+            rec = parse_udp(data) if data else None
+            if rec is not None:
+                live.push(now, rec["amp"])
+            if now - last >= 0.5:                      # two readings a second
+                last = now
+                b = live.bars(now)
+                moving = driving()
+                if moving:
+                    live.reset()                       # only trusted once HOUND has stopped: 10 s of a still receiver
+                r = None if moving else live.read(now)
+                with lock:
+                    wifi.update(pps=live.pps(now) if not moving else 0, paused=moving, read=r,
+                                bars=None if b is None else [round(float(v), 1) for v in b])
+    except Exception as e:
+        with lock:
+            wifi["err"] = f"{e.__class__.__name__}: {e}"
+    finally:
+        sock.close()
+        with lock:
+            if wifi["id"] == wid:
+                wifi.update(on=False, bars=None, read=None)
+
+
+def wifi_start(opener=None):
+    with lock:
+        if wifi["on"] or senses["running"]:    # a senses check is listening on 5005: wait for it
+            return
+        wifi["id"] += 1; wifi.update(on=True, bars=None, read=None, pps=0, paused=False, err=""); wid = wifi["id"]
+    threading.Thread(target=wifi_thread, args=(wid, opener), daemon=True).start()
+
+
+def wifi_stop(wait=False):
+    with lock:
+        was = wifi["on"]
+        wifi["id"] += 1; wifi.update(on=False, bars=None, read=None)
+    if was and wait:
+        time.sleep(0.3)                        # the reader notices within one 0.1 s receive and closes the port
+
+
 def status():
     s = dict(r4.status)
     with lock:
@@ -438,6 +528,8 @@ def status():
             s["radar"] = {"on": radar["on"], "targets": list(radar["targets"]), "fps": radar["fps"], "err": radar["err"]}
         if cam["on"] or cam["err"]:
             s["cam"] = {"on": cam["on"], "fps": cam["fps"], "err": cam["err"]}
+        if wifi["on"] or wifi["err"]:
+            s["wifi"] = {k: wifi[k] for k in ("on", "bars", "pps", "read", "paused", "model", "err")}
     return s
 
 
@@ -501,6 +593,10 @@ input[type=range]{width:200px;max-width:36vw}label small{white-space:nowrap}sele
 <h1 style="margin-top:16px">Radar view</h1>
 <div class=row><button id=rdr style="padding:6px 12px">▶ LD2450 live</button><span id=rdst style="color:#93a1ae;font-size:12px">up to 3 moving people, x/y from the rear radar · 6 m fan</span></div>
 <canvas id=rdc width=320 height=180 style="width:320px;max-width:100%;background:#172029;border-radius:8px;display:none"></canvas>
+<h1 style="margin-top:16px">Wi-Fi neural network</h1>
+<div class=row><button id=wfb style="padding:6px 12px">▶ Wi-Fi network live</button><span id=wfst style="color:#93a1ae;font-size:12px">ESP32 #3's 51 subcarriers, read by the network trained on Blender people · needs 10 s · only while HOUND is stopped</span></div>
+<div id=wfv style="display:none"><canvas id=wfc width=306 height=90 style="width:306px;max-width:100%;background:#172029;border-radius:8px"></canvas>
+<div id=wfr style="font-size:20px;font-weight:600;margin:6px 0"></div><div id=wfp style="font:12px ui-monospace,monospace;color:#93a1ae"></div></div>
 <p id=st>connecting…</p>
 <p class=warn id=note></p>
 <p style="font-size:13px;color:#93a1ae">Keys: <kbd>W</kbd><kbd>S</kbd> forward/back · <kbd>A</kbd><kbd>D</kbd> strafe · <kbd>Q</kbd><kbd>E</kbd> rotate · arrows = diagonals · <kbd>space</kbd> stop. Hold to move; release stops. Going faster than the slider allows means moving the caps under the drivers to M2 only (1/16) and picking 16 above.</p>
@@ -572,7 +668,7 @@ function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];docum
  if(s.ptrim!=null&&!ptrimSeen){ptrimSeen=true;ptrim=s.ptrim;document.getElementById('ptv').textContent=ptrim;}
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';
- showRec(s);drawThermal(s.thermal);drawRadar(s.radar);showCam(s.cam);autoStart(s);}
+ showRec(s);drawThermal(s.thermal);drawRadar(s.radar);drawWifi(s.wifi);showCam(s.cam);autoStart(s);}
 // Webcam: the next picture is asked for only when the last one has arrived, so a slow link shows fewer frames, never a backlog.
 const cmb=document.getElementById('cmb'),cmi=document.getElementById('cmi'),cmst=document.getElementById('cmst');let cmOn=false,cmT=-1e9,cmN=0,cmN0=0,cmT0=performance.now();
 function nextCam(){if(!cmOn)return;cmi.src='/api/cam.jpg?k='+encodeURIComponent(K)+'&t='+Date.now();}
@@ -592,13 +688,13 @@ const IRON=[[0,0,0],[40,0,90],[150,0,120],[230,60,20],[255,170,0],[255,245,170],
 function iron(t){const x=Math.max(0,Math.min(1,t))*(IRON.length-1),i=Math.min(IRON.length-2,Math.floor(x)),f=x-i;return IRON[i].map((v,k)=>Math.round(v+(IRON[i+1][k]-v)*f));}
 // Both live views start by themselves: when the page opens, and again after a senses check that had to stop them.
 // A view the person turned off stays off until the page is reloaded; one that reported an error is tried at most 3 times.
-const auto={th:{off:false,tries:0},rd:{off:false,tries:0}};let sensesWas=false;
+const auto={th:{off:false,tries:0},rd:{off:false,tries:0},wf:{off:false,tries:0}};let sensesWas=false;
 function autoStart(s){const busy=!!s.senses_running;
- if(sensesWas&&!busy){auto.th.tries=0;auto.rd.tries=0;}sensesWas=busy;if(busy)return;
- [['th',s.thermal,()=>!thOn,'thermal'],['rd',s.radar,()=>!rdOn,'radar']].forEach(([k,st,idle,ep])=>{
+ if(sensesWas&&!busy){auto.th.tries=0;auto.rd.tries=0;auto.wf.tries=0;}sensesWas=busy;if(busy)return;
+ [['th',s.thermal,()=>!thOn,'thermal'],['rd',s.radar,()=>!rdOn,'radar'],['wf',s.wifi,()=>!wfOn,'wifi']].forEach(([k,st,idle,ep])=>{
   const a=auto[k];if(a.off||!idle()||a.tries>=3||(st&&st.on))return;
-  if(performance.now()-(k==='th'?thT:rdT)<1500)return;a.tries++;
-  if(k==='th'){thOn=true;thT=performance.now();thb.textContent='■ stop thermal';thc.style.display='';}else{rdOn=true;rdT=performance.now();rdr.textContent='■ stop radar';rdc.style.display='';}
+  if(performance.now()-(k==='th'?thT:k==='rd'?rdT:wfT)<1500)return;a.tries++;
+  if(k==='th'){thOn=true;thT=performance.now();thb.textContent='■ stop thermal';thc.style.display='';}else if(k==='rd'){rdOn=true;rdT=performance.now();rdr.textContent='■ stop radar';rdc.style.display='';}else{wfOn=true;wfT=performance.now();wfb.textContent='■ stop Wi-Fi';wfv.style.display='';}
   api(ep+'?on=1');});}
 // The camera sits on its side: rotate the 32x24 image in 90-degree steps (0, 90 cw, 180, 270 cw), remembered in this browser.
 let thRot=1;try{const v=parseInt(localStorage.getItem('thRot'));if(v>=0&&v<=3)thRot=v;}catch(e){}
@@ -629,6 +725,20 @@ function drawRadar(r){const on=!!(r&&r.on);if(performance.now()-rdT>1500){rdOn=o
  [-60,60].forEach(a=>{const r=a*Math.PI/180;g.beginPath();g.moveTo(cx,H-4);g.lineTo(cx+Math.sin(r)*6000*sc,H-4-Math.cos(r)*6000*sc);g.stroke();});
  r.targets.forEach(t=>{g.fillStyle='#7fd18b';g.beginPath();g.arc(cx+t.x_mm*sc,H-4-t.y_mm*sc,6,0,7);g.fill();});}
 rdr.onclick=()=>{auto.rd.off=rdOn;rdOn=!rdOn;rdT=performance.now();rdr.textContent=rdOn?'■ stop radar':'▶ LD2450 live';rdc.style.display=rdOn?'':'none';api('radar?on='+(rdOn?1:0));};
+// Wi-Fi neural network: the 51 subcarriers as bars, then what the network says about them.
+const wfb=document.getElementById('wfb'),wfv=document.getElementById('wfv'),wfc=document.getElementById('wfc'),wfst=document.getElementById('wfst'),wfr=document.getElementById('wfr'),wfp=document.getElementById('wfp');let wfOn=false,wfT=-1e9;
+function drawWifi(w){const on=!!(w&&w.on);if(performance.now()-wfT>1500){wfOn=on;wfb.textContent=on?'■ stop Wi-Fi':'▶ Wi-Fi network live';}
+ wfv.style.display=wfOn?'':'none';if(w&&w.err){wfst.textContent=w.err;wfst.style.color='#ff8a4c';}
+ if(!on)return;wfst.style.color='#93a1ae';
+ const g=wfc.getContext('2d'),W=wfc.width,H=wfc.height;g.clearRect(0,0,W,H);
+ if(w.bars){const mx=Math.max(...w.bars,1);w.bars.forEach((v,i)=>{const h=(H-6)*v/mx;g.fillStyle='#7fb0e0';g.fillRect(i*6+1,H-h,4,h);});}
+ const r=w.read;
+ if(w.paused){wfr.textContent='HOUND is driving';wfr.style.color='#93a1ae';wfp.textContent='the network listens again once HOUND stops (10 s)';}
+ else if(!r||!r.ready){wfr.textContent='listening…';wfr.style.color='#93a1ae';wfp.textContent=(r?r.heard_s:0)+' of 10 s heard';}
+ else{wfr.textContent=r.is_person?'PERSON · '+(r.moving>=0.5?'moving':'still'):'NO ONE';wfr.style.color=r.is_person?'#ffcf5c':'#e6ebf0';
+  wfp.textContent='P(person) '+r.person.toFixed(2)+' · says PERSON above '+r.threshold.toFixed(2)+' · P(moving) '+r.moving.toFixed(2);}
+ wfst.textContent=w.pps+' packets/s · '+w.model+(w.pps<50&&!w.paused?' · under 50/s: ESP32 #3 on the hotspot, ESP32 #2 sending?':'');}
+wfb.onclick=()=>{auto.wf.off=wfOn;wfOn=!wfOn;wfT=performance.now();wfb.textContent=wfOn?'■ stop Wi-Fi':'▶ Wi-Fi network live';wfv.style.display=wfOn?'':'none';api('wifi?on='+(wfOn?1:0));};
 const snsGet=(go)=>fetch('/api/senses?'+(go?'go=1&':'')+'k='+encodeURIComponent(K)).then(r=>r.json()).then(showSns).catch(()=>{});
 sns.onclick=()=>{snsGet(true);if(!snsT)snsT=setInterval(()=>snsGet(false),1000);};
 setInterval(()=>{if(!cur&&!curJ)api('status');},700);api('status');
@@ -714,6 +824,8 @@ class H(BaseHTTPRequestHandler):
                 radar_start() if q.get("on") == "1" else radar_stop(wait=True)   # port closed before a quick re-start
             elif ep == "cam":
                 cam_start() if q.get("on") == "1" else cam_stop(wait=True)
+            elif ep == "wifi":
+                wifi_start() if q.get("on") == "1" else wifi_stop(wait=True)       # port closed before a quick re-start
             elif ep == "senses":
                 if q.get("go") == "1":
                     senses_start()

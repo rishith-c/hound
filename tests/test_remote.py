@@ -399,3 +399,86 @@ def test_page_starts_both_views_by_itself_and_respects_a_manual_stop(web):
 def test_thermal_view_has_a_rotate_button_that_remembers(web):
     for needle in ("id=thr", "function thermalSrc", "localStorage.getItem('thRot')", "localStorage.setItem('thRot'", "let thRot=1"):
         assert needle in web.PAGE, needle
+
+
+class _FakeCsiSocket:
+    """UDP 5005 as the Wi-Fi view sees it: csi_rx_udp packets of a simulated person, then silence."""
+    def __init__(self, packets):
+        self.packets, self.closed = list(packets), False
+
+    def recv(self, n):
+        import socket
+        if not self.packets:
+            time.sleep(0.05)
+            raise socket.timeout()
+        time.sleep(0.002)
+        return self.packets.pop(0)
+
+    def close(self): self.closed = True
+
+
+def _csi_packets(n):
+    np = pytest.importorskip("numpy")
+    sys.path.insert(0, os.path.join(ROOT, "ml"))
+    import csi_window as cw
+    import simulate_csi as S
+    p = json.load(open(os.path.join(ROOT, "ml", "data", "people.json")))["people"][0]
+    _, iq, _ = S.packets(np.random.default_rng(0), p, "moving", n / 100)
+    return [cw.encode_packet(q.astype(np.int8), seq=i) for i, q in enumerate(iq)]
+
+
+def _wait(cond, s=5):
+    t0 = time.monotonic()
+    while not cond() and time.monotonic() - t0 < s:
+        time.sleep(0.05)
+
+
+def test_wifi_view_shows_the_subcarriers_and_lets_the_port_go(web):
+    """The Wi-Fi network view reads CSI packets only while it is on, reports packets/s, the 51 bars and the network's
+    state (still listening: a reading needs 10 s), and closes the port when turned off."""
+    web.ML = os.path.join(ROOT, "ml")
+    sock = _FakeCsiSocket(_csi_packets(300))
+    web.wifi_start(opener=lambda: sock)
+    _wait(lambda: (web.status().get("wifi") or {}).get("bars"))
+    w = web.status()["wifi"]
+    assert w["on"] and len(w["bars"]) == 51 and w["pps"] > 0 and w["model"].startswith("csi_nn")
+    assert w["read"] == {"ready": False, "heard_s": w["read"]["heard_s"]} and not w["paused"]
+    web.wifi_stop(wait=True)
+    assert sock.closed and "wifi" not in web.status()
+
+
+def test_wifi_view_pauses_while_hound_drives(web):
+    web.ML = os.path.join(ROOT, "ml")
+    sock = _FakeCsiSocket(_csi_packets(300))
+    web.wifi_start(opener=lambda: sock)
+    web.drive(100, 0, 0, "v 100 0 0")
+    _wait(lambda: (web.status().get("wifi") or {}).get("paused"))
+    w = web.status()["wifi"]
+    assert w["paused"] and w["read"] is None                                  # the receiver is moving: no reading
+    web.stop()
+    _wait(lambda: not web.status()["wifi"]["paused"])
+    assert web.status()["wifi"]["read"]["ready"] is False                      # starts listening again from zero
+    web.wifi_stop(wait=True)
+
+
+def test_check_senses_turns_the_wifi_view_off_first(web, tmp_path):
+    web.ML = os.path.join(ROOT, "ml")
+    d = tmp_path / "sensing"; d.mkdir()
+    (d / "bringup.py").write_text("print('PASS  csi  100 CSI packets/s')\n")
+    web.SENSING = str(d)
+    sock = _FakeCsiSocket(_csi_packets(50))
+    web.wifi_start(opener=lambda: sock)
+    _wait(lambda: (web.status().get("wifi") or {}).get("model"))
+    web.senses_start()
+    assert sock.closed and not web.wifi["on"]                                 # bringup gets UDP 5005 to itself
+    _wait(lambda: not web.senses["running"])
+
+
+def test_wifi_view_without_numpy_says_why(web, tmp_path, monkeypatch):
+    (tmp_path / "infer.py").write_text("raise ModuleNotFoundError(\"No module named 'numpy'\")\n")
+    monkeypatch.delitem(sys.modules, "infer", raising=False)
+    monkeypatch.syspath_prepend(str(tmp_path))
+    web.ML = str(tmp_path)
+    web.wifi_start(opener=lambda: _FakeCsiSocket([]))
+    _wait(lambda: not web.wifi["on"])
+    assert "numpy" in web.status()["wifi"]["err"] and not web.wifi["on"]
