@@ -123,11 +123,13 @@ for inst, sx, sy in (("FL", 1, 1), ("FR", 1, -1), ("RL", -1, 1), ("RR", -1, -1))
 # Four quadrant tiles, not two: a 390 mm tile fits no common print bed (220–256 mm).
 # Each tile is 170 × 195 with a 15 mm tongue on its centreline edges that laps the
 # neighbour's rebate, joined by M3×8 + nut, so the seams carry no rail.
-for inst, x, y in (("front-left tile", 85.0, 97.5), ("front-right tile", 85.0, -97.5),
-                   ("rear-left tile", -85.0, 97.5), ("rear-right tile", -85.0, -97.5)):
-    add("PETG", inst, "Printed deck tile 170×195×5 with 15 mm tongue/rebate on the centreline edges", x, y, DECK_Z0 + DECK_T / 2, 170, 195, DECK_T,
-        "flat on rail tops", "one side rail + one cross rail", "3× M5×8 + M5 T-nut into the side-rail top slot, 2× into the cross-rail top slot (corner kit); holes counterbored so 3 mm of tile is under the head; 3× M3×8 + nut per tongue seam",
-        "3.0 N·m", M["deck"] / 4, note="Fits a 220 mm bed. Tongues face +X and +Y so the four lap the same way. Print flat, 5 perimeters, 30% infill; notch a rear tile edge for the battery lead.")
+# 175 long, not 170: the cross-rail top slot is at X ±165 and a 9 mm M5 counterbore
+# centred there needs 4.5 mm of tile beyond it. 170 left 0.5 mm and broke out.
+for inst, x, y in (("front-left tile", 87.5, 97.5), ("front-right tile", 87.5, -97.5),
+                   ("rear-left tile", -87.5, 97.5), ("rear-right tile", -87.5, -97.5)):
+    add("PETG", inst, "Printed deck tile 175×195×5, half-thickness lap (15 mm tongue / rebate) on the centreline edges", x, y, DECK_Z0 + DECK_T / 2, 175, 195, DECK_T,
+        "flat on rail tops", "one side rail + one cross rail", "3× M5×8 + M5 T-nut into the side-rail top slot, 2× into the cross-rail top slot (corner kit) at 1.5 N·m — 3 mm of PLA under the head crushes at the 3.0 the corners take; 3× M3×8 + nut per lap seam",
+        "3.0 N·m", M["deck"] / 4, note="Fits a 220 mm bed. Laps are half thickness so the top stays flush; tongues face +X and +Y. Print flat, 5 perimeters, 30% infill. Wire pass-through slots 20×8 mm beside each motor corner and at the rear centre for the pack lead — the tiles cover the whole frame and every under-deck wire has to come up somewhere.")
 
 # ── Battery, slung under the deck ───────────────────────────────────────────
 cradle_z = DECK_Z0 - (LIPO[2] + 2 * CRADLE_T) / 2
@@ -201,7 +203,7 @@ add("MIC", "—", "INMP441 I2S microphone", PX + 6, 0, RADAR_Z, 14, 12, 3, "port
     "radar bar, Y 0", "1× M2 + nut (or VHB)", "hand-tight", 0.002, verify="board hole",
     note="I2S to Pi GPIO 18/19/20. Stop-and-listen: motors and fan off, ENABLE low, then 3 s capture. Voice/knock energy only — one mic gives no bearing.")
 add("CO2", "—", "SCD41 CO2 sensor", PX - POST[0] / 2 - 4, 0, DECK_TOP + 150, 8, 24, 20, "sensing face −X (rear), in free air",
-    "radar post, rear face, 150 mm up", "printed saddle + 2× M2 + nut", "hand-tight", 0.005, verify="breakout hole spacing",
+    "radar post, LEFT face, 150 mm up (the rear face is the open side of the U-channel)", "printed saddle + 2× M2 + nut", "hand-tight", 0.005, verify="breakout hole spacing",
     note="I2C 0x62 on the main bus. Rear face keeps it out of the driver-fan exhaust. Reads a room in minutes, not seconds: park at a closed door and wait.")
 
 # ── VL53L1X obstacle sensors on the four rail outer faces ───────────────────
@@ -250,8 +252,8 @@ L, B = 2 * AXLE_X, 2 * abs(next(p["y"] for p in parts if p["id"] == "WHL"))
 tip_pitch = math.degrees(math.atan((L / 2) / cg[2]))
 tip_roll = math.degrees(math.atan((B / 2) / cg[2]))
 
-fast = {"M5 T-nut": 8 + 12 + 2, "M5×8 (corner kit)": 8 + 12 + 2, "M4 T-nut": 8 + 2, "M4×10 / ×12 (T-nut kit)": 8 + 2,
-        "M3×6 (motor, supplied with brackets)": 16, "M3 ×12/×16 + nut (M3 kit)": 4 + 4 + 2 + 2, "M2 + nut": 4 + 4 + 2 + 2 + 4 + 1 + 2, "cable ties": 2 + 2 + 2 + 2 + 2 + 2 + 20}
+fast = {"M5 T-nut": 8 + 20 + 2, "M5×8 (corner kit)": 8 + 20 + 2, "M4 T-nut": 8 + 2, "M4×10 / ×12 (T-nut kit)": 8 + 2,
+        "M3×6 (motor, supplied with brackets)": 16, "M3 ×8/×12/×16 + nut (M3 kit)": 12 + 4 + 4 + 2 + 2, "M2 + nut": 4 + 4 + 2 + 2 + 4 + 1 + 2, "cable ties": 2 + 2 + 2 + 2 + 2 + 2 + 20}
 kits = {"M5 T-nut": "corner kit 40 + T-nut kit", "M4 T-nut": "T-nut kit 40", "M4×10": "T-nut kit 20", "M3": "750-pc M3 kit", "M2.5": "COMRUN standoff kit"}
 
 # ── Output ──────────────────────────────────────────────────────────────────
@@ -268,7 +270,7 @@ print(f"  track / wheelbase            {B:.0f} / {L:.0f} mm")
 print(f"  CG                           x {cg[0]:+.1f}  y {cg[1]:+.1f}  z {cg[2]:.1f} mm   (placed mass {mass:.2f} kg)")
 print(f"  static tip angles            pitch {tip_pitch:.0f}°   roll {tip_roll:.0f}°   PASS")
 print(f"  fasteners                    " + ", ".join(f"{k} {v}" for k, v in fast.items()))
-print(f"  kit coverage                 M5×8 {fast['M5×8 (corner kit)']} of 40; M5 T-nut {fast['M5 T-nut']} of 40+; M4 T-nut {fast['M4 T-nut']} of 40; M3 {fast['M3 ×12/×16 + nut (M3 kit)']} of 750; M2 {fast['M2 + nut']} of 645; ties {fast['cable ties']} of 100  PASS")
+print(f"  kit coverage                 M5×8 {fast['M5×8 (corner kit)']} of 40; M5 T-nut {fast['M5 T-nut']} of 40+; M4 T-nut {fast['M4 T-nut']} of 40; M3 {fast['M3 ×8/×12/×16 + nut (M3 kit)']} of 750; M2 {fast['M2 + nut']} of 645; ties {fast['cable ties']} of 100  PASS")
 print(f"\nVERIFY ON RECEIPT (caliper, before drilling): " + "; ".join(sorted({p['verify'] for p in parts if p['verify']})))
 print(f"\nNOT CHECKED: fastener pull-out in PETG, deck deflection under the turret, cable strain relief, servo torque with the ELP camera,")
 print(f"  radar detection at Z = {RADAR_Z:.0f} mm (Walleye measured floor-level radar as blind — test before trusting), wheel roller clearance to the bracket foot.\n")
