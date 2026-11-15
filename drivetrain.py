@@ -68,7 +68,7 @@ MASS_ITEMS = [
     ("4x 80 mm mecanum wheel + 5 mm coupling", 4 * 0.150,         "ALLOCATED"),
     ("4x steel NEMA 17 bracket",               4 * 0.113,         "MEASURED"),   # listing: 1.5 lb per 6 = 113 g each
     ("Pan/tilt turret: 2x MG996R-class servo + bracket + PCA9685", 0.250, "ALLOCATED"),  # field-triage-rover hardware
-    ("LM2596 buck (owned): 6.0 V servo rail",  0.020,             "ALLOCATED"),
+    ("XL4015 5 A buck (owned): 6.0 V servo rail", 0.030,           "ALLOCATED"),
     ("USB power bank for Pi, compact 5000 mAh — WEIGH IT", 0.130, "ALLOCATED"),
     ("8x 2020 corner bracket + T-nuts",        8 * 0.012,         "ALLOCATED"),
     ("Uno + CNC Shield + 4 drivers + fan",     0.117,             "ALLOCATED"),

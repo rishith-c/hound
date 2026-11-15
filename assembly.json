@@ -11,9 +11,9 @@
   "track": 440.0,
   "wheelbase": 250.0,
   "cg": [
-   -2.8,
-   2.2,
-   80.5
+   -2.9,
+   2.4,
+   80.6
   ],
   "ground_clearance": 18.85,
   "tip_pitch_deg": 57,
@@ -634,20 +634,20 @@
    "note": "USB-C to the Pi. Must deliver 5 V at 3 A. Centred to keep the CG on the axis."
   },
   {
-   "id": "LM2596",
+   "id": "XL4015",
    "instance": "\u2192 servos 6.0 V",
-   "part": "LM2596 buck (owned)",
+   "part": "XL4015 5 A buck (owned)",
    "x": -44.5,
    "y": 110.5,
-   "z": 113.0,
-   "l": 43.0,
-   "w": 21.0,
-   "h": 14.0,
+   "z": 115.0,
+   "l": 54.0,
+   "w": 23.0,
+   "h": 18.0,
    "orientation": "flat on 10 mm standoffs",
    "mounts_to": "deck top, ahead of the R4",
    "fasteners": "printed bosses + 2 cable ties",
    "torque": "hand-tight",
-   "mass_kg": 0.02,
+   "mass_kg": 0.03,
    "verify": "",
    "note": "Trim to 6.0 V before connecting the PCA9685. Own return to the shield GND."
   },
@@ -888,7 +888,7 @@
   {
    "id": "WIRE22",
    "instance": "power",
-   "part": "22 AWG (owned): pack \u2192 shield VMOT, \u2192 LM2596 IN (6 V servo rail)",
+   "part": "22 AWG (owned): pack \u2192 shield VMOT, \u2192 XL4015 IN (6 V servo rail)",
    "x": -60,
    "y": 40,
    "z": 96.0,

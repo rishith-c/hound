@@ -40,7 +40,7 @@ UNO = (68.6, 53.3, 12.0)
 SHIELD_STACK_H = 45.0       # Uno + shield + DRV8825 with heatsinks           VERIFY
 PI = (85.0, 56.0, 20.0)
 PCA9685 = (62.0, 25.0, 12.0)
-BUCK = (43.0, 21.0, 14.0)   # LM2596 module                                  VERIFY
+BUCK = (54.0, 23.0, 18.0)   # XL4015 module                                  VERIFY
 ESP32 = (63.0, 25.4, 12.0)
 LIPO = (105.0, 33.0, 20.0)  # OVONIC 2200 mAh                                MEASURED (listing)
 CRADLE_T = 3.0
@@ -56,7 +56,7 @@ RADAR_Z = DECK_TOP + POST[2] + 4.0    # 300: antenna faces horizontal, forward
 
 # ── Masses, kg, for CG (same figures as drivetrain.py) ─────────────────────
 M = dict(motor=0.240, rail=0.350 * 0.50, wheel=0.150, bracket=0.113, corner=0.012,
-         uno_stack=0.117, pi=0.070, lipo=0.179, buck=0.020, radar=0.010, esp32=0.015,
+         uno_stack=0.117, pi=0.070, lipo=0.179, buck=0.030, radar=0.010, esp32=0.015,
          cam=0.162, tof=0.005, deck=0.300, cradle=0.060, post=0.100, turret=0.250,
          pca=0.010, fan=0.030, strapwire=0.150)
 
@@ -152,7 +152,7 @@ on_deck("PCA", "—", "PCA9685 servo driver (Ceres)", PCA9685, -29.0, -97.5, "de
 on_deck("BANK", "→ Pi", "USB power bank, compact (owned)", (100.0, 60.0, 15.0), 0.0, 0.0, "deck top, centre, over the LiPo cradle",
         "printed lip on the deck tile + 2 cable ties through printed slots", "hand-tight", 0.130, verify="WEIGH IT: ≤ 130 g, footprint",
         note="USB-C to the Pi. Must deliver 5 V at 3 A. Centred to keep the CG on the axis.")
-on_deck("LM2596", "→ servos 6.0 V", "LM2596 buck (owned)", BUCK, -44.5, 110.5, "deck top, ahead of the R4",
+on_deck("XL4015", "→ servos 6.0 V", "XL4015 5 A buck (owned)", BUCK, -44.5, 110.5, "deck top, ahead of the R4",
         "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 6.0 V before connecting the PCA9685. Own return to the shield GND.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
@@ -207,7 +207,7 @@ for inst, x, y, face, dims in (("front", 175 + 2 + TOF[2] / 2, 0, "+X", (TOF[2],
         verify="module hole spacing", note=f"XSHUT → Pi GPIO {dict(front=5, rear=6)[inst]}. Both share I2C 0x29 until re-addressed at boot.")
 
 # ── Wiring ──────────────────────────────────────────────────────────────────
-add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → LM2596 IN (6 V servo rail)", -60, 40, DECK_TOP, 0, 0, 0,
+add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → XL4015 IN (6 V servo rail)", -60, 40, DECK_TOP, 0, 0, 0,
     "—", "pack connector at the battery (rear)", "cable ties every 60 mm to the deck; tape or heat-shrink every joint", "—", M["strapwire"] / 3,
     note="~250 mm each run; 22 AWG is rated 7 A against a 4 A burst. Single common ground at the shield GND terminal. No fuse — by your call; the connector is the disconnect, so keep the pack leads short, sleeved and never resting on a rail edge.")
 add("WIRE22", "signals", "22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 2× ToF + PCA9685 + SCD41; UART radar → ESP32", -80, 0, DECK_TOP, 0, 0, 0,
