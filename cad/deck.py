@@ -10,7 +10,7 @@ Outputs (cad/out/):
 Geometry comes from assembly.py: rails 20 mm, side-rail top slot at Y = ±185, cross-rail top slot at X = ±165,
 deck on the rail tops (Z 91..96). Frame axes: +X forward, +Y left; the deck's own Z is up.
 
-Run:  ~/Developer/vyper5/.venv/bin/python cad/deck.py
+Run:  ~/.venvs/cad/bin/python cad/deck.py
 """
 from pathlib import Path
 from build123d import *   # noqa: F401,F403
