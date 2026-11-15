@@ -89,6 +89,7 @@ FspTimer stepTimer;
 const uint8_t PCA = 0x40; const uint8_t TILT_CH = 0, PAN_CH = 2;   // Ceres: tilt ch 0, pan ch 2
 bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; uint8_t showStep = 0;   // Ceres turret_duet "kinematic show"
 // The turret's zero is wherever it was hand-set: no pose is forced at boot, and a show comes back to where it began.
+const int PAN_SIGN = -1;          // this pan servo turns right for pulses below 1500 (user, 2026-09-24): dir +1 = right everywhere
 int panTrim = 0;                  // µs added to the pan's stop pulse (1500): trims out a left/right imbalance so timed turns net to zero
 float panPos = 0, showPanStart = 0;   // net pan travel since boot in eased-nudge ms (+ = right); 0 = the hand-set start
 int showTiltStart = -1;           // tilt before the show (-1 = limp), put back when it stops
@@ -140,7 +141,7 @@ void nudgePan(int dir, int ms) {              // Ceres-style nudge, eased (kinem
 void panTick() {                              // called every 20 ms while a nudge runs
   if (!panStopAt) return;
   float f = (millis() - panT0) / (float)panMs; if (f > 1) f = 1;
-  pcaPulse(PAN_CH, 1500 + panTrim + panDir * (int)(250.0f * sinf(PI * f)));
+  pcaPulse(PAN_CH, 1500 + panTrim + PAN_SIGN * panDir * (int)(250.0f * sinf(PI * f)));
 }
 void setPan(int) { panStop(); }               // any 'p' just stops the pan — angles mean nothing to a continuous servo
 
