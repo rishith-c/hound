@@ -48,7 +48,7 @@
    "Shield: MS3 cap under each of the four sockets with the drivers OUT. Drivers in, EN to EN. Jumpers on D12 and D13 of the A header. EN/GND open. Trim each Vref to 0.75 V (1.5 A at 0.100 Ω — read your sense resistor first).",
    "Deck tiles on with M5×8 into the top-slot T-nuts. Cradle under the centre, battery in, bar on, ties through. Boards onto their bosses, ties through the slots. Power bank centred on top.",
    "Turret base on the front tile, M3×16. Camera into the Ceres clamp, thermal saddle on top. Radar post through the rear tile into the rail, bar on, LD2410C at Y +50, LD2450 at Y −50, mic between, SCD41 on the rear face.",
-   "XL4015: trim to 6.0 V with a multimeter, unloaded, then wire to PCA9685 V+. Nothing else touches this rail.",
+   "XL4015: trim to 6.0 V with a multimeter, unloaded, then wire to PCA9685 V+. Nothing else touches this rail. Charge the pack on a concrete or tile surface, never on carpet or a bench full of parts — there is no fire bag.",
    "Wiring, in this order: motor leads to the four sockets (X = FL, Y = FR, Z = RL, A = RR); pack XT60 pigtail to shield VMOT and XL4015 IN; fan to the shield 5 V header; Pi to R4 by USB, Pi to ESP32 by USB, Pi to webcam by USB; I2C from the Pi to PCA9685, both ToF (with XSHUT lines), SCD41; the thermal array on the second I2C bus; radars to the ESP32 UARTs; mic on I2S. Tie everything down.",
    "Wheels-up test before the floor: each wheel forward and back in turn, then all four. A wheel that hums but does not turn is a stalled driver — check Vref and the MS3 cap. Then the floor: forward, reverse, strafe, spin, stop. Then ten minutes at cruise with a finger on each heatsink.",
    "The torque test: wheels up, lever on one shaft, hanging scale on the lever, drive at 24 rpm and load it until it skips. T = F × arm. Compare with 0.254 N·m. This retires the biggest assumption in the design.",
@@ -262,15 +262,6 @@
    "qty": 1,
    "price": 7.99,
    "note": "Charger lead: only if your balance charger has banana-plug outputs and no XT60 lead. Cut one end, fit the bananas."
-  },
-  {
-   "id": "BAG",
-   "status": "buy",
-   "group": "Power",
-   "asin": "B08QCMMGJT",
-   "item": "Tenergy LiPo charging bag",
-   "qty": 1,
-   "price": 8.99
   },
   {
    "id": "PI",
