@@ -12,11 +12,16 @@ CFG="$BOOT/config.txt"; CMD="$BOOT/cmdline.txt"
 STAMP=$(date +%Y%m%d-%H%M%S)
 sudo cp "$CFG" "$CFG.bak-$STAMP"; sudo cp "$CMD" "$CMD.bak-$STAMP"
 
+# lines appended after a [pi5] / [cm4] … section would apply to that board only: re-open [all] first if needed
+if ! grep -q '^enable_uart=1' "$CFG" || ! grep -q '^dtoverlay=disable-bt' "$CFG"; then
+  [ "$(grep -E '^\[' "$CFG" | tail -1)" = "[all]" ] || echo '[all]' | sudo tee -a "$CFG" >/dev/null
+fi
 grep -q '^enable_uart=1' "$CFG" || echo 'enable_uart=1' | sudo tee -a "$CFG" >/dev/null
 grep -q '^dtoverlay=disable-bt' "$CFG" || echo 'dtoverlay=disable-bt' | sudo tee -a "$CFG" >/dev/null
 # no login console on the radar's UART (cmdline.txt is one line)
 sudo sed -i -E 's/(^| )console=(serial0|ttyAMA0|ttyS0),[0-9]+( |$)/\1/g; s/ +$//' "$CMD"
 sudo systemctl disable hciuart >/dev/null 2>&1 || true
+sudo systemctl disable serial-getty@ttyAMA0.service serial-getty@serial0.service >/dev/null 2>&1 || true   # a getty enabled by hand
 id -nG | tr ' ' '\n' | grep -qx dialout || sudo usermod -aG dialout "$(whoami)"
 
 # point station.py at it (other entries — the two CP2102s — are kept)
