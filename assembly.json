@@ -906,7 +906,7 @@
   {
    "id": "WIRE22",
    "instance": "signals",
-   "part": "22 AWG / Dupont: 4\u00d7 motor 4-wire \u2192 shield sockets; I2C to 4\u00d7 ToF + PCA9685; UART radar \u2192 ESP32",
+   "part": "22 AWG / Dupont: 4\u00d7 motor 4-wire \u2192 shield sockets; I2C to 2\u00d7 ToF + PCA9685 + SCD41; UART radar \u2192 ESP32",
    "x": -80,
    "y": 0,
    "z": 96.0,
