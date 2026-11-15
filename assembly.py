@@ -57,7 +57,7 @@ RADAR_Z = DECK_TOP + POST[2] + 4.0    # 300: antenna faces horizontal, forward
 # ── Masses, kg, for CG (same figures as drivetrain.py) ─────────────────────
 M = dict(motor=0.240, rail=0.350 * 0.50, wheel=0.150, bracket=0.113, corner=0.012,
          uno_stack=0.117, pi=0.070, lipo=0.190, buck=0.030, radar=0.010, esp32=0.015,
-         cam=0.162, tof=0.005, deck=0.335, cradle=0.060, post=0.100, turret=0.250,
+         cam=0.162, tof=0.005, deck=0.340, cradle=0.060, post=0.100, turret=0.250,
          pca=0.010, fan=0.030, strapwire=0.150)
 
 parts = []
@@ -110,7 +110,9 @@ for inst, sx, sy in (("FL", 1, 1), ("FR", 1, -1), ("RL", -1, 1), ("RR", -1, -1))
         x, motor_c_y, AXLE_Z, NEMA, NEMA_LEN, NEMA, f"shaft along Y pointing {'+Y' if sy > 0 else '−Y'} (outboard)",
         f"bracket {inst} leg, inboard side", "4× M3×6 socket head through leg into flange", "0.8 N·m (aluminium threads)",
         M["motor"], note=f"Flange face at Y = {motor_face_y:+.1f}; body bottom at Z = {AXLE_Z - NEMA/2:.1f} (ground clearance). Leads exit inboard.")
-    wheel_c_y = outer + sy * (BRK_T + 3.0 + COUPLER_LEN / 2 + WHEEL_W / 2 - 4.0)
+    # Wheel inner face 5 mm outboard of the bracket leg: as close to the motor bearing as
+    # the coupler allows. Every extra millimetre of overhang multiplies the bearing load.
+    wheel_c_y = outer + sy * (5.0 + WHEEL_W / 2)
     add("WHL", f"{inst} ({HAND[inst]})", f"80 mm mecanum wheel, {HAND[inst]}", x, wheel_c_y, AXLE_Z,
         WHEEL_D, WHEEL_W, WHEEL_D, "axis Y; rollers on the TOP of the wheel point toward chassis centre (X seen from above)",
         f"5 mm coupler on motor {inst} shaft", "coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware",
@@ -118,10 +120,14 @@ for inst, sx, sy in (("FL", 1, 1), ("FR", 1, -1), ("RL", -1, 1), ("RR", -1, -1))
         note=f"Inner face Y = {wheel_c_y - sy*WHEEL_W/2:+.1f}. Track = {2*abs(wheel_c_y):.0f} mm.")
 
 # ── Deck ────────────────────────────────────────────────────────────────────
-for inst, x in (("front tile", 85.0), ("rear tile", -85.0)):
-    add("PETG", inst, "PETG deck tile 170×390×5 (full frame width)", x, 0, DECK_Z0 + DECK_T / 2, 170, 390, DECK_T,
-        "flat on rail tops", "all four rails", "6× M5×8 hex (corner kit) + 6× M5 T-nut in the top slots, 3 per side-rail edge; holes counterbored so 3 mm of tile is under the head",
-        "3.0 N·m", M["deck"] / 2, note="Tiles meet at X = 0. 390 wide, not 350: a 350 mm tile only reaches the side rails' INNER faces and cannot be bolted to their top slots at Y ±185. Print flat, 5 perimeters, 30% infill; notch the rear tile edge for the battery lead.")
+# Four quadrant tiles, not two: a 390 mm tile fits no common print bed (220–256 mm).
+# Each tile is 170 × 195 with a 15 mm tongue on its centreline edges that laps the
+# neighbour's rebate, joined by M3×8 + nut, so the seams carry no rail.
+for inst, x, y in (("front-left tile", 85.0, 97.5), ("front-right tile", 85.0, -97.5),
+                   ("rear-left tile", -85.0, 97.5), ("rear-right tile", -85.0, -97.5)):
+    add("PETG", inst, "Printed deck tile 170×195×5 with 15 mm tongue/rebate on the centreline edges", x, y, DECK_Z0 + DECK_T / 2, 170, 195, DECK_T,
+        "flat on rail tops", "one side rail + one cross rail", "3× M5×8 + M5 T-nut into the side-rail top slot, 2× into the cross-rail top slot (corner kit); holes counterbored so 3 mm of tile is under the head; 3× M3×8 + nut per tongue seam",
+        "3.0 N·m", M["deck"] / 4, note="Fits a 220 mm bed. Tongues face +X and +Y so the four lap the same way. Print flat, 5 perimeters, 30% infill; notch a rear tile edge for the battery lead.")
 
 # ── Battery, slung under the deck ───────────────────────────────────────────
 cradle_z = DECK_Z0 - (LIPO[2] + 2 * CRADLE_T) / 2
@@ -164,7 +170,7 @@ on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "d
 # ── Turret (Ceres pan/tilt) at the front centre ─────────────────────────────
 TX = 110.0
 add("PT", "base", "Ceres pan/tilt turret base plate 100×60×6", TX, 0, DECK_TOP + TURRET_BASE[2] / 2, *TURRET_BASE,
-    "flat on deck, pan axis vertical, servo collar toward +X", "front deck tile",
+    "flat on deck; PAN STAGE LOCKED — the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3", "front-left/right tiles across the seam",
     "4× M3×16 through base (6 mm) + deck (5 mm) + 4× M3 nut (M3 kit)", "1.0 N·m", M["turret"],
     verify="hole positions on the actual Ceres base", note="Spans X +60..+160, Y −30..+30. Pan servo cable and tilt servo cable to PCA9685 ch 2 / ch 0.")
 CAM_Z = DECK_TOP + TURRET_BASE[2] + TURRET_H
@@ -178,11 +184,11 @@ add("THERM", "above the camera", "MLX90640-D55 thermal array, 55° FoV", TX + 4,
 # ── Radar post, rear centre, looking forward over the turret ────────────────
 PX = -CROSS_X
 add("PETG", "radar post", "PETG post 40×40×200 with 60×60×6 flange", PX, 0, DECK_TOP + POST[2] / 2, *POST,
-    "vertical, on the rear cross rail through the deck", "rear tile → rear cross rail top slot",
+    "vertical, on the rear cross rail through the deck; PRINT IT FLAT as a 3-wall U-channel, open side rearward as the cable run — a 200 mm upright needs 200 mm of Z that small printers lack", "rear tile → rear cross rail top slot",
     "2× M4×12 (T-nut kit) through flange + deck into 2× M4 T-nuts in the rear rail top slot, at Y ±20; flange and tile counterbored to 3 mm each", "2.0 N·m", M["post"],
     note="Hollow 3 mm walls, print upright. Cable channel down the +X face for the two radar leads.")
 add("PETG", "radar bar", "PETG radar bar 120×20×8 on the post top", PX, 0, DECK_TOP + POST[2] + 4, 120, 20, 8,
-    "horizontal, antenna faces toward +X", "radar post top", "2× M3×10 + heat-set inserts", "hand-tight", 0.02)
+    "horizontal, antenna faces toward +X", "radar post top", "2× M3×10 + M3 nut through the post wall (no heat-set inserts on the list)", "hand-tight", 0.02)
 add("LD2410C", "#1 (primary)", "HLK-LD2410C radar", PX + 6, 50, RADAR_Z, *LD2410C, "antenna face +X, horizontal",
     "radar bar, Y +50", "2× M2 or a printed clip; nothing metal within 10 mm of the antenna face", "hand-tight", M["radar"],
     verify="PCB 35×7", note=f"Boresight Z = {RADAR_Z:.0f}, passes over the camera (top ≈ {DECK_TOP + TURRET_BASE[2] + TURRET_H + 10:.0f}). Walleye found floor-level radar sees nothing — this height is a compromise to TEST.")
