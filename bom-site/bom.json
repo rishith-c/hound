@@ -24,7 +24,7 @@
    "Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail."
   ],
   "power_after": [
-   "Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion — plus up to ~0.8 A average for the servos. The 2200 mAh Gens ace gives roughly 35–40 minutes of driving; the cell alarm on its balance lead calls time before the pack is damaged. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.",
+   "Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion — plus up to ~0.8 A average for the servos. The 2200 mAh Gens ace gives roughly 35–40 minutes of driving; check the pack with the multimeter before and after every run and stop at 11.1 V — there is no alarm on the balance lead. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.",
    "The owned three-pin switch is not in the load path until its DC rating is read off the body and is at least 10 A.",
    "One star ground at the shield GND terminal. The Pi sits on its own bank and reaches that ground two ways — through the R4's USB cable and through the PCA9685's logic GND pin — so keep the PCA9685 power return heavy and short, or servo current will find the USB cable and corrupt the serial link. That exact fault took down the Ceres rover once."
   ],
@@ -67,6 +67,19 @@
    "When the 5 V buck left the list, the fan and the radars lost their 5 V source. Both now run on USB pass-through from the Pi, with the Pi's 1.2 A USB budget written out above.",
    "Motor lead length has never been documented. The far-corner motor needs about 400 mm to reach the shield; plan to extend with your 22 AWG and crimp Dupont housings.",
    "The design mass crept from 4.84 to 5.41 kg through three honest corrections — brackets at 113 g not 60, a 162 g webcam, the power bank — and failed the ramp at 1.5 A before the 2200 mAh pack brought it back to 5.11 kg. Every gram from here spends margin."
+  ],
+  "mesh": [
+   "Motor shaft 5 mm with flat → wheel-kit 5 mm coupler (grub screw on the flat) → 80 mm mecanum hub. Same nominal bore on both sides; verify the coupler's set screw lands on the flat.",
+   "Motor 31 mm × 31 mm M3 pattern, 22 mm pilot → Anndason bracket (31 mm pattern, 3 mm steel, M3 screws in the box). Bracket 4.3 mm foot slots → M4×10 + M4 T-nut (T-nut kit) → 2020 rail 6 mm slot. M5 does not fit the bracket; M4 does.",
+   "2020 rail ↔ 2020 rail → TOCLUX 17×20 corner brackets, M5×8 + M5 T-nut (corner kit). Rail ↔ printed deck → M5×8 + M5 T-nut into the top slot, counterbored tiles. Rail ↔ printed radar post → M4×12 + M4 T-nut, counterbored flange.",
+   "Deck → boards: printed 10 mm bosses; Uno R4 and ESP32 held by cable ties through slots; Pi (2.7 mm holes) and PCA9685 by M2 + nut. Deck → battery cradle: M3×12 + nut. Deck → Ceres turret base: M3×16 + nut through the base's existing M3 clearance holes.",
+   "Gens ace XT60 → Padarsey XT60 pigtail → two 22 AWG branches → CNC Shield VMOT screw terminal (8–45 V, DRV8825 range) and XL4015 IN (4–38 V). 12.6 V charged pack sits inside both windows.",
+   "XL4015 OUT 6.0 V → PCA9685 V+ terminal → MG996R servos (4.8–7.2 V). PCA9685 VCC ← Pi 3.3 V; I2C 0x40 ← Pi GPIO 2/3 at 3.3 V. Nothing on this rail sees pack voltage.",
+   "Power bank 5 V/3 A → Pi USB-C. Pi USB-A → UNO R4 USB-C (5 V logic, CNC Shield V3 is a 5 V shield: pinout matches). Pi USB-A → ESP32-S3 USB-C. Pi USB-A → webcam. Four Pi USB ports, four loads, ~950 mA of a 1.2 A budget.",
+   "CNC Shield 5 V header → 40 mm 5 V fan (150 mA). ESP32-S3 5 V pin → LD2410C and LD2450 VCC (5 V, ~200 mA peak); their UART is 3.3 V, matching the ESP32-S3 GPIO. Radar TX → ESP32 RX and vice versa, 256000 baud.",
+   "Pi I2C-1 (3.3 V): PCA9685 0x40, VL53L1X ×2 at 0x29 re-addressed via XSHUT on GPIO 5/6, SCD41 0x62 — no address clashes. Pi I2C-3 (i2c-gpio overlay): MLX90640 0x33 alone at 1 MHz. VL53L1X and MLX90640 modules run on 3.3 V from the Pi header.",
+   "Pi I2S GPIO 18/19/20 → INMP441 (3.3 V). Pi ↔ R4 serial over the same USB cable that powers it.",
+   "Firmware boundary: R4 runs the four-axis step generator (timer ISR, D2–D7 + D12/D13, enable D8) and takes velocity commands over serial; the Pi runs everything else. Nothing on the shield is driven by GRBL."
   ]
  },
  "items": [
@@ -197,6 +210,14 @@
    "note": "Spare. Outranked by the XL4015 for the servo rail (2–3 A vs 5 A). One trimmed to 5.10 V is the fallback Pi supply if the power bank ever drops out."
   },
   {
+   "id": "DMM",
+   "status": "owned",
+   "group": "Fasteners and assembly",
+   "item": "Multimeter (owned)",
+   "qty": 1,
+   "note": "Sets the XL4015 to 6.0 V before anything is connected, and checks the pack: 12.6 V full, stop driving at 11.1 V (3.7 V/cell), never below 9.9 V. Check before and after every run — there is no alarm on the balance lead."
+  },
+  {
    "id": "SW",
    "status": "owned",
    "group": "Power",
@@ -216,13 +237,11 @@
   },
   {
    "id": "CHG",
-   "status": "buy",
+   "status": "owned",
    "group": "Power",
-   "asin": "B0CV64ZB2L",
-   "item": "SKYRC B6AC Neo balance charger, 60 W AC",
+   "item": "Balance charger (owned)",
    "qty": 1,
-   "price": 53.0,
-   "note": "Start at 2.6 A = 0.5 C. Follow the pack's instructions."
+   "note": "Yours. Charge the Gens ace at 2.6 A = 0.5 C on the LiPo program with the balance lead plugged in. If its output is banana plugs, you need an XT60 charge lead — that is the optional extension below."
   },
   {
    "id": "XT60PIG",
@@ -236,23 +255,13 @@
   },
   {
    "id": "XT60EXT",
-   "status": "buy",
-   "group": "Power",
+   "status": "optional",
+   "group": "Only if you lack it",
    "asin": "B09CT5VGPW",
    "item": "LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions",
    "qty": 1,
    "price": 7.99,
-   "note": "Charger lead: cut one end and fit the charger's banana plugs, or use it straight if the charger has an XT60 output lead."
-  },
-  {
-   "id": "ALARM",
-   "status": "buy",
-   "group": "Power",
-   "asin": "B07VR4SV8C",
-   "item": "AOICRIE 2× 1S–8S cell voltage alarms",
-   "qty": 1,
-   "price": 6.59,
-   "note": "On the balance lead, velcroed to the cradle side."
+   "note": "Charger lead: only if your balance charger has banana-plug outputs and no XT60 lead. Cut one end, fit the bananas."
   },
   {
    "id": "BAG",
@@ -386,16 +395,6 @@
    "note": "Everything, including the power branches: the wire calc puts 22 AWG at a 7 A limit against a 4 A burst — 18 AWG was comfort, not need. I2C, UART, XSHUT, motor lead extensions."
   },
   {
-   "id": "CORD",
-   "status": "optional",
-   "group": "Only if you lack it",
-   "asin": "B08N42RQF6",
-   "item": "Bicmice US IEC C7 mains cord 6 ft",
-   "qty": 1,
-   "price": 6.99,
-   "note": "The charger's manual lists an AC cord in the box; buy only if it arrives without one."
-  },
-  {
    "id": "PETG",
    "status": "optional",
    "group": "Only if you lack it",
@@ -464,16 +463,6 @@
    "qty": 1,
    "price": 21.98,
    "note": "Needed for every VERIFY dimension before drilling the deck. Skip only if you own one."
-  },
-  {
-   "id": "DMM",
-   "status": "optional",
-   "group": "Tools",
-   "asin": "B0DYJ465TC",
-   "item": "Westinghouse MM600V15 multimeter",
-   "qty": 1,
-   "price": 34.89,
-   "note": "Vref and buck voltages."
   },
   {
    "id": "IRON",
