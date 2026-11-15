@@ -238,7 +238,7 @@
    "item": "CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks",
    "qty": 1,
    "price": 15.99,
-   "note": "Required, not optional: A4988 fails the ramp case. SIX JUMPERS: D12 and D13 on the A-axis header (gives the fourth wheel its own STEP/DIR — bridging X/Y/Z there clones another wheel instead); MS3 only under each of the four drivers for 1/16 microstepping on DRV8825 (an A4988 needs all three — most tutorials show that, and it is wrong for these). Leave EN/GND OFF so D8 controls enable. Insert each driver with its EN pin on the shield's EN mark — backwards destroys it; the trimpot sits on the opposite side from an A4988. Vref = 5 × Rsense × I — READ THE SENSE RESISTOR CODE on each carrier first: R100 → 0.75 V for 1.5 A; R200/R220 → 1.5/1.65 V. Setting 0.75 V on an R220 board gives 0.68 A and a rover that stalls. Check the kit includes jumper caps. LISTING CHECK: CNC Shield V3.0 + 4× DRV8825 + 4 heatsinks confirmed; 1/32-capable drivers with current limit and thermal protection. No jumper caps in the box — yours."
+   "note": "Required, not optional: A4988 fails the ramp case. TEN JUMPERS (D12 + D13 on the A header, caps on MS1 + MS3 under each driver = 1/32): D12 and D13 on the A-axis header (gives the fourth wheel its own STEP/DIR — bridging X/Y/Z there clones another wheel instead); MS3 only under each of the four drivers for 1/16 microstepping on DRV8825 (an A4988 needs all three — most tutorials show that, and it is wrong for these). Leave EN/GND OFF so D8 controls enable. Insert each driver with its EN pin on the shield's EN mark — backwards destroys it; the trimpot sits on the opposite side from an A4988. Vref = 5 × Rsense × I — READ THE SENSE RESISTOR CODE on each carrier first: R100 → 0.75 V for 1.5 A; R200/R220 → 1.5/1.65 V. Setting 0.75 V on an R220 board gives 0.68 A and a rover that stalls. Check the kit includes jumper caps. LISTING CHECK: CNC Shield V3.0 + 4× DRV8825 + 4 heatsinks confirmed; 1/32-capable drivers with current limit and thermal protection. No jumper caps in the box — yours."
   },
   {
    "id": "FAN",
@@ -248,7 +248,7 @@
    "item": "SIXQJZML 2× 40 × 40 × 10 mm 5 V fans",
    "qty": 1,
    "price": 5.99,
-   "note": "Listing confirms 5 V, 0.15 A, 2-pin. One over the drivers on a printed bridge, one spare. Powered from the LM2596 5 V rail through the Wagos — NOT the shield's 5 V header, which is the R4's USB 5 V."
+   "note": "Listing confirms 5 V, 0.15 A, 2-pin. One over the drivers on a printed bridge, one spare. Powered from the XL4015 5.0 V output pads beside the servo leads."
   },
   {
    "id": "TB6600",
@@ -280,7 +280,7 @@
    "group": "Power",
    "item": "HiLetgo XL4015 5 A adjustable buck converters, 3 pcs (4–38 V in, 1.25–36 V out)",
    "qty": 3,
-   "note": "One set to 6.0 V feeds the PCA9685 V+ for the tilt servo (one MG996R stalling ≈ 2.5 A; the locked pan servo is disconnected). 5 A rating is the listing's, not a verified continuous figure at 6 V — heatsink it. TRIM WITH A MULTIMETER BEFORE CONNECTING. Two spare."
+   "note": "One, trimmed to 5.0 V: tilt servo red/brown and fan leads soldered to its OUT pads; IN from the shield's VMOT/GND screws (second wire in each). 5 A rating derated to 4 A; servo stall 2.1 A + fan 0.2 A."
   },
   {
    "id": "LM2596",
@@ -288,7 +288,7 @@
    "group": "Power",
    "item": "DROK LM2596 adjustable buck converters, pack of 5 (3.2–35 V in, 1.25–34 V out)",
    "qty": 5,
-   "note": "One trimmed to 5.0 V feeds the fan and both radars, keeping them off the Pi's USB budget. Trim with a multimeter before connecting — ships at a random output. Four spare; one at 5.10 V is the fallback Pi supply."
+   "note": "Spare since v4: one XL4015 at 5.0 V now feeds the servo and the fan; radars are powered by their CP2102 adapters; the ESP32 has its own small bank."
   },
   {
    "id": "DMM",
@@ -380,7 +380,7 @@
    "group": "Sensing and compute",
    "item": "CP2102 USB-UART",
    "qty": 1,
-   "note": "Bench setup only. Check it is 3.3 V logic before touching a radar."
+   "note": "THREE needed (one per radar): 3.3 V logic. Each radar is a four-wire job to its adapter: 5V, GND, TXD → radar RX, RXD → radar TX. Adapters into a 4-port hub with the R4."
   },
   {
    "id": "THERM",
@@ -416,7 +416,7 @@
    "group": "Turret (Ceres)",
    "item": "PCA9685 16-channel servo driver (Ceres)",
    "qty": 1,
-   "note": "I2C 0x40 from the Pi. Tilt ch 0, pan ch 2, as in turret_duet.ino."
+   "note": "NOT USED since v4 (2026-09-20): the tilt servo is driven straight from the CNC shield's Z+ end-stop pin (R4 D11, hardware PWM, firmware 't <deg>'). Keep it as a spare."
   },
   {
    "id": "M3KIT",
@@ -460,7 +460,7 @@
    "id": "LOCTITE",
    "item": "Blue threadlocker (Loctite 242/243 or equivalent)",
    "price": 6.0,
-   "note": "Four coupler grub screws carry the whole drivetrain. Parts box first. Plus two resistors from any parts drawer: one 10 kΩ (EN pull-up on the shield) and two 4.7 kΩ (I2C pull-ups for BCM 4/5 if the thermal module has none).",
+   "note": "Four coupler grub screws carry the whole drivetrain. Parts box first.",
    "status": "optional",
    "group": "Build-day consumables — check your parts box first",
    "qty": 1,
@@ -470,7 +470,7 @@
    "id": "WAGO",
    "item": "Wago 221-415 5-way lever nuts, pack of 10 (or solder + heat-shrink)",
    "price": 12.0,
-   "note": "Four used: two for the pack (+ and −: pigtail plus three branches is four conductors each), two for the LM2596 output (+ and −: buck plus fan and two radars). A 3-way cannot do either job.",
+   "note": "NOT NEEDED since v4: the shield's power screw terminal is the only pack splice (pack lead + XL4015 input share each screw).",
    "status": "optional",
    "group": "Build-day consumables — check your parts box first",
    "qty": 1,
