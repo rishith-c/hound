@@ -173,3 +173,52 @@ def test_station_finds_r4_in_the_pi_layout(tmp_path):
     r = subprocess.run([sys.executable, str(tmp_path / "run.py"), str(tmp_path / "rover" / "sensing" / "station.py")],
                        cwd=tmp_path, capture_output=True, text=True)
     assert r.stdout.strip() == "found", r.stderr[-800:]
+
+
+def _wait_senses(web, limit=10.0):
+    t0 = time.monotonic()
+    while web.senses["running"] and time.monotonic() - t0 < limit:
+        time.sleep(0.02)
+    return list(web.senses["lines"])
+
+
+def test_senses_check_streams_bringup_lines_and_can_run_again(web, tmp_path):
+    """The remote's 'check senses' runs sensing/bringup.py as its own process and shows its lines; a second press works."""
+    d = tmp_path / "sensing"; d.mkdir()
+    (d / "bringup.py").write_text("import sys\nprint('PASS  radars  left 10.0 frames/s')\nprint('FAIL  thermal x\\n      → re-seat it')\n"
+                                  "print('args', sys.argv[1:])\n")
+    web.SENSING = str(d)
+    web.senses_start(); web.senses_start()                         # a double tap starts one run
+    lines = _wait_senses(web)
+    assert lines == ["PASS  radars  left 10.0 frames/s", "FAIL  thermal x", "      → re-seat it", "args ['--seconds', '3']"]
+    web.senses_start(); assert _wait_senses(web) == lines            # again, fresh lines
+    assert web.status()["mode"] == "idle" and not any(c.startswith("v") for _, c in web.r4.sent)   # motors untouched
+
+
+def test_senses_check_that_hangs_is_stopped(web, tmp_path):
+    d = tmp_path / "sensing"; d.mkdir()
+    (d / "bringup.py").write_text("import time\nprint('PASS  i2c  ok', flush=True)\ntime.sleep(60)\n")
+    web.SENSING, web.SENSES_TIMEOUT = str(d), 0.5
+    web.senses_start()
+    lines = _wait_senses(web)
+    assert lines[0] == "PASS  i2c  ok" and "stopped after" in lines[-1] and not web.senses["running"]
+
+
+def test_senses_api_needs_the_key_and_returns_lines(web, tmp_path):
+    import http.server
+    d = tmp_path / "sensing"; d.mkdir(); (d / "bringup.py").write_text("print('WARN  csi  12 CSI packets/s')\n")
+    web.SENSING = str(d)
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), web.H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}/api/senses"
+    try:
+        with pytest.raises(urllib.error.HTTPError):
+            urllib.request.urlopen(base + "?go=1&k=wrong")
+        assert not web.senses["running"] and web.senses["lines"] == []    # the wrong key started nothing
+        j = json.loads(urllib.request.urlopen(base + f"?go=1&k={web.KEY}").read())
+        assert j["senses"]["running"] is True and "mode" in j
+        _wait_senses(web)
+        j = json.loads(urllib.request.urlopen(base + f"?k={web.KEY}").read())
+        assert j["senses"] == {"running": False, "lines": ["WARN  csi  12 CSI packets/s"]}
+    finally:
+        srv.shutdown()

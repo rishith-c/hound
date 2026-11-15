@@ -13,6 +13,8 @@ import json
 import math
 import os
 import secrets
+import subprocess
+import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -171,6 +173,40 @@ def play_stop():
     r4.pan_stop()
 
 
+# ── senses check: sensing/bringup.py in its own process (GPIO, I2C and the camera are let go when it exits, and a
+#    crash there cannot take the remote down). The motors are not touched. ────────────────────────────────────────────
+SENSING = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sensing")     # deploy.sh puts sensing/ here
+SENSES_TIMEOUT = 120
+senses = {"running": False, "lines": []}
+
+
+def senses_thread():
+    try:
+        p = subprocess.Popen([sys.executable, "-u", os.path.join(SENSING, "bringup.py"), "--seconds", "3"], cwd=SENSING,
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        killer = threading.Timer(SENSES_TIMEOUT, p.kill); killer.start()
+        for line in p.stdout:
+            with lock:
+                senses["lines"].append(line.rstrip())
+        p.wait(); killer.cancel()
+        if p.returncode < 0:
+            with lock:
+                senses["lines"].append(f"FAIL  senses  stopped after {SENSES_TIMEOUT} s")
+    except Exception as e:
+        with lock:
+            senses["lines"].append(f"FAIL  senses  {e.__class__.__name__}: {e}")
+    with lock:
+        senses["running"] = False
+
+
+def senses_start():
+    with lock:
+        if senses["running"]:
+            return
+        senses.update(running=True, lines=[])
+    threading.Thread(target=senses_thread, daemon=True).start()
+
+
 def status():
     s = dict(r4.status)
     with lock:
@@ -227,6 +263,9 @@ input[type=range]{width:200px;max-width:36vw}label small{white-space:nowrap}sele
 <h1 style="margin-top:16px">Motor test</h1>
 <div class=row><label>test speed <input id=js type=number value=120 min=20 max=530 step=10> mm/s</label><button id=tall>▶ run all four (fwd 1.5 s each)</button><span id=tst></span></div>
 <div class=mt id=motors></div>
+<h1 style="margin-top:16px">Senses</h1>
+<div class=row><button id=sns style="padding:6px 12px">▶ check senses</button><span style="color:#93a1ae;font-size:12px">radars, Wi-Fi CSI, thermal, ToFs, camera, I2C · about 20 s · motors not touched</span></div>
+<pre id=snsout style="font:12px ui-monospace,monospace;white-space:pre-wrap;margin:4px 0"></pre>
 <p id=st>connecting…</p>
 <p class=warn id=note></p>
 <p style="font-size:13px;color:#93a1ae">Keys: <kbd>W</kbd><kbd>S</kbd> forward/back · <kbd>A</kbd><kbd>D</kbd> strafe · <kbd>Q</kbd><kbd>E</kbd> rotate · arrows = diagonals · <kbd>space</kbd> stop. Hold to move; release stops. Going faster than the slider allows means moving the caps under the drivers to M2 only (1/16) and picking 16 above.</p>
@@ -299,6 +338,13 @@ function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];docum
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
  document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';
  showRec(s);}
+const sns=document.getElementById('sns'),snsout=document.getElementById('snsout');let snsT=null;
+function showSns(j){const s=j.senses;if(!s)return;
+ snsout.innerHTML=s.lines.map(l=>{const c=/^PASS/.test(l)?'#7fd18b':/^WARN/.test(l)?'#ffcf5c':/^FAIL/.test(l)?'#ff8a4c':'#93a1ae';
+  return '<span style="color:'+c+'">'+l.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>';}).join('\n');
+ sns.textContent=s.running?'… checking':'▶ check senses';sns.disabled=s.running;if(!s.running&&snsT){clearInterval(snsT);snsT=null;}}
+const snsGet=(go)=>fetch('/api/senses?'+(go?'go=1&':'')+'k='+encodeURIComponent(K)).then(r=>r.json()).then(showSns).catch(()=>{});
+sns.onclick=()=>{snsGet(true);if(!snsT)snsT=setInterval(()=>snsGet(false),1000);};
 setInterval(()=>{if(!cur&&!curJ)api('status');},700);api('status');
 </script></body></html>"""
 
@@ -368,6 +414,12 @@ class H(BaseHTTPRequestHandler):
                 with lock:
                     motions.pop(q.get("del", ""), None)
                 save_motions()
+            elif ep == "senses":
+                if q.get("go") == "1":
+                    senses_start()
+                with lock:
+                    snap = {"running": senses["running"], "lines": list(senses["lines"])}
+                self._json({**status(), "senses": snap}); return
             elif ep == "jog":
                 r4.jog(int(f("w")), int(f("d", 1)), f("s", 60))
                 with lock:
