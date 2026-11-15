@@ -169,7 +169,7 @@ on_deck("LM2596", "→ fan + radars 5.0 V", "LM2596 buck (owned)", (43.0, 21.0, 
         "printed bosses + 2 cable ties", "hand-tight", 0.020, note="Trim to 5.0 V unloaded. Feeds the fan and both radars so they stay off the Pi's USB budget; dedicated GND wire to the ESP32 alongside the radar signals.")
 on_deck("WAGO", "pack split", "2× Wago 221-415 5-way lever nuts in a printed clip", (40.0, 30.0, 18.0), -150.0, -165.0, "deck top, rear-right corner",
         "printed clip + 1 cable tie", "hand-tight", 0.020, note="Two 5-way Wago 221-415: one for +, one for − — each takes the pigtail plus three branches (shield VMOT, XL4015 IN, LM2596 IN). A 3-way cannot: source plus three branches is four conductors per polarity.")
-on_deck("T-plug", "e-stop", "T-plug mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -150.0, -132.0, "deck top, between the Pi and the Wago",
+on_deck("T-plug", "e-stop", "T-plug mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -140.0, -132.0, "deck top, between the Pi and the Wago",
         "printed saddle + 1 cable tie on the fixed half", "hand-tight", 0.010, note="The pack lead comes up through the rear slot to here. One-handed disconnect from above = the emergency stop.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
