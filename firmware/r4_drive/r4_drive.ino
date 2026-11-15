@@ -88,10 +88,16 @@ FspTimer stepTimer;
 const uint8_t PCA = 0x40; const uint8_t PAN_CH = 0, TILT_CH = 1;
 const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; Ceres mechanical floor ~62°
 const int PAN_MIN = 0,   PAN_MAX = 180,  PAN_PARK = 90;
-int tiltDeg = TILT_PARK, panDeg = PAN_PARK; bool tiltOn = false, panOn = false, pcaOk = false; uint32_t panStopAt = 0;
+int tiltDeg = TILT_PARK, panDeg = PAN_PARK; bool tiltOn = false, panOn = false, pcaOk = false; uint32_t panStopAt = 0, pcaRetryAt = 0;
+uint8_t i2cFound[8]; uint8_t i2cN = 0;
+void i2cScan() {                              // which addresses answer on the shield's SDA/SCL (for the status line)
+  i2cN = 0;
+  for (uint8_t a = 0x08; a < 0x78 && i2cN < 8; a++) { Wire.beginTransmission(a); if (Wire.endTransmission() == 0) i2cFound[i2cN++] = a; }
+}
 void pcaWrite(uint8_t reg, uint8_t val) { Wire.beginTransmission(PCA); Wire.write(reg); Wire.write(val); Wire.endTransmission(); }
 bool pcaInit() {
-  Wire.begin(); Wire.setClock(400000);
+  Wire.begin(); Wire.setClock(100000);
+  i2cScan();
   Wire.beginTransmission(PCA); if (Wire.endTransmission() != 0) return false;
   pcaWrite(0x00, 0x10);            // MODE1: sleep (prescale is only writable asleep)
   pcaWrite(0xFE, 121);             // prescale: 25 MHz / (4096 × 50 Hz) − 1
@@ -263,17 +269,18 @@ void saveSettings() {
 
 // ───────────────────────── status JSON ───────────────────────────
 char jsonBuf[400];
+const char* i2cList() { static char b[40]; int n = 0; b[0] = 0; for (uint8_t i = 0; i < i2cN && n < 34; i++) n += snprintf(b + n, sizeof(b) - n, "%s0x%02X", i ? " " : "", i2cFound[i]); return b; }
 const char* statusJson() {
   int en = digitalRead(EN_PIN) == LOW;
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"pca\":%d,\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"pca\":%d,\"i2c\":\"%s\",\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, pcaOk ? 1 : 0, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, pcaOk ? 1 : 0, i2cList(), ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -408,6 +415,7 @@ void handleSerial() {
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
+        case 'I': pcaOk = pcaInit(); if (pcaOk) { setPan(panDeg); setTilt(tiltDeg); } break;   // re-probe the servo board now
         case 'p': setPan(line.length() == 1 ? PAN_PARK : (int)a); break;      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
         case 'n': nudgePan((int)a, (int)b); break;                              // 'n -1 300' / 'n 1 300': continuous-rotation nudge left/right for ms
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
@@ -460,6 +468,7 @@ void runCircle() {
 
 void loop() {
   if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) { panStopAt = 0; setPan(90); }   // end of a continuous-rotation nudge
+  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk) { setPan(panDeg); setTilt(tiltDeg); } }   // hot-plugged board: keep probing
   static uint32_t lastMotionMs = 0;
   readVbat();
   if (lowVolt && anyMotion) stopAll();
