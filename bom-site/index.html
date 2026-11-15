@@ -111,7 +111,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="FAN" data-owned="0" aria-label="I have all required quantities of SIXQJZML 2× 40 × 40 × 10 mm 5 V fans"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0DY6GQMJX">SIXQJZML 2× 40 × 40 × 10 mm 5 V fans</a><div class="grp">Motion control</div><div class="note">One over the drivers on a printed bridge, one spare. Powered from the 5 V buck.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="FAN" data-owned="0" aria-label="I have all required quantities of SIXQJZML 2× 40 × 40 × 10 mm 5 V fans"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0DY6GQMJX">SIXQJZML 2× 40 × 40 × 10 mm 5 V fans</a><div class="grp">Motion control</div><div class="note">One over the drivers on a printed bridge, one spare. Powered from the shield&#x27;s 5 V / GND header.</div></td>
 <td align="right">1</td>
 <td align="right">$5.99</td>
 <td align="right">$5.99</td>
@@ -160,7 +160,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr class=owned>
-<td class="have-cell"><input type="checkbox" data-item="SW" data-owned="1" aria-label="I have all required quantities of Three-pin switch"></td><td>Three-pin switch<div class="grp">Power</div><div class="note">Not wired in until its DC rating is read and is ≥ 10 A. Until then the T-plug is the switch.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="SW" data-owned="1" aria-label="I have all required quantities of Three-pin switch"></td><td>Three-pin switch<div class="grp">Power</div><div class="note">Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch.</div></td>
 <td align="right">1</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
@@ -532,7 +532,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>XL4015 OUT -&gt; PCA9685 V+ terminal. Set to 6.0 V with a multimeter before connecting. Its 5 A rating covers both servos stalling at once (~2.5 A each); an LM2596 would sag there. Servo current returns through the PCA9685 terminal, never through a USB ground.</li>
 <li>Fan -&gt; the shield&#x27;s 5 V / GND header pins (the R4 passes the Pi&#x27;s USB 5 V through), 150 mA. Radars -&gt; the ESP32-S3&#x27;s 5 V pin, also USB pass-through from the Pi. The Pi 4&#x27;s USB ports share a 1.2 A budget: webcam ~250 mA + ESP32 with both radars ~400 mA + R4 with fan ~300 mA ≈ 950 mA. Inside it, but nothing else goes on the Pi&#x27;s USB. If the Pi shows the lightning bolt, move the radars to a third LM2596 trimmed to 5.0 V.</li>
 <li>Pi -&gt; camera by USB. Pi -&gt; ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.</li>
-<li>Four VL53L1X share I2C only after XSHUT (GPIO 5, 6, 13, 19) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.</li>
+<li>Two VL53L1X share I2C only after XSHUT (GPIO 5 and 6) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.</li>
 <li>Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail.</li>
 </ul>
 <p>Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion — plus up to ~0.8 A average for the servos. The 2200 mAh Gens ace gives roughly 35–40 minutes of driving; check the pack with the multimeter before and after every run and stop at 11.1 V — there is no alarm on the balance lead. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.</p>

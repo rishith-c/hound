@@ -20,7 +20,7 @@
    "XL4015 OUT -> PCA9685 V+ terminal. Set to 6.0 V with a multimeter before connecting. Its 5 A rating covers both servos stalling at once (~2.5 A each); an LM2596 would sag there. Servo current returns through the PCA9685 terminal, never through a USB ground.",
    "Fan -> the shield's 5 V / GND header pins (the R4 passes the Pi's USB 5 V through), 150 mA. Radars -> the ESP32-S3's 5 V pin, also USB pass-through from the Pi. The Pi 4's USB ports share a 1.2 A budget: webcam ~250 mA + ESP32 with both radars ~400 mA + R4 with fan ~300 mA ≈ 950 mA. Inside it, but nothing else goes on the Pi's USB. If the Pi shows the lightning bolt, move the radars to a third LM2596 trimmed to 5.0 V.",
    "Pi -> camera by USB. Pi -> ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.",
-   "Four VL53L1X share I2C only after XSHUT (GPIO 5, 6, 13, 19) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.",
+   "Two VL53L1X share I2C only after XSHUT (GPIO 5 and 6) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.",
    "Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail."
   ],
   "power_after": [
@@ -167,7 +167,7 @@
    "item": "SIXQJZML 2× 40 × 40 × 10 mm 5 V fans",
    "qty": 1,
    "price": 5.99,
-   "note": "One over the drivers on a printed bridge, one spare. Powered from the 5 V buck."
+   "note": "One over the drivers on a printed bridge, one spare. Powered from the shield's 5 V / GND header."
   },
   {
    "id": "TB6600",
@@ -223,7 +223,7 @@
    "group": "Power",
    "item": "Three-pin switch",
    "qty": 1,
-   "note": "Not wired in until its DC rating is read and is ≥ 10 A. Until then the T-plug is the switch."
+   "note": "Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch."
   },
   {
    "id": "LIPO",
