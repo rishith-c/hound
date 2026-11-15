@@ -153,18 +153,6 @@
    "source": "DS: ≤ 200 mA"
   },
   {
-   "name": "ESP32-S3 #3 CSI receiver (5 V pin, WiFi TX)",
-   "rail": "V5_LM",
-   "vin": [
-    4.5,
-    5.5
-   ],
-   "i_avg": 0.25,
-   "i_peak": 0.5,
-   "connector": "header 2.54",
-   "source": "DS: WiFi TX bursts to ~500 mA"
-  },
-  {
    "name": "Raspberry Pi 4 itself",
    "rail": "V5_BANK",
    "vin": [
@@ -291,16 +279,16 @@
    "awg": 14,
    "length_m": 0.3,
    "connector": "T-plug (Deans)",
-   "i_avg": 2.46,
-   "i_peak": 6.24
+   "i_avg": 2.33,
+   "i_peak": 5.96
   },
   {
    "name": "Deans pigtail → 5-way Wagos (+ and −)",
    "awg": 14,
    "length_m": 0.15,
    "connector": "Wago 221-415",
-   "i_avg": 2.46,
-   "i_peak": 6.24
+   "i_avg": 2.33,
+   "i_peak": 5.96
   },
   {
    "name": "Wago → CNC Shield VMOT/GND terminal",
@@ -323,8 +311,8 @@
    "awg": 22,
    "length_m": 0.15,
    "connector": "screw terminal 5.08",
-   "i_avg": 0.31,
-   "i_peak": 0.56
+   "i_avg": 0.17,
+   "i_peak": 0.28
   },
   {
    "name": "XL4015 OUT → PCA9685 V+ / GND terminal",
@@ -335,12 +323,12 @@
    "i_peak": 2.5
   },
   {
-   "name": "LM2596 OUT → fan, LD2410C, LD2450, ESP32 #3 (daisy)",
+   "name": "LM2596 OUT → 5-way Wagos → fan, LD2410C, LD2450",
    "awg": 22,
    "length_m": 0.3,
-   "connector": "Dupont 2.54",
-   "i_avg": 0.58,
-   "i_peak": 1.0
+   "connector": "Wago 221-415",
+   "i_avg": 0.33,
+   "i_peak": 0.5
   },
   {
    "name": "shield driver socket → 4-pin motor cable → motor (per phase)",
@@ -495,11 +483,11 @@
    "bus": "USB"
   },
   {
-   "driver": "ESP32-S3 #2/#3 → Pi hotspot",
-   "pins": "WiFi UDP (RuView CSI)",
+   "driver": "ESP32-S3 #2 and #3, OFF the rover (doorway / far wall), RuView receiver nodes",
+   "pins": "WiFi UDP → SINK_IP:5005",
    "v_out": 0,
-   "receiver": "Pi",
-   "rpins": "wlan0 hotspot",
+   "receiver": "Pi hotspot on the rover (the CSI transmitter)",
+   "rpins": "wlan0, 2.4 GHz",
    "v_in_max": 0,
    "v_ih": 0,
    "bus": "WIFI"
@@ -558,8 +546,8 @@
   },
   {
    "level": "VERIFY",
-   "id": "esp32-5v",
-   "text": "Confirm with the meter that ESP32-S3 #3's clone devkit actually wires its 5 V header pin to the module (some clones leave it floating) before trusting it as a power input; never plug its USB while the 5 V pin is fed."
+   "id": "bank-cable",
+   "text": "If the bank's output is USB-C and the Pi 4 is an early board (pre-2020, rev 1.1), an e-marked C-to-C cable will not power it — use an A-to-C cable or a plain C-to-C. Later Pi 4s and all Pi 5s are fine"
   },
   {
    "level": "VERIFY",
@@ -573,18 +561,38 @@
   },
   {
    "level": "VERIFY",
-   "id": "lm-ripple",
-   "text": "ESP32-S3 #3's WiFi bursts (~0.5 A steps) share the LM2596 rail with both radars. If a radar's frames go bad only while the CSI stream runs, put 100 µF across that radar's VCC/GND at its connector"
-  },
-  {
-   "level": "VERIFY",
    "id": "servo-pwm",
    "text": "PCA9685 VCC is 3.3 V, so the tilt servo gets 3.3 V PWM. MG996R clones normally accept it; if the servo jitters or ignores commands, that is the level. Do NOT raise VCC to 5 V — the board's I2C pull-ups follow VCC and would put 5 V on the Pi's SDA/SCL. A 74HCT125 buffer fixes it"
   },
   {
    "level": "PROCEDURE",
+   "id": "cap-polarity",
+   "text": "1000 µF electrolytic across VMOT: stripe = negative, to the GND terminal. Reversed, it vents on the first power-up"
+  },
+  {
+   "level": "PROCEDURE",
+   "id": "csi-nodes",
+   "text": "ESP32 #2 and #3 are NOT on the rover. Walleye's csi_rx firmware writes CSI to Serial (a wire to the Pi), and the RuView firmware's nodes are receivers of the AP's frames — so the transmitter is the Pi's own 2.4 GHz hotspot on the rover, and the two nodes sit at the doorway and the far wall on any USB power, streaming CSI back over that same WiFi as UDP. Two bistatic links through two walls, zero rover wiring, nothing on the Pi's USB budget."
+  },
+  {
+   "level": "PROCEDURE",
+   "id": "driver-orient",
+   "text": "DRV8825 into the shield socket with its EN pin over the socket's EN label (the trimpot ends up toward the shield's power terminal on genuine Pololu layouts; clones vary — go by the label). Backwards = dead driver on power-up, no warning"
+  },
+  {
+   "level": "PROCEDURE",
+   "id": "fan-rail",
+   "text": "The 40 mm fan must be a 5 V fan for the LM2596 rail. A 12 V fan goes on the pack side (Wago +/−, 11.1 V nominal) instead — check the label before it is wired"
+  },
+  {
+   "level": "PROCEDURE",
    "id": "ground",
    "text": "Servo return: PCA9685 V+ GND terminal → XL4015 OUT− (its own wire). Motor return: shield GND terminal → Wago. Neither ever through a board GND pin or a USB cable."
+  },
+  {
+   "level": "PROCEDURE",
+   "id": "lm-dist",
+   "text": "LM2596 OUT feeds three loads (fan, LD2410C, LD2450): four conductors per polarity, so two MORE 5-way Wagos (four of the pack of ten used) or a soldered splice. Never daisy-chain through a load's connector"
   },
   {
    "level": "PROCEDURE",
@@ -595,6 +603,11 @@
    "level": "PROCEDURE",
    "id": "phases",
    "text": "Motor coil pairs by multimeter: the two leads that show ~2 Ω are one coil. A coil split across the 2B/2A–1A/1B header halves makes a motor buzz and not turn."
+  },
+  {
+   "level": "PROCEDURE",
+   "id": "radar-gnd",
+   "text": "Each radar's GND pin gets TWO wires: one to the LM2596 OUT− (its power return) and the cable's GND to ESP32 #1 (signal reference). With only the cable GND, the radars' 330 mA returns through ESP32 #1 → Pi → R4 USB → shield → Wago: 132 mV of ground shift on every serial link. That is the exact Ceres fault"
   },
   {
    "level": "PROCEDURE",
@@ -614,7 +627,7 @@
   {
    "level": "PASS",
    "id": "I-budget",
-   "text": "PACK (HOOVO 3S 2200 mAh 80C, T-plug): avg 2.46 A of 44.0 A (6%), peak 6.24 A of 100.0 A (6%)"
+   "text": "PACK (HOOVO 3S 2200 mAh 80C, T-plug): avg 2.33 A of 44.0 A (5%), peak 5.96 A of 100.0 A (6%)"
   },
   {
    "level": "PASS",
@@ -624,7 +637,7 @@
   {
    "level": "PASS",
    "id": "I-budget",
-   "text": "V5_LM (LM2596 trimmed to 5.0 V): avg 0.58 A of 2.0 A (29%), peak 1.00 A of 3.0 A (33%)"
+   "text": "V5_LM (LM2596 trimmed to 5.0 V): avg 0.33 A of 2.0 A (16%), peak 0.50 A of 3.0 A (17%)"
   },
   {
    "level": "PASS",
@@ -675,11 +688,6 @@
    "level": "PASS",
    "id": "V-window",
    "text": "LD2450 radar: 4.9–5.1 V inside 4.5–5.5 V"
-  },
-  {
-   "level": "PASS",
-   "id": "V-window",
-   "text": "ESP32-S3 #3 CSI receiver (5 V pin, WiFi TX): 4.9–5.1 V inside 4.5–5.5 V"
   },
   {
    "level": "PASS",
@@ -749,12 +757,12 @@
   {
    "level": "PASS",
    "id": "endurance",
-   "text": "pack draw avg 2.46 A, peak 6.24 A → 43 min per 2200 mAh pack (80 % usable)"
+   "text": "pack draw avg 2.33 A, peak 5.96 A → 45 min per 2200 mAh pack (80 % usable)"
   },
   {
    "level": "PASS",
    "id": "ground",
-   "text": "star = Wago negative. Peak drop per branch: shield GND terminal (via R4 USB GND) 32 mV, PCA9685 GND (via XL4015 OUT− / IN−) 13 mV, radar GND (via LM2596 OUT− / IN−) 4 mV → ≤ 27 mV between attachment points, ~68 mA circulating through USB grounds (limit 100 mV)"
+   "text": "star = Wago negative. Peak drop per branch: shield GND terminal (via R4 USB GND) 32 mV, PCA9685 GND (via XL4015 OUT− / IN−) 13 mV, radar GND (via LM2596 OUT− / IN−) 2 mV → ≤ 30 mV between attachment points, ~74 mA circulating through USB grounds (limit 100 mV)"
   },
   {
    "level": "PASS",
@@ -824,7 +832,7 @@
   {
    "level": "PASS",
    "id": "level",
-   "text": "ESP32-S3 #2/#3 → Pi hotspot → Pi: radio link, no wire"
+   "text": "ESP32-S3 #2 and #3, OFF the rover (doorway / far wall), RuView receiver nodes → Pi hotspot on the rover (the CSI transmitter): radio link, no wire"
   },
   {
    "level": "PASS",
@@ -854,12 +862,12 @@
   {
    "level": "PASS",
    "id": "wire",
-   "text": "pack lead: HOOVO T-plug → OliRC extension → e-stop pair: 14 AWG × 0.3 m, peak 6.24 A (ampacity 32 A, T-plug (Deans) 50 A), round-trip drop 31 mV = 0.3%"
+   "text": "pack lead: HOOVO T-plug → OliRC extension → e-stop pair: 14 AWG × 0.3 m, peak 5.96 A (ampacity 32 A, T-plug (Deans) 50 A), round-trip drop 30 mV = 0.3%"
   },
   {
    "level": "PASS",
    "id": "wire",
-   "text": "Deans pigtail → 5-way Wagos (+ and −): 14 AWG × 0.15 m, peak 6.24 A (ampacity 32 A, Wago 221-415 32 A), round-trip drop 16 mV = 0.1%"
+   "text": "Deans pigtail → 5-way Wagos (+ and −): 14 AWG × 0.15 m, peak 5.96 A (ampacity 32 A, Wago 221-415 32 A), round-trip drop 15 mV = 0.1%"
   },
   {
    "level": "PASS",
@@ -874,7 +882,7 @@
   {
    "level": "PASS",
    "id": "wire",
-   "text": "Wago → LM2596 IN: 22 AWG × 0.15 m, peak 0.56 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 9 mV = 0.1%"
+   "text": "Wago → LM2596 IN: 22 AWG × 0.15 m, peak 0.28 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 4 mV = 0.0%"
   },
   {
    "level": "PASS",
@@ -884,7 +892,7 @@
   {
    "level": "PASS",
    "id": "wire",
-   "text": "LM2596 OUT → fan, LD2410C, LD2450, ESP32 #3 (daisy): 22 AWG × 0.3 m, peak 1.00 A (ampacity 7 A, Dupont 2.54 2.0 A), round-trip drop 32 mV = 0.6%"
+   "text": "LM2596 OUT → 5-way Wagos → fan, LD2410C, LD2450: 22 AWG × 0.3 m, peak 0.50 A (ampacity 7 A, Wago 221-415 32 A), round-trip drop 16 mV = 0.3%"
   },
   {
    "level": "PASS",
@@ -908,23 +916,23 @@
   }
  ],
  "summary": {
-  "pack_avg": 2.46,
-  "pack_peak": 6.24,
+  "pack_avg": 2.33,
+  "pack_peak": 5.96,
   "bank_avg": 1.32,
   "bank_peak": 2.49,
   "pi_usb_peak": 1.05,
-  "minutes": 43,
+  "minutes": 45,
   "v_pi": 4.77,
   "v_cam": 4.4,
-  "n_loads": 18,
+  "n_loads": 17,
   "n_wires": 12,
   "n_signals": 12,
   "counts": {
    "FAIL": 0,
    "WARN": 9,
-   "VERIFY": 6,
-   "PROCEDURE": 6,
-   "PASS": 59
+   "VERIFY": 5,
+   "PROCEDURE": 12,
+   "PASS": 58
   }
  }
 }

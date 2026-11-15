@@ -45,7 +45,6 @@ LOADS = [
     ("40 mm fan on the driver heatsinks",       "V5_LM",    4.5, 5.5,  0.15, 0.20, "Dupont 2.54",         "LISTING"),
     ("LD2410C radar",                           "V5_LM",    4.5, 5.5,  0.08, 0.10, "JST 1.25",            "DS: ≤ 80 mA"),
     ("LD2450 radar",                            "V5_LM",    4.5, 5.5,  0.10, 0.20, "JST 1.25",            "DS: ≤ 200 mA"),
-    ("ESP32-S3 #3 CSI receiver (5 V pin, WiFi TX)", "V5_LM", 4.5, 5.5, 0.25, 0.50, "header 2.54",         "DS: WiFi TX bursts to ~500 mA"),
     ("Raspberry Pi 4 itself",                   "V5_BANK",  4.75, 5.25, 0.70, 1.20, "USB-C",              "DS: idle 0.6 A, loaded 1.2 A without USB peripherals"),
     ("Webcam (C920-class, 1080p)",              "V5_PI_USB",4.75, 5.25, 0.25, 0.50, "USB-A",              "DS: 500 mA descriptor, ~250 typical"),
     ("UNO R4 WiFi + shield logic",              "V5_PI_USB",4.75, 5.25, 0.15, 0.20, "USB-A",              "DS: radio off"),
@@ -66,7 +65,7 @@ WIRES = [
     ("Wago → XL4015 IN",                                            22, 0.15, "screw terminal 5.08", "XL_IN"),
     ("Wago → LM2596 IN",                                            22, 0.15, "screw terminal 5.08", "LM_IN"),
     ("XL4015 OUT → PCA9685 V+ / GND terminal",                      22, 0.12, "screw terminal 5.08", "RAIL:V_SERVO"),
-    ("LM2596 OUT → fan, LD2410C, LD2450, ESP32 #3 (daisy)",         22, 0.30, "Dupont 2.54",      "RAIL:V5_LM"),
+    ("LM2596 OUT → 5-way Wagos → fan, LD2410C, LD2450",             22, 0.30, "Wago 221-415",     "RAIL:V5_LM"),
     ("shield driver socket → 4-pin motor cable → motor (per phase)", 26, 0.40, "Dupont 2.54",      "PHASE"),
     ("bank → Pi USB-C cable",                                       24, 0.30, "USB-C",            "RAIL:V5_BANK"),
     ("Pi USB-A → webcam (captive cable, 1.5 m)",                    28, 1.50, "USB-A",            "PACK_LOAD:Webcam (C920-class, 1080p)"),
@@ -87,7 +86,7 @@ SIGNALS = [
     ("Pi I2S (BCM 18/19/20)", "BCLK/LRCLK/DIN", 3.3, "INMP441", "SCK/WS/SD", 3.6, 2.3, "I2S"),
     ("Pi ↔ UNO R4", "USB CDC", 5.0, "UNO R4", "USB", 5.25, 0, "USB"),
     ("Pi ↔ ESP32-S3 #1", "USB CDC (UART0 bridge)", 5.0, "ESP32-S3 #1", "USB", 5.25, 0, "USB"),
-    ("ESP32-S3 #2/#3 → Pi hotspot", "WiFi UDP (RuView CSI)", 0, "Pi", "wlan0 hotspot", 0, 0, "WIFI"),
+    ("ESP32-S3 #2 and #3, OFF the rover (doorway / far wall), RuView receiver nodes", "WiFi UDP → SINK_IP:5005", 0, "Pi hotspot on the rover (the CSI transmitter)", "wlan0, 2.4 GHz", 0, 0, "WIFI"),
 ]
 
 PI_BCM = {"I2C1 SDA": 2, "I2C1 SCL": 3, "i2c3 SDA": 4, "i2c3 SCL": 5, "I2S BCLK": 18, "I2S LRCLK": 19, "I2S DIN": 20, "XSHUT front": 22, "XSHUT rear": 27}
@@ -207,8 +206,8 @@ out(PROC, "microstep", "DRV8825 1/16 = M2 only → ONE cap on MS3 under each dri
 out(PROC, "phases", "Motor coil pairs by multimeter: the two leads that show ~2 Ω are one coil. A coil split across the 2B/2A–1A/1B header halves makes a motor buzz and not turn.")
 out(WARN, "protection", "No fuse on the pack and no cell alarm (declined). A 2200 mAh 80C pack delivers >70 A into a short; the T-plug is a disconnect, not protection. Listed under Safety as reviewer-recommended.")
 out(WARN, "connector", f"Motor phases run 1.5 A through Dupont 2.54 contacts rated {CONNECTOR_A['Dupont 2.54']} A — inside rating but the crimp quality is the margin. A contact that heats in the wheels-up test gets re-crimped or soldered.")
-out(VERIFY, "esp32-5v", "Confirm with the meter that ESP32-S3 #3's clone devkit actually wires its 5 V header pin to the module (some clones leave it floating) before trusting it as a power input; never plug its USB while the 5 V pin is fed.")
 out(VERIFY, "bank", "Load-test the bank at 2.5 A for 60 s with the meter on the Pi's 5 V pin: below 4.8 V the bank is not a 3 A bank.")
+out(PROC, "csi-nodes", "ESP32 #2 and #3 are NOT on the rover. Walleye's csi_rx firmware writes CSI to Serial (a wire to the Pi), and the RuView firmware's nodes are receivers of the AP's frames — so the transmitter is the Pi's own 2.4 GHz hotspot on the rover, and the two nodes sit at the doorway and the far wall on any USB power, streaming CSI back over that same WiFi as UDP. Two bistatic links through two walls, zero rover wiring, nothing on the Pi's USB budget.")
 out(PASS, "bulk-cap", "1000 µF 25 V across VMOT at the shield terminal (consumables) — protects the drivers from the pack lead's inductance on connect.")
 
 # 11. voltage chain: bank → cable → Pi → USB port → the farthest device (webcam on its captive 1.5 m cable)
@@ -231,8 +230,16 @@ out(WARN, "enable", "DRV8825 nENABLE has an internal pull-down: during the R4's 
 out(VERIFY, "i2c3", "BCM 4/5 have NO on-board I2C pull-ups (BCM 2/3 have 1.8 kΩ). The MLX90640 module must carry its own, or add 4.7 kΩ from SDA and SCL to 3.3 V (consumables). And w1-gpio (1-Wire) defaults to BCM 4 — leave that overlay off")
 out(VERIFY, "servo-pwm", "PCA9685 VCC is 3.3 V, so the tilt servo gets 3.3 V PWM. MG996R clones normally accept it; if the servo jitters or ignores commands, that is the level. Do NOT raise VCC to 5 V — the board's I2C pull-ups follow VCC and would put 5 V on the Pi's SDA/SCL. A 74HCT125 buffer fixes it")
 out(WARN, "connector", f"Tilt servo stall {rail_sum('V_SERVO', 5):.1f} A through the PCA9685's 2.54 mm channel header (rated {CONNECTOR_A['header 2.54']} A). Momentary, and how every servo board works; keep stalls short with tilt limits in software")
-out(VERIFY, "lm-ripple", "ESP32-S3 #3's WiFi bursts (~0.5 A steps) share the LM2596 rail with both radars. If a radar's frames go bad only while the CSI stream runs, put 100 µF across that radar's VCC/GND at its connector")
 out(PASS, "wago", "Wago 221-415 accepts 0.14–4 mm² (24–12 AWG), solid or fine-stranded: the 14 AWG pigtail and the 22 AWG branches both land in it without ferrules")
+
+# 13. pass 3 — the paths a schematic hides
+radar_ret = sum(l[4] for l in LOADS if "radar" in l[0])
+out(PROC, "radar-gnd", f"Each radar's GND pin gets TWO wires: one to the LM2596 OUT− (its power return) and the cable's GND to ESP32 #1 (signal reference). With only the cable GND, the radars' {radar_ret*1000:.0f} mA returns through ESP32 #1 → Pi → R4 USB → shield → Wago: {radar_ret*0.4*1000:.0f} mV of ground shift on every serial link. That is the exact Ceres fault")
+out(PROC, "lm-dist", "LM2596 OUT feeds three loads (fan, LD2410C, LD2450): four conductors per polarity, so two MORE 5-way Wagos (four of the pack of ten used) or a soldered splice. Never daisy-chain through a load's connector")
+out(PROC, "driver-orient", "DRV8825 into the shield socket with its EN pin over the socket's EN label (the trimpot ends up toward the shield's power terminal on genuine Pololu layouts; clones vary — go by the label). Backwards = dead driver on power-up, no warning")
+out(PROC, "cap-polarity", "1000 µF electrolytic across VMOT: stripe = negative, to the GND terminal. Reversed, it vents on the first power-up")
+out(VERIFY, "bank-cable", "If the bank's output is USB-C and the Pi 4 is an early board (pre-2020, rev 1.1), an e-marked C-to-C cable will not power it — use an A-to-C cable or a plain C-to-C. Later Pi 4s and all Pi 5s are fine")
+out(PROC, "fan-rail", "The 40 mm fan must be a 5 V fan for the LM2596 rail. A 12 V fan goes on the pack side (Wago +/−, 11.1 V nominal) instead — check the label before it is wired")
 
 # ── Report ────────────────────────────────────────────────────────────────────
 order = {FAIL: 0, WARN: 1, VERIFY: 2, PROC: 3, PASS: 4}
