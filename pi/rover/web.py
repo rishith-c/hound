@@ -80,10 +80,98 @@ def watchdog():
 threading.Thread(target=watchdog, daemon=True).start()
 
 
+# ── turret motion recorder: tilt and pan commands from the page are logged with their time and replayed here on the Pi
+MOTIONS_FILE = os.path.expanduser("~/rover/motions.json")   # {label: [[t_s, kind, a, b], ...]}
+try:
+    motions = json.load(open(MOTIONS_FILE))
+except (OSError, ValueError):
+    motions = {}
+rec = {"on": False, "t0": 0.0, "ev": []}
+play = {"id": 0, "name": None}
+
+
+def turret(kind, a=0, b=0):
+    if kind == "tilt":
+        r4.tilt(int(a))
+    elif kind == "nudge":
+        r4.nudge_pan(int(a), int(b))
+    elif kind == "pan":
+        r4.pan_stop()
+
+
+def turret_cmd(kind, a=0, b=0):
+    """A turret command from the page: do it, and log it while recording."""
+    turret(kind, a, b)
+    with lock:
+        if rec["on"]:
+            rec["ev"].append([round(time.time() - rec["t0"], 3), kind, a, b])
+
+
+def save_motions():
+    with lock:
+        text = json.dumps(motions)
+    with open(MOTIONS_FILE, "w") as fh:
+        fh.write(text)
+
+
+def rec_start():
+    with lock:
+        rec.update(on=True, t0=time.time(), ev=[])
+        if r4.status.get("tilton"):   # a held tilt is part of the pose: replay starts there. A limp tilt stays wherever it was put.
+            rec["ev"].append([0.0, "tilt", int(r4.status.get("tilt", 92)), 0])
+        rec["base"] = len(rec["ev"])  # a recording with nothing past the start pose is not saved
+
+
+def rec_stop(name):
+    with lock:
+        if not rec["on"]:
+            return
+        rec["on"] = False
+        ev = rec["ev"] if len(rec["ev"]) > rec["base"] else []
+        name = (name or "").strip()[:40]
+        if not name:
+            n = 1
+            while f"motion {n}" in motions:
+                n += 1
+            name = f"motion {n}"
+        if ev:
+            motions[name] = ev
+    if ev:
+        save_motions()
+
+
+def play_thread(name, pid):
+    t0 = time.time()
+    for t, kind, a, b in motions.get(name, []):
+        while time.time() - t0 < t:
+            if play["id"] != pid:
+                return
+            time.sleep(0.01)
+        if play["id"] != pid:
+            return
+        turret(kind, a, b)
+    with lock:
+        if play["id"] == pid:
+            play["name"] = None
+
+
+def play_start(name):
+    with lock:
+        play["id"] += 1; play["name"] = name; pid = play["id"]
+    threading.Thread(target=play_thread, args=(name, pid), daemon=True).start()
+
+
+def play_stop():
+    with lock:
+        play["id"] += 1; play["name"] = None
+    r4.pan_stop()
+
+
 def status():
     s = dict(r4.status)
     with lock:
         s.update(mode=state["mode"], cmd=state["cmd"], uptime=round(time.time() - state["t0"]), port=r4.port)
+        s.update(rec=rec["on"], rec_n=len(rec["ev"]), playing=play["name"], motions={k: (v[-1][0] if v else 0) for k, v in motions.items()})
     return s
 
 
@@ -107,12 +195,19 @@ input[type=range]{width:200px}select,input[type=number]{font:inherit;background:
  <label>speed <input id=sp type=range min=20 max=530 value=415> <span id=spv>415</span> mm/s</label>
  <label>microsteps <select id=ms><option>16<option selected>32</select></label>
  <label><input id=hold type=checkbox> hold drivers</label>
- <label>tilt <input id=tilt type=range min=78 max=150 value=92> <span id=tiltv>90</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
+ <label>tilt <small style="color:#93a1ae">▼ down</small><input id=tilt type=range min=78 max=150 value=92><small style="color:#93a1ae">up ▲</small> <span id=tiltv>92</span>° <button id=tiltoff style="padding:4px 8px;font-size:12px">release</button></label>
  <label><button id=show style="padding:6px 12px">▶ Ceres show</button></label>
  <label>pan <button id=nudgeL style="padding:6px 12px">◀ left</button><button id=panStop style="padding:6px 12px">■</button><button id=nudgeR style="padding:6px 12px">right ▶</button> <span id=panv style="color:#93a1ae;font-size:12px">hold to keep turning · 300 ms nudges (Ceres)</span></label>
  <label>pan trim <button id=trm style="padding:4px 10px">−</button> <span id=ptv>0</span> µs <button id=trp style="padding:4px 10px">+</button> <button id=still style="padding:4px 8px;font-size:12px">test: hold still 3 s</button> <span style="color:#93a1ae;font-size:12px">creeps right → +, creeps left → −</span></label>
  <span id=lat></span>
 </div>
+<h1 style="margin-top:12px">Record motions</h1>
+<div class=row>
+ <button id=rec style="padding:6px 12px">● record</button>
+ <input id=rname maxlength=40 placeholder="label, e.g. nod" style="font:inherit;background:#172029;color:#e6ebf0;border:1px solid #2a3641;border-radius:4px;padding:4px;width:160px">
+ <span id=recst style="color:#93a1ae;font-size:12px">records the tilt slider and pan buttons, with timing</span>
+</div>
+<div class=row id=mlist></div>
 <div class=pad>
  <button data-v="1,1,0">◤ fwd-left</button><button data-v="1,0,0">▲ forward</button><button data-v="1,-1,0">◥ fwd-right</button>
  <button data-v="0,1,0">◀ strafe L</button><button class=stop id=stop>STOP</button><button data-v="0,-1,0">strafe R ▶</button>
@@ -163,8 +258,20 @@ document.getElementById('circle').addEventListener('click',()=>api(`circle?r=${d
 document.getElementById('sp').oninput=e=>document.getElementById('spv').textContent=e.target.value;
 document.getElementById('ms').onchange=e=>api('set?ms='+e.target.value);
 document.getElementById('hold').onchange=e=>api('set?hold='+(e.target.checked?1:0));
-document.getElementById('tilt').oninput=e=>{document.getElementById('tiltv').textContent=e.target.value;};
+let tiltT=0;document.getElementById('tilt').oninput=e=>{document.getElementById('tiltv').textContent=e.target.value;const t=performance.now();if(t-tiltT>80){tiltT=t;api('set?tilt='+e.target.value);}};   // follows the drag live (and gets recorded)
 document.getElementById('tilt').onchange=e=>api('set?tilt='+e.target.value);
+let recOn=false,mSig='';const recB=document.getElementById('rec'),ml=document.getElementById('mlist');
+recB.onclick=()=>{if(!recOn)api('rec?on=1');else{api('rec?on=0&name='+encodeURIComponent(document.getElementById('rname').value));document.getElementById('rname').value='';}};
+ml.onclick=e=>{const b=e.target.closest('button');if(!b)return;const n=b.dataset.n;
+ if(b.dataset.a==='play')api('play?name='+encodeURIComponent(n));else if(b.dataset.a==='stop')api('play?stop=1');else if(b.dataset.a==='del'&&confirm('Delete "'+n+'"?'))api('motion?del='+encodeURIComponent(n));};
+function showRec(s){recOn=!!s.rec;recB.textContent=recOn?'■ stop & save':'● record';recB.classList.toggle('on',recOn);
+ document.getElementById('recst').textContent=recOn?'recording… '+(s.rec_n||0)+' moves':'records the tilt slider and pan buttons, with timing';
+ const sig=JSON.stringify([s.motions,s.playing]);if(sig===mSig)return;mSig=sig;ml.textContent='';
+ Object.entries(s.motions||{}).forEach(([n,d])=>{const w=document.createElement('span');w.style.cssText='display:inline-flex;gap:6px;align-items:center;background:#172029;border-radius:6px;padding:4px 8px';
+  const b=document.createElement('b');b.textContent=n;const t=document.createElement('small');t.style.color='#93a1ae';t.textContent=(+d).toFixed(1)+' s';
+  const on=s.playing===n,p=document.createElement('button');p.style.cssText='padding:4px 10px;font-size:13px';p.dataset.a=on?'stop':'play';p.dataset.n=n;p.textContent=on?'■ stop':'▶ play';
+  const x=document.createElement('button');x.style.cssText='padding:4px 8px;font-size:12px;color:#93a1ae';x.dataset.a='del';x.dataset.n=n;x.textContent='✕';
+  w.append(b,t,p,x);ml.append(w);});}
 document.getElementById('tiltoff').onclick=()=>api('set?tilt=-1');
 let panTimer=null;function panHold(b,dir){b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');api('set?nudge='+dir+'&ms=300');clearInterval(panTimer);panTimer=setInterval(()=>api('set?nudge='+dir+'&ms=300'),320);});
  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');clearInterval(panTimer);panTimer=null;}));}
@@ -184,7 +291,8 @@ function show(s){if(!s||!s.rate)return;W.forEach((n,i)=>{const r=s.rate[i];docum
  document.getElementById('ms').value=s.ms;document.getElementById('sp').max=Math.floor(s.maxmm||190);
  if(s.ptrim!=null&&!ptrimSeen){ptrimSeen=true;ptrim=s.ptrim;document.getElementById('ptv').textContent=ptrim;}
  document.getElementById('st').textContent=`${s.mode} · ${s.cmd} · pack ${s.vbat>5?s.vbat.toFixed(1)+' V'+(s.lv?' LOW — DRIVE LOCKED':''):'n/a'} · drivers ${s.en?'ON':'off'} · ${s.spm} steps/mm · max ${Math.floor(s.maxmm)} mm/s · R4 ${s.port||''} · pi up ${s.uptime}s`;
- document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';}
+ document.getElementById('note').textContent=s.wd?'R4 watchdog tripped (link went quiet) — it stopped itself':'';
+ showRec(s);}
 setInterval(()=>{if(!cur&&!curJ)api('status');},700);api('status');
 </script></body></html>"""
 
@@ -225,13 +333,13 @@ class H(BaseHTTPRequestHandler):
                 if "hold" in q:
                     r4.hold_enable(q["hold"] == "1")
                 if "tilt" in q:
-                    r4.tilt(int(float(q["tilt"])))
+                    turret_cmd("tilt", int(float(q["tilt"])))
                 if "pan" in q:
-                    r4.pan_stop()
+                    turret_cmd("pan")
                 if "show" in q:
                     r4._send(f"K {1 if q['show'] == '1' else 0}")
                 if "nudge" in q:
-                    r4.nudge_pan(int(q["nudge"]), int(float(q.get("ms", 300))))
+                    turret_cmd("nudge", int(q["nudge"]), int(float(q.get("ms", 300))))
                 if "ptrim" in q:
                     v = max(-150, min(150, int(float(q["ptrim"]))))
                     r4._send(f"T {v}")
@@ -240,6 +348,20 @@ class H(BaseHTTPRequestHandler):
                     r4._send(f"H {int(float(q['still']))}")
                 if q.get("inv") in ("0", "1", "2", "3"):
                     r4._send(f"i {q['inv']}")
+            elif ep == "rec":
+                if q.get("on") == "1":
+                    rec_start()
+                else:
+                    rec_stop(q.get("name"))
+            elif ep == "play":
+                if q.get("name") in motions:
+                    play_start(q["name"])
+                else:
+                    play_stop()
+            elif ep == "motion":
+                with lock:
+                    motions.pop(q.get("del", ""), None)
+                save_motions()
             elif ep == "jog":
                 r4.jog(int(f("w")), int(f("d", 1)), f("s", 60))
                 with lock:
