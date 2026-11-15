@@ -117,6 +117,13 @@ def radar_ports(by_id="/dev/serial/by-id", serial0="/dev/serial0", cfg="~/rover/
     return ports
 
 
+
+def port_label(path: str) -> str:
+    """What to show a person: a by-path link as its hub socket ('USB socket 1.2'), anything else by its name."""
+    import re
+    m = re.search(r"-usb(?:v2)?-\d+:([\d.]+):", os.path.basename(path))
+    return f"USB socket {m.group(1)}" if m else os.path.basename(path)
+
 class CsiSink:
     """ESP32 #3 (firmware/csi_rx_udp) streams one UDP packet per probe to port 5005; csi.parse_udp checks the header
     and keeps the 51 used subcarriers of the LLTF block."""

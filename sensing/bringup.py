@@ -86,12 +86,12 @@ def check_csi(sink=None, seconds=5.0):
 
 def check_radars(seconds=5.0):
     from radar_check import check_ld2410, check_ld2450
-    from station import radar_ports
+    from station import port_label, radar_ports
     out = []
     for name, path in radar_ports().items():
         try:
             r = (check_ld2450 if name == "ld2450" else check_ld2410)(path, seconds)
-            out.append((r["verdict"], f"radar {name}: {r.get('fps', 0):.1f} frames/s", r["hint"]))
+            out.append((r["verdict"], f"radar {name} ({port_label(path)}): {r.get('fps', 0):.1f} frames/s", r["hint"]))
         except Exception as e:
             out.append(("FAIL", f"radar {name}", f"cannot open {path}: {e}"))
     return out or [("FAIL", "radars", "no radar ports: CP2102s not on USB, and /dev/serial0 is not the PL011 (enable_gpio_uart.sh)")]
