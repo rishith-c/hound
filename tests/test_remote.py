@@ -291,3 +291,73 @@ def test_radar_view_waits_while_check_senses_has_the_port(web):
     assert opened == [] and not web.radar["on"]                            # never touched the port
     with web.lock:
         web.senses["running"] = False
+
+
+class _FakeMLX:
+    """An MLX90640: getFrame fills 768 floats. `plan` lists, per call, 'ok' or an exception to raise."""
+    def __init__(self, plan=None, temp=22.0): self.plan, self.temp, self.calls = list(plan or []), temp, 0
+    def getFrame(self, buf):
+        self.calls += 1
+        act = self.plan.pop(0) if self.plan else "ok"
+        time.sleep(0.01)
+        if act != "ok": raise act
+        for i in range(768): buf[i] = self.temp
+        buf[5 * 32 + 10] = 34.6                                         # a warm spot at row 5, column 10
+
+
+def _wait(cond, limit=3.0):
+    t0 = time.monotonic()
+    while not cond() and time.monotonic() - t0 < limit:
+        time.sleep(0.02)
+
+
+def test_thermal_view_reports_frames_in_tenths_and_closes(web):
+    mlx = _FakeMLX()
+    web.thermal_start(opener=lambda: mlx)
+    _wait(lambda: web.status().get("thermal", {}).get("frame"))
+    t = web.status()["thermal"]
+    assert t["on"] and len(t["frame"]) == 768 and t["frame"][0] == 220 and t["frame"][5 * 32 + 10] == 346
+    web.thermal_stop(wait=True)
+    assert "thermal" not in web.status()                                # off: nothing in the status
+    n = mlx.calls; time.sleep(0.2); assert mlx.calls == n               # and it stopped reading
+
+
+def test_thermal_view_skips_a_bad_frame_and_gives_up_after_ten(web):
+    web.thermal_start(opener=lambda: _FakeMLX([RuntimeError("Too many retries")] * 3))
+    _wait(lambda: web.status().get("thermal", {}).get("frame"))
+    assert web.status()["thermal"]["on"]                                 # three bad reads, then frames: still on
+    web.thermal_stop(wait=True)
+    web.thermal_start(opener=lambda: _FakeMLX([RuntimeError("x")] * 50))
+    _wait(lambda: not web.thermal["on"])
+    r = web.status()["thermal"]
+    assert not r["on"] and "re-seat" in r["err"]
+
+
+def test_thermal_view_without_the_camera_says_why(web):
+    def missing(): raise ValueError("No I2C device at address: 0x33")
+    web.thermal_start(opener=missing)
+    _wait(lambda: not web.thermal["on"])
+    r = web.status()["thermal"]
+    assert not r["on"] and "No I2C device" in r["err"] and "SDA" in r["err"]
+
+
+def test_check_senses_and_thermal_view_never_share_the_bus(web, tmp_path):
+    opened = []
+    with web.lock:
+        web.senses["running"] = True
+    web.thermal_start(opener=lambda: opened.append(1) or _FakeMLX())
+    time.sleep(0.1)
+    assert opened == [] and not web.thermal["on"]                        # refused while a senses check runs
+    with web.lock:
+        web.senses["running"] = False
+    web.thermal_start(opener=lambda: _FakeMLX())
+    _wait(lambda: web.status().get("thermal", {}).get("frame"))
+    d = tmp_path / "sensing"; d.mkdir(); (d / "bringup.py").write_text("print('PASS  thermal  ok')\n"); web.SENSING = str(d)
+    web.senses_start()
+    assert not web.thermal["on"]                                         # the check turned the view off first
+    _wait(lambda: not web.senses["running"])
+
+
+def test_thermal_page_has_its_button_and_colour_scale(web):
+    for needle in ("id=thb", "id=thc", "function drawThermal", "api('thermal?on='", "drawThermal(s.thermal)"):
+        assert needle in web.PAGE, needle
