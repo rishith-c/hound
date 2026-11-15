@@ -65,7 +65,7 @@ class R4:
             self._cmd = "s"
 
     def tilt(self, deg):
-        """Tilt servo on the shield's Z+ pin: 65–150°, or -1 to release the servo (no pulses)."""
+        """Tilt servo (PCA9685 channel 3, driven by the R4): 78–150°, or -1 to release the servo (no pulses)."""
         self._send(f"t {int(deg)}")
 
     def pan_stop(self):
@@ -73,7 +73,7 @@ class R4:
         self._send("p 0")
 
     def nudge_pan(self, direction, ms=300):
-        """Ceres-style pan: 1250 µs left / 1750 µs right for ms milliseconds, then the pulse is cut. ~20° per 300 ms nudge."""
+        """Ceres-style pan: an eased turn for ms milliseconds (+1 right, −1 left), then the pulse is cut. ~20° per 300 ms nudge."""
         self._send(f"n {1 if direction > 0 else -1} {int(ms)}")
 
     def pan(self, deg=None):
@@ -113,8 +113,8 @@ class R4:
         with self._io:                                       # one serial exchange at a time: two readers on the port crash pyserial
             self.ser.write((cmd + "\n").encode())
             chunk = self.ser.read(2000)
-        self._buf = getattr(self, "_buf", b"") + chunk
-        *lines, self._buf = self._buf.split(b"\n")          # keep the unfinished tail for next time
+            self._buf = getattr(self, "_buf", b"") + chunk      # inside the lock: callers on other threads share the buffer
+            *lines, self._buf = self._buf.split(b"\n")      # keep the unfinished tail for next time
         for line in reversed(lines):
             line = line.strip()
             if line.startswith(b"{") and line.endswith(b"}"):
