@@ -14,7 +14,7 @@ cd "$HOME/rover"
 [ -d venv ] || python3 -m venv --system-site-packages venv
 venv/bin/pip install -q --upgrade pip
 venv/bin/pip install -q pyserial adafruit-blinka adafruit-circuitpython-pca9685 adafruit-circuitpython-motor \
-  numpy scipy adafruit-circuitpython-mlx90640 opencv-python-headless        # sensing: vitals DSP, thermal array, MobileNet-SSD camera
+  numpy scipy adafruit-circuitpython-mlx90640 adafruit-circuitpython-vl53l1x opencv-python-headless   # sensing: vitals DSP, thermal array, ToFs, MobileNet-SSD camera
 # MobileNet-SSD (Caffe) for the camera person detector, ~23 MB
 [ -f "$HOME/rover/MobileNetSSD_deploy.caffemodel" ] || curl -fsSL -o "$HOME/rover/MobileNetSSD_deploy.caffemodel" \
   "https://github.com/chuanqi305/MobileNet-SSD/raw/master/mobilenet_iter_73000.caffemodel" || true

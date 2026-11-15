@@ -538,35 +538,35 @@
 <!-- TOF_F -->
 <g id="node3" class="node">
 <title>TOF_F</title>
-<polygon fill="#ffffff" stroke="black" points="3723.98,-454.88 2952.48,-454.88 2952.48,-264.88 3723.98,-264.88 3723.98,-454.88"/>
-<polygon fill="none" stroke="black" points="2952.48,-431.12 2952.48,-454.88 3723.98,-454.88 3723.98,-431.12 2952.48,-431.12"/>
+<polygon fill="#ffffff" stroke="black" points="3987.23,-454.88 2689.23,-454.88 2689.23,-264.88 3987.23,-264.88 3987.23,-454.88"/>
+<polygon fill="none" stroke="black" points="2689.23,-431.12 2689.23,-454.88 3987.23,-454.88 3987.23,-431.12 2689.23,-431.12"/>
 <text xml:space="preserve" text-anchor="start" x="3316.48" y="-438.12" font-family="arial" font-size="14.00">TOF_F</text>
-<polygon fill="none" stroke="black" points="2952.48,-407.38 2952.48,-431.12 3511.48,-431.12 3511.48,-407.38 2952.48,-407.38"/>
-<text xml:space="preserve" text-anchor="start" x="3043.73" y="-414.38" font-family="arial" font-size="14.00">VL53L1X ToF FRONT (0x29 → re&#45;addressed 0x30 by XSHUT)</text>
-<polygon fill="none" stroke="black" points="3511.48,-407.38 3511.48,-431.12 3723.98,-431.12 3723.98,-407.38 3511.48,-407.38"/>
-<text xml:space="preserve" text-anchor="start" x="3602.73" y="-414.38" font-family="arial" font-size="14.00">5&#45;pin</text>
-<polygon fill="none" stroke="black" points="2952.48,-383.62 2952.48,-407.38 3316.85,-407.38 3316.85,-383.62 2952.48,-383.62"/>
-<text xml:space="preserve" text-anchor="start" x="3130.92" y="-390.62" font-family="arial" font-size="14.00">1</text>
-<polygon fill="none" stroke="black" points="3316.85,-383.62 3316.85,-407.38 3723.98,-407.38 3723.98,-383.62 3316.85,-383.62"/>
-<text xml:space="preserve" text-anchor="start" x="3495.29" y="-390.62" font-family="arial" font-size="14.00">VIN 3V3</text>
-<polygon fill="none" stroke="black" points="2952.48,-359.88 2952.48,-383.62 3316.85,-383.62 3316.85,-359.88 2952.48,-359.88"/>
-<text xml:space="preserve" text-anchor="start" x="3130.92" y="-366.88" font-family="arial" font-size="14.00">2</text>
-<polygon fill="none" stroke="black" points="3316.85,-359.88 3316.85,-383.62 3723.98,-383.62 3723.98,-359.88 3316.85,-359.88"/>
-<text xml:space="preserve" text-anchor="start" x="3505.04" y="-366.88" font-family="arial" font-size="14.00">GND</text>
-<polygon fill="none" stroke="black" points="2952.48,-336.12 2952.48,-359.88 3316.85,-359.88 3316.85,-336.12 2952.48,-336.12"/>
-<text xml:space="preserve" text-anchor="start" x="3130.92" y="-343.12" font-family="arial" font-size="14.00">3</text>
-<polygon fill="none" stroke="black" points="3316.85,-336.12 3316.85,-359.88 3723.98,-359.88 3723.98,-336.12 3316.85,-336.12"/>
-<text xml:space="preserve" text-anchor="start" x="3506.54" y="-343.12" font-family="arial" font-size="14.00">SDA</text>
-<polygon fill="none" stroke="black" points="2952.48,-312.38 2952.48,-336.12 3316.85,-336.12 3316.85,-312.38 2952.48,-312.38"/>
-<text xml:space="preserve" text-anchor="start" x="3130.92" y="-319.38" font-family="arial" font-size="14.00">4</text>
-<polygon fill="none" stroke="black" points="3316.85,-312.38 3316.85,-336.12 3723.98,-336.12 3723.98,-312.38 3316.85,-312.38"/>
-<text xml:space="preserve" text-anchor="start" x="3507.29" y="-319.38" font-family="arial" font-size="14.00">SCL</text>
-<polygon fill="none" stroke="black" points="2952.48,-288.62 2952.48,-312.38 3316.85,-312.38 3316.85,-288.62 2952.48,-288.62"/>
-<text xml:space="preserve" text-anchor="start" x="3130.92" y="-295.62" font-family="arial" font-size="14.00">5</text>
-<polygon fill="none" stroke="black" points="3316.85,-288.62 3316.85,-312.38 3723.98,-312.38 3723.98,-288.62 3316.85,-288.62"/>
-<text xml:space="preserve" text-anchor="start" x="3497.54" y="-295.62" font-family="arial" font-size="14.00">XSHUT</text>
-<polygon fill="none" stroke="black" points="2952.48,-264.88 2952.48,-288.62 3723.98,-288.62 3723.98,-264.88 2952.48,-264.88"/>
-<text xml:space="preserve" text-anchor="start" x="2956.48" y="-271.88" font-family="arial" font-size="14.00">Both ToFs share I2C&#45;1. At boot the Pi holds FRONT XSHUT low, gives REAR 0x29… then raises FRONT and moves it to 0x30.</text>
+<polygon fill="none" stroke="black" points="2689.23,-407.38 2689.23,-431.12 3511.48,-431.12 3511.48,-407.38 2689.23,-407.38"/>
+<text xml:space="preserve" text-anchor="start" x="2912.1" y="-414.38" font-family="arial" font-size="14.00">VL53L1X ToF FRONT (0x29 → re&#45;addressed 0x30 by XSHUT)</text>
+<polygon fill="none" stroke="black" points="3511.48,-407.38 3511.48,-431.12 3987.23,-431.12 3987.23,-407.38 3511.48,-407.38"/>
+<text xml:space="preserve" text-anchor="start" x="3734.35" y="-414.38" font-family="arial" font-size="14.00">5&#45;pin</text>
+<polygon fill="none" stroke="black" points="2689.23,-383.62 2689.23,-407.38 3316.85,-407.38 3316.85,-383.62 2689.23,-383.62"/>
+<text xml:space="preserve" text-anchor="start" x="2999.29" y="-390.62" font-family="arial" font-size="14.00">1</text>
+<polygon fill="none" stroke="black" points="3316.85,-383.62 3316.85,-407.38 3987.23,-407.38 3987.23,-383.62 3316.85,-383.62"/>
+<text xml:space="preserve" text-anchor="start" x="3626.92" y="-390.62" font-family="arial" font-size="14.00">VIN 3V3</text>
+<polygon fill="none" stroke="black" points="2689.23,-359.88 2689.23,-383.62 3316.85,-383.62 3316.85,-359.88 2689.23,-359.88"/>
+<text xml:space="preserve" text-anchor="start" x="2999.29" y="-366.88" font-family="arial" font-size="14.00">2</text>
+<polygon fill="none" stroke="black" points="3316.85,-359.88 3316.85,-383.62 3987.23,-383.62 3987.23,-359.88 3316.85,-359.88"/>
+<text xml:space="preserve" text-anchor="start" x="3636.67" y="-366.88" font-family="arial" font-size="14.00">GND</text>
+<polygon fill="none" stroke="black" points="2689.23,-336.12 2689.23,-359.88 3316.85,-359.88 3316.85,-336.12 2689.23,-336.12"/>
+<text xml:space="preserve" text-anchor="start" x="2999.29" y="-343.12" font-family="arial" font-size="14.00">3</text>
+<polygon fill="none" stroke="black" points="3316.85,-336.12 3316.85,-359.88 3987.23,-359.88 3987.23,-336.12 3316.85,-336.12"/>
+<text xml:space="preserve" text-anchor="start" x="3638.17" y="-343.12" font-family="arial" font-size="14.00">SDA</text>
+<polygon fill="none" stroke="black" points="2689.23,-312.38 2689.23,-336.12 3316.85,-336.12 3316.85,-312.38 2689.23,-312.38"/>
+<text xml:space="preserve" text-anchor="start" x="2999.29" y="-319.38" font-family="arial" font-size="14.00">4</text>
+<polygon fill="none" stroke="black" points="3316.85,-312.38 3316.85,-336.12 3987.23,-336.12 3987.23,-312.38 3316.85,-312.38"/>
+<text xml:space="preserve" text-anchor="start" x="3638.92" y="-319.38" font-family="arial" font-size="14.00">SCL</text>
+<polygon fill="none" stroke="black" points="2689.23,-288.62 2689.23,-312.38 3316.85,-312.38 3316.85,-288.62 2689.23,-288.62"/>
+<text xml:space="preserve" text-anchor="start" x="2999.29" y="-295.62" font-family="arial" font-size="14.00">5</text>
+<polygon fill="none" stroke="black" points="3316.85,-288.62 3316.85,-312.38 3987.23,-312.38 3987.23,-288.62 3316.85,-288.62"/>
+<text xml:space="preserve" text-anchor="start" x="3629.17" y="-295.62" font-family="arial" font-size="14.00">XSHUT</text>
+<polygon fill="none" stroke="black" points="2689.23,-264.88 2689.23,-288.62 3987.23,-288.62 3987.23,-264.88 2689.23,-264.88"/>
+<text xml:space="preserve" text-anchor="start" x="2693.23" y="-271.88" font-family="arial" font-size="14.00">Both ToFs share I2C&#45;1 and boot at 0x29. At every start sensing/tof.py holds BOTH XSHUT low, wakes FRONT alone and moves it to 0x30, then wakes REAR (0x29). Waking both before the change would move both.</text>
 </g>
 <!-- TOF_R -->
 <g id="node4" class="node">
@@ -720,37 +720,37 @@
 <!-- W_TOF_F&#45;&#45;TOF_F -->
 <g id="edge10" class="edge">
 <title>W_TOF_F:e&#45;&#45;TOF_F:w</title>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-396.75C2604.24,-396.75 2673.66,-393.5 2951.48,-393.5"/>
-<path fill="none" stroke="#ff0000" stroke-width="2" d="M2326.6,-398.75C2604.33,-398.75 2673.75,-395.5 2951.48,-395.5"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-400.75C2604.42,-400.75 2673.85,-397.5 2951.48,-397.5"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-396.75C2487.17,-396.76 2527.34,-393.51 2688.23,-393.5"/>
+<path fill="none" stroke="#ff0000" stroke-width="2" d="M2326.6,-398.75C2487.33,-398.75 2527.5,-395.5 2688.23,-395.5"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-400.75C2487.49,-400.74 2527.66,-397.49 2688.23,-397.5"/>
 </g>
 <!-- W_TOF_F&#45;&#45;TOF_F -->
 <g id="edge12" class="edge">
 <title>W_TOF_F:e&#45;&#45;TOF_F:w</title>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-371C2604.29,-371 2673.72,-369.75 2951.48,-369.75"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-373C2604.33,-373 2673.76,-371.75 2951.48,-371.75"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-375C2604.36,-375 2673.79,-373.75 2951.48,-373.75"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-371C2487.26,-371 2527.44,-369.75 2688.23,-369.75"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-373C2487.33,-373 2527.51,-371.75 2688.23,-371.75"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-375C2487.39,-375 2527.57,-373.75 2688.23,-373.75"/>
 </g>
 <!-- W_TOF_F&#45;&#45;TOF_F -->
 <g id="edge14" class="edge">
 <title>W_TOF_F:e&#45;&#45;TOF_F:w</title>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-345.25C2604.35,-345.25 2673.78,-346 2951.48,-346"/>
-<path fill="none" stroke="#0066ff" stroke-width="2" d="M2326.6,-347.25C2604.33,-347.25 2673.76,-348 2951.48,-348"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-349.25C2604.3,-349.25 2673.73,-350 2951.48,-350"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-345.25C2487.36,-345.25 2527.54,-346 2688.23,-346"/>
+<path fill="none" stroke="#0066ff" stroke-width="2" d="M2326.6,-347.25C2487.33,-347.25 2527.51,-348 2688.23,-348"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-349.25C2487.29,-349.25 2527.47,-350 2688.23,-350"/>
 </g>
 <!-- W_TOF_F&#45;&#45;TOF_F -->
 <g id="edge16" class="edge">
 <title>W_TOF_F:e&#45;&#45;TOF_F:w</title>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-319.5C2604.41,-319.5 2673.83,-322.25 2951.48,-322.25"/>
-<path fill="none" stroke="#ffff00" stroke-width="2" d="M2326.6,-321.5C2604.33,-321.5 2673.75,-324.25 2951.48,-324.25"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-323.5C2604.25,-323.5 2673.67,-326.25 2951.48,-326.25"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-319.5C2487.47,-319.5 2527.64,-322.25 2688.23,-322.25"/>
+<path fill="none" stroke="#ffff00" stroke-width="2" d="M2326.6,-321.5C2487.33,-321.5 2527.5,-324.25 2688.23,-324.25"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-323.5C2487.19,-323.5 2527.37,-326.25 2688.23,-326.25"/>
 </g>
 <!-- W_TOF_F&#45;&#45;TOF_F -->
 <g id="edge18" class="edge">
 <title>W_TOF_F:e&#45;&#45;TOF_F:w</title>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-293.75C2604.47,-293.75 2673.89,-298.5 2951.48,-298.5"/>
-<path fill="none" stroke="#ffffff" stroke-width="2" d="M2326.6,-295.75C2604.33,-295.75 2673.75,-300.5 2951.48,-300.5"/>
-<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-297.75C2604.2,-297.75 2673.61,-302.5 2951.48,-302.5"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-293.75C2487.57,-293.76 2527.73,-298.51 2688.23,-298.5"/>
+<path fill="none" stroke="#ffffff" stroke-width="2" d="M2326.6,-295.75C2487.34,-295.75 2527.49,-300.5 2688.23,-300.5"/>
+<path fill="none" stroke="#000000" stroke-width="2" d="M2326.6,-297.75C2487.11,-297.74 2527.26,-302.49 2688.23,-302.5"/>
 </g>
 <!-- W_TOF_R&#45;&#45;TOF_R -->
 <g id="edge20" class="edge">
