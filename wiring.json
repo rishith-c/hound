@@ -607,7 +607,7 @@
   {
    "level": "PROCEDURE",
    "id": "radar-gnd",
-   "text": "Each radar's GND pin gets TWO wires: one to the LM2596 OUT− (its power return) and the cable's GND to ESP32 #1 (signal reference). With only the cable GND, the radars' 330 mA returns through ESP32 #1 → Pi → R4 USB → shield → Wago: 132 mV of ground shift on every serial link. That is the exact Ceres fault"
+   "text": "Each radar's GND pin gets TWO wires: one to the LM2596 OUT− (its power return) and the cable's GND to ESP32 #1 (signal reference). With only the cable GND, the radars' 180 mA returns through ESP32 #1 → Pi → R4 USB → shield → Wago: 72 mV of ground shift on every serial link. That is the exact Ceres fault"
   },
   {
    "level": "PROCEDURE",
