@@ -1,0 +1,52 @@
+[
+  [
+    "JK42HS40-1704-13A motors",
+    "5",
+    "Four drive wheels; fifth spare"
+  ],
+  [
+    "Raspberry Pi",
+    "1",
+    "Video, interface, sensor processing; model still unknown"
+  ],
+  [
+    "Power bank",
+    "1",
+    "Logic power; verify model, ports and combined output"
+  ],
+  [
+    "HLK-LD2450",
+    "1",
+    "Fixed moving-target tracker; no heartbeat output"
+  ],
+  [
+    "HLK-LD2410C",
+    "2",
+    "One primary stationary/moving presence sensor; second spare"
+  ],
+  [
+    "ESP32-S3",
+    "3",
+    "One sensor interface; two available for optional CSI experiments"
+  ],
+  [
+    "CP2102 USB-UART adapter",
+    "1",
+    "Bench configuration or one radar-to-Pi link; verify 3.3 V UART levels"
+  ],
+  [
+    "TB6600",
+    "1",
+    "Spare; no fifth axis in this design"
+  ],
+  [
+    "Dupont leads and 22 AWG wire",
+    "Existing stock",
+    "Signals and suitable low-current connections"
+  ],
+  [
+    "Three-pin switch",
+    "1",
+    "Motor switch candidate; DC rating and pinout unverified"
+  ]
+]

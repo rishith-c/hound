@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rover BOM</title>
+<style>
+:root{color-scheme:light}
+html,body{background:#fff;color:#000;margin:0}
+body{font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;max-width:920px;padding:32px 20px 64px;margin:0 auto}
+h1{font-size:26px;margin:0 0 6px;font-weight:650}
+h2{font-size:18px;margin:36px 0 8px;font-weight:650;display:flex;justify-content:space-between;align-items:baseline}
+h2 .sub{font-weight:400;font-size:15px}
+h2 small{font-weight:400;font-size:13px;margin-left:8px}
+p{margin:8px 0}
+.lede{font-size:15px}
+a{color:#000;text-decoration:underline;text-underline-offset:2px}
+a:hover{text-decoration-thickness:2px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 6px;border-bottom:1px solid #000;text-align:left;vertical-align:top;font-size:15px}
+th{font-weight:600;border-bottom:2px solid #000}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.ck{width:26px;padding-right:0}
+input[type=checkbox]{width:16px;height:16px;accent-color:#000;margin:2px 0 0}
+tr.done td{opacity:.45}
+tr.done a{text-decoration:line-through}
+.note{font-size:13px;margin-top:3px}
+.bar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:baseline;margin:14px 0 4px}
+.big{font-size:20px;font-weight:650}
+.btn{display:inline-block;border:1.5px solid #000;padding:6px 12px;text-decoration:none;font-size:15px}
+.btn:hover{background:#000;color:#fff}
+.rule{border:0;border-top:1px solid #000;margin:28px 0}
+pre{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;border:1px solid #000;padding:12px}
+.muted{font-size:13px}
+@media(max-width:600px){body{padding:20px 12px 48px} th,td{padding:7px 4px;font-size:14px}}
+</style></head><body>
+
+<h1>Mecanum rover — bill of materials</h1>
+<p>Four owned NEMA 17 steppers, four 80 mm mecanum wheels, a low 2020 frame, fixed radar mounts. No linear rail. Parts grouped by what they do.</p>
+
+<div class="bar">
+  <span class="big">Buy: $413.04</span>
+  <span>26 lines · optional tools $116.16 more</span>
+  <a class="btn" href="bom.csv" download>Download CSV</a>
+  <a class="btn" href="drivetrain.txt">Drivetrain report</a>
+</div>
+<p class="muted">Prices observed Sept 4–5, 2026 on Amazon US; check before checkout. Tick a box to mark it bought — it remembers on this device.</p>
+
+<hr class="rule">
+
+<h2>Can four motors carry it? <span class="sub">yes — with one condition</span></h2>
+<p>Four JK42HS40-1704-13A motors carry the 4.84 kg design at 1.5 A per phase. That current needs DRV8825 drivers — the A4988s that ship with most CNC Shield kits fail the 5° ramp case at every setting they can run without cooking. Governing load is a 5° carpet ramp at 0.3 m/s²; steppers that lose it stall silently and lose position. Keep total mass under about 5.2 kg or the ramp margin is gone.</p>
+<div class="tw"><table>
+<thead><tr><th>Driver / current</th><th class="n">Torque avail</th><th class="n">Level</th><th class="n">Strafe</th><th class="n">5° ramp</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>A4988, no cooling — 1.0 A</td><td class="n">0.170 N·m</td><td class="n">1.43</td><td class="n">1.19</td><td class="n">0.91</td><td>FAIL ramp</td></tr><tr><td>A4988, heatsink + fan — 1.2 A</td><td class="n">0.204 N·m</td><td class="n">1.71</td><td class="n">1.43</td><td class="n">1.09</td><td>FAIL ramp</td></tr><tr><td>DRV8825, no cooling — 1.5 A</td><td class="n">0.254 N·m</td><td class="n">2.14</td><td class="n">1.78</td><td class="n">1.36</td><td>PASS</td></tr><tr><td>DRV8825, heatsink + fan — 1.7 A</td><td class="n">0.288 N·m</td><td class="n">2.43</td><td class="n">2.02</td><td class="n">1.54</td><td>PASS</td></tr>
+</tbody></table></div>
+<p class="muted">Margin = available ÷ required; acceptance ≥ 1.25 on an unmeasured running torque. Design mass 4.84 kg. The one number that retires the biggest assumption: measure pull-out torque at 24 rpm, 1.5 A, on the real battery.</p>
+
+<hr class="rule">
+
+<h2>Already owned <span class="sub">$0.00</span></h2>
+<div class="tw"><table>
+<thead><tr><th>Item</th><th class="n">Qty</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>JK42HS40-1704-13A NEMA 17 stepper</td><td class="n">5</td><td>Four drive wheels; fifth spare. 0.41 N·m holding, 1.7 A, 0.24 kg each</td></tr>
+<tr><td>Raspberry Pi</td><td class="n">1</td><td>Camera, interface, sensor processing. Model still unknown</td></tr>
+<tr><td>USB power bank</td><td class="n">1</td><td>Logic power for the Pi. Verify combined output current</td></tr>
+<tr><td>HLK-LD2410C 24 GHz radar</td><td class="n">2</td><td>Primary presence sensor, sees a motionless person; one spare</td></tr>
+<tr><td>HLK-LD2450 24 GHz radar</td><td class="n">1</td><td>x/y of moving targets only. Not a heartbeat sensor — neither is</td></tr>
+<tr><td>ESP32-S3 (N16R8)</td><td class="n">3</td><td>One as radar UART bridge; two free for WiFi CSI experiments</td></tr>
+<tr><td>CP2102 USB-UART</td><td class="n">1</td><td>Bench setup. Check it is 3.3 V logic before touching a radar</td></tr>
+<tr><td>TB6600 driver</td><td class="n">1</td><td>Spare. No fifth axis in this design</td></tr>
+<tr><td>Dupont leads, 22 AWG wire</td><td class="n">stock</td><td>Signal wiring</td></tr>
+<tr><td>3-pin switch</td><td class="n">1</td><td>Motor power switch candidate. DC rating unverified</td></tr>
+</tbody></table></div>
+
+<h2 id="drivetrain">Drivetrain <span class="sub">$46.98</span></h2>
+<p class="lede">The four owned motors plus the wheels and the steel brackets that hold them. Use the couplings that come with the wheels; do not print a load-bearing hub.</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>Item</th><th class="n">Qty</th><th class="n">Each</th><th class="n">Line</th></tr></thead>
+<tbody>
+<tr><td class="ck"><input type="checkbox" data-key="drivetrain-B0DWSWQV4T"></td><td><a href="https://www.amazon.com/dp/B0DWSWQV4T" target="_blank" rel="noopener">SmaringRobot 4× 80 mm mecanum wheels with 5 mm couplings</a><div class="note">Two left-hand, two right-hand. Same handedness on each diagonal.</div></td><td class="n">1</td><td class="n">$29.99</td><td class="n">$29.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="drivetrain-B073QW9RPZ"></td><td><a href="https://www.amazon.com/dp/B073QW9RPZ" target="_blank" rel="noopener">Anndason 6× steel NEMA 17 L-brackets with screws</a><div class="note">Four used, two spare. 31 mm bolt pattern. Base slots are 4.3 mm — use M4 T-nuts, not M5. Mount inverted under the rail.</div></td><td class="n">1</td><td class="n">$16.99</td><td class="n">$16.99</td></tr>
+</tbody></table></div>
+<h2 id="frame">Frame <span class="sub">$45.57</span></h2>
+<p class="lede">Four 350 mm rails butt-jointed into a 350 × 390 mm rectangle. Rail top sits 91 mm off the floor with 80 mm wheels.</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>Item</th><th class="n">Qty</th><th class="n">Each</th><th class="n">Line</th></tr></thead>
+<tbody>
+<tr><td class="ck"><input type="checkbox" data-key="frame-B099M9DMSL"></td><td><a href="https://www.amazon.com/dp/B099M9DMSL" target="_blank" rel="noopener">VICHSAMWY 4× 350 mm 2020 V-slot aluminium extrusion</a></td><td class="n">1</td><td class="n">$16.59</td><td class="n">$16.59</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="frame-B0F1B85397"></td><td><a href="https://www.amazon.com/dp/B0F1B85397" target="_blank" rel="noopener">TOCLUX 20× 2020 corner brackets with M5 screws and T-nuts</a><div class="note">Eight for the frame corners, rest for deck and mount attachment.</div></td><td class="n">1</td><td class="n">$14.99</td><td class="n">$14.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="frame-B0FQ55VFDK"></td><td><a href="https://www.amazon.com/dp/B0FQ55VFDK" target="_blank" rel="noopener">Bemaka 2020 T-nut kit, M3/M4/M5, with M4×10 and M4×12 screws</a><div class="note">The M4 T-nuts and screws here are what hold the motor brackets to the rails.</div></td><td class="n">1</td><td class="n">$13.99</td><td class="n">$13.99</td></tr>
+</tbody></table></div>
+<h2 id="motion-control">Motion control <span class="sub">$38.97</span></h2>
+<p class="lede">Uno generates the step pulses on a timer interrupt; the shield carries four drivers. DRV8825 is required, not optional — see the torque table above. Ordinary GRBL cannot do independent four-wheel drive; this runs custom firmware with a shared ENABLE on D8 and the A axis on D12/D13.</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>Item</th><th class="n">Qty</th><th class="n">Each</th><th class="n">Line</th></tr></thead>
+<tbody>
+<tr><td class="ck"><input type="checkbox" data-key="motion-control-B01EWOE0UU"></td><td><a href="https://www.amazon.com/dp/B01EWOE0UU" target="_blank" rel="noopener">ELEGOO Uno R3 with USB cable</a></td><td class="n">1</td><td class="n">$16.99</td><td class="n">$16.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="motion-control-B0B24YS695"></td><td><a href="https://www.amazon.com/dp/B0B24YS695" target="_blank" rel="noopener">CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks</a><div class="note">Replaces the A4988 kit ($9.99) — +$6 buys the ramp margin. Set Vref = 5 × Rsense × I; with 0.100 Ω sense resistors 1.5 A is 0.75 V. Identify the sense resistor first.</div></td><td class="n">1</td><td class="n">$15.99</td><td class="n">$15.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="motion-control-B0DY6GQMJX"></td><td><a href="https://www.amazon.com/dp/B0DY6GQMJX" target="_blank" rel="noopener">SIXQJZML 2× 40 × 40 × 10 mm 5 V fans</a><div class="note">One over the drivers, one spare. Needed for the 1.7 A setting; good practice at 1.5 A.</div></td><td class="n">1</td><td class="n">$5.99</td><td class="n">$5.99</td></tr>
+</tbody></table></div>
+<h2 id="power">Power <span class="sub">$143.43</span></h2>
+<p class="lede">LiPo → overcurrent protection → DC-rated switch → shield VMOT. The Pi runs off the power bank, never off the LiPo rail. Motors draw about 2 A at 1.5 A/phase; the 5200 mAh pack runs them for roughly 2 hours.</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>Item</th><th class="n">Qty</th><th class="n">Each</th><th class="n">Line</th></tr></thead>
+<tbody>
+<tr><td class="ck"><input type="checkbox" data-key="power-B0972RKJDS"></td><td><a href="https://www.amazon.com/dp/B0972RKJDS" target="_blank" rel="noopener">Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60</a><div class="note">343 g, 132 × 43 × 25 mm. Strap it low and centred — it is the heaviest single part.</div></td><td class="n">1</td><td class="n">$34.99</td><td class="n">$34.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="power-B0CV64ZB2L"></td><td><a href="https://www.amazon.com/dp/B0CV64ZB2L" target="_blank" rel="noopener">SKYRC B6AC Neo balance charger, 60 W AC</a><div class="note">Start at 2.6 A = 0.5 C. Follow the pack&#x27;s instructions.</div></td><td class="n">1</td><td class="n">$53.00</td><td class="n">$53.00</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="power-B09CT5VGPW"></td><td><a href="https://www.amazon.com/dp/B09CT5VGPW" target="_blank" rel="noopener">LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions</a></td><td class="n">1</td><td class="n">$7.99</td><td class="n">$7.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="power-B07BF8154S"></td><td><a href="https://www.amazon.com/dp/B07BF8154S" target="_blank" rel="noopener">Padarsey 2 pairs XT60 14 AWG pigtails</a></td><td class="n">1</td><td class="n">$6.99</td><td class="n">$6.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="power-B07VR4SV8C"></td><td><a href="https://www.amazon.com/dp/B07VR4SV8C" target="_blank" rel="noopener">AOICRIE 2× 1S–8S cell voltage alarms</a><div class="note">Plugs into the balance lead. Screams before the pack is damaged.</div></td><td class="n">1</td><td class="n">$6.59</td><td class="n">$6.59</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="power-B08QCMMGJT"></td><td><a href="https://www.amazon.com/dp/B08QCMMGJT" target="_blank" rel="noopener">Tenergy LiPo charging bag</a></td><td class="n">1</td><td class="n">$8.99</td><td class="n">$8.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="power-B0B15CH937"></td><td><a href="https://www.amazon.com/dp/B0B15CH937" target="_blank" rel="noopener">XINWANG 18 AWG silicone wire, 6 colours × 5 m</a><div class="note">Motor and VMOT runs. 22 AWG would carry it; 18 AWG is comfortable.</div></td><td class="n">1</td><td class="n">$17.89</td><td class="n">$17.89</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="power-B08N42RQF6"></td><td><a href="https://www.amazon.com/dp/B08N42RQF6" target="_blank" rel="noopener">Bicmice US IEC C7 mains cord 6 ft</a><div class="note">Omit if the charger ships with the right cord.</div></td><td class="n">1</td><td class="n">$6.99</td><td class="n">$6.99</td></tr>
+</tbody></table></div>
+<h2 id="sensing-and-compute">Sensing and compute <span class="sub">$78.45</span></h2>
+<p class="lede">Fixed forward-facing radar mounts with the antenna face clear of metal. Camera and four short-range ToF sensors for obstacle stops. The two radar types get tested separately before running together.</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>Item</th><th class="n">Qty</th><th class="n">Each</th><th class="n">Line</th></tr></thead>
+<tbody>
+<tr><td class="ck"><input type="checkbox" data-key="sensing-and-compute-B09V4DS888"></td><td><a href="https://www.amazon.com/dp/B09V4DS888" target="_blank" rel="noopener">DWEII 2× VL53L1X time-of-flight distance modules</a><div class="note">Four total: forward, reverse, both sides. Share I²C only after XSHUT assigns unique addresses at boot.</div></td><td class="n">2</td><td class="n">$14.99</td><td class="n">$29.98</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="sensing-and-compute-B00KA80N9U"></td><td><a href="https://www.amazon.com/dp/B00KA80N9U" target="_blank" rel="noopener">ELP USBFHD01M-L28 USB camera, 2.8 mm lens</a></td><td class="n">1</td><td class="n">$22.49</td><td class="n">$22.49</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="sensing-and-compute-B07YGZQ4H8"></td><td><a href="https://www.amazon.com/dp/B07YGZQ4H8" target="_blank" rel="noopener">Kingston Canvas Select Plus 64 GB microSD, A1</a></td><td class="n">1</td><td class="n">$17.99</td><td class="n">$17.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="sensing-and-compute-B07Z1TQYDN"></td><td><a href="https://www.amazon.com/dp/B07Z1TQYDN" target="_blank" rel="noopener">etguuds 2× USB-A to USB-C 6 ft cables</a></td><td class="n">1</td><td class="n">$7.99</td><td class="n">$7.99</td></tr>
+</tbody></table></div>
+<h2 id="fasteners-and-assembly">Fasteners and assembly <span class="sub">$44.95</span></h2>
+<p class="lede">Everything that holds it together. The M3 motor bolts see under 5 N each at a full-torque jam — margin is not a concern there.</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>Item</th><th class="n">Qty</th><th class="n">Each</th><th class="n">Line</th></tr></thead>
+<tbody>
+<tr><td class="ck"><input type="checkbox" data-key="fasteners-and-assembly-B0FGV5FCBN"></td><td><a href="https://www.amazon.com/dp/B0FGV5FCBN" target="_blank" rel="noopener">Fgruh 750-piece M3 screw, nut and washer assortment</a></td><td class="n">1</td><td class="n">$9.99</td><td class="n">$9.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="fasteners-and-assembly-B0CKBWQSNY"></td><td><a href="https://www.amazon.com/dp/B0CKBWQSNY" target="_blank" rel="noopener">COMRUN M2.5 nylon standoff kit</a><div class="note">Pi, Uno and ESP32 mounting.</div></td><td class="n">1</td><td class="n">$9.99</td><td class="n">$9.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="fasteners-and-assembly-B0GH8CGW2T"></td><td><a href="https://www.amazon.com/dp/B0GH8CGW2T" target="_blank" rel="noopener">MEIVIFPV 5× 20 × 250 mm battery straps</a></td><td class="n">1</td><td class="n">$9.99</td><td class="n">$9.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="fasteners-and-assembly-B01MFA3OFA"></td><td><a href="https://www.amazon.com/dp/B01MFA3OFA" target="_blank" rel="noopener">Ginsco 580-piece heat-shrink assortment</a></td><td class="n">1</td><td class="n">$7.99</td><td class="n">$7.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="fasteners-and-assembly-B0F9T5G2J5"></td><td><a href="https://www.amazon.com/dp/B0F9T5G2J5" target="_blank" rel="noopener">ALLWIN 100 cable mounts + 100 cable ties</a></td><td class="n">1</td><td class="n">$6.99</td><td class="n">$6.99</td></tr>
+</tbody></table></div>
+<h2 id="fabrication">Fabrication <span class="sub">$14.69</span></h2>
+<p class="lede">Printed deck tiles, sensor mounts, electronics tray and battery cradle. PETG over PLA for the battery cradle — it will sit next to warm drivers.</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>Item</th><th class="n">Qty</th><th class="n">Each</th><th class="n">Line</th></tr></thead>
+<tbody>
+<tr><td class="ck"><input type="checkbox" data-key="fabrication-B07PGYHYV8"></td><td><a href="https://www.amazon.com/dp/B07PGYHYV8" target="_blank" rel="noopener">OVERTURE black PETG 1 kg 1.75 mm</a></td><td class="n">1</td><td class="n">$14.69</td><td class="n">$14.69</td></tr>
+</tbody></table></div>
+<h2 id="tools">Tools <small>(optional)</small> <span class="sub">$116.16</span></h2>
+<p class="lede">Only if you do not already have them. The hanging scale is the one that matters: it is how you measure the motor torque this whole design rests on.</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>Item</th><th class="n">Qty</th><th class="n">Each</th><th class="n">Line</th></tr></thead>
+<tbody>
+<tr><td class="ck"><input type="checkbox" data-key="tools-B0GGHDNZWJ"></td><td><a href="https://www.amazon.com/dp/B0GGHDNZWJ" target="_blank" rel="noopener">MEIYA hanging scale</a><div class="note">Lever arm on the motor shaft, scale on the lever, read the force. T = F × arm.</div></td><td class="n">1</td><td class="n">$7.99</td><td class="n">$7.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="tools-B0DYJ465TC"></td><td><a href="https://www.amazon.com/dp/B0DYJ465TC" target="_blank" rel="noopener">Westinghouse MM600V15 multimeter</a><div class="note">Vref setting needs this.</div></td><td class="n">1</td><td class="n">$34.89</td><td class="n">$34.89</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="tools-B08Y8M54M9"></td><td><a href="https://www.amazon.com/dp/B08Y8M54M9" target="_blank" rel="noopener">Jiavarry 150 mm digital caliper</a></td><td class="n">1</td><td class="n">$21.98</td><td class="n">$21.98</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="tools-B087767KNW"></td><td><a href="https://www.amazon.com/dp/B087767KNW" target="_blank" rel="noopener">Q-MING soldering iron kit</a></td><td class="n">1</td><td class="n">$12.59</td><td class="n">$12.59</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="tools-B09WYHPHTC"></td><td><a href="https://www.amazon.com/dp/B09WYHPHTC" target="_blank" rel="noopener">WORKPRO 12 inch hacksaw</a></td><td class="n">1</td><td class="n">$18.73</td><td class="n">$18.73</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="tools-B0CJBRYQF3"></td><td><a href="https://www.amazon.com/dp/B0CJBRYQF3" target="_blank" rel="noopener">AMTOVL metric hex key set</a></td><td class="n">1</td><td class="n">$9.99</td><td class="n">$9.99</td></tr>
+<tr><td class="ck"><input type="checkbox" data-key="tools-B08Y6GDS61"></td><td><a href="https://www.amazon.com/dp/B08Y6GDS61" target="_blank" rel="noopener">DOWELL wire strippers</a></td><td class="n">1</td><td class="n">$9.99</td><td class="n">$9.99</td></tr>
+</tbody></table></div>
+
+<hr class="rule">
+<h2>Not analysed</h2>
+<p class="muted">Fatigue, buckling, impact, vibration, roller wear, uneven floors and wheel unloading, combined-slip mecanum behaviour, motor and driver thermal equilibrium, battery sag under stall, firmware timing, motor-bearing radial rating (assumed 28 N — thinnest margin at 1.18), detection performance of any sensor. No physical test has been run.</p>
+<p class="muted">Sources: <a href="https://static.jkongmotor.com/JK42HS40-1704-13A-aidlnBprKrkloSRilikkrllkn.pdf">motor drawing</a> · <a href="https://www.pololu.com/product/2133">DRV8825 current guidance</a> · <a href="https://www.pololu.com/product/1182">A4988 current guidance</a> · full arithmetic in <a href="drivetrain.txt">drivetrain.txt</a>.</p>
+
+<script>
+(function(){
+  var KEY='rover-bom-v2';
+  var st={};try{st=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+  document.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+    var k=cb.dataset.key, tr=cb.closest('tr');
+    if(st[k]){cb.checked=true;tr.classList.add('done')}
+    cb.addEventListener('change',function(){
+      st[k]=cb.checked;tr.classList.toggle('done',cb.checked);
+      try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}
+    });
+  });
+})();
+</script>
+</body></html>
