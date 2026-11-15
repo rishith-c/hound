@@ -423,7 +423,7 @@ void handleSerial() {
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
-        case 'I': pcaOk = pcaInit(); if (pcaOk && tiltOn) setTilt(tiltDeg); break;   // re-probe the servo board now
+        case 'I': pcaOk = pcaInit(); if (pcaOk) setTilt(tiltOn ? tiltDeg : TILT_PARK); break;   // re-probe the servo board now
         case 'K': showOn = a > 0.5f; if (showOn) { showT0 = millis(); showLastNudge = 0; showCount = 0; } else { panStop(); setTilt(TILT_PARK); } break;   // 'K 1' Ceres kinematic show, 'K 0' stop
         case 'p': setPan(0); break;                                                // any 'p' = stop the pan (continuous servo)      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
         case 'n': nudgePan((int)a, (int)b); break;                              // 'n -1 300' / 'n 1 300': continuous-rotation nudge left/right for ms
@@ -446,7 +446,7 @@ void setup() {
   for (int i = 0; i < 4; i++) { pinMode(STEP_PIN[i], OUTPUT); pinMode(DIR_PIN[i], OUTPUT); digitalWrite(STEP_PIN[i], LOW); }
   pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH);          // drivers OFF until commanded
   pinMode(VBAT_PIN, INPUT);
-  pcaOk = pcaInit();                                             // servo board present? (status 'pca')                                       // 50 Hz frame, no pulse until 't' arrives (servo limp)
+  pcaOk = pcaInit(); if (pcaOk) setTilt(TILT_PARK);              // servo board present? then hold the head LEVEL at once (Ceres: writeUs(tilt, 1500) in setup) so it never sags                                       // 50 Hz frame, no pulse until 't' arrives (servo limp)
   Serial.begin(115200);
   loadSettings();
   updateAccel();
@@ -478,7 +478,7 @@ void runCircle() {
 void loop() {
   { static uint32_t lastPan = 0; if (panStopAt && millis() - lastPan >= 20) { lastPan = millis(); panTick(); } }
   if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) panStop();                   // end of a nudge: cut the pulse
-  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk && tiltOn) setTilt(tiltDeg); }   // hot-plugged board: keep probing
+  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk) setTilt(tiltOn ? tiltDeg : TILT_PARK); }   // hot-plugged board: keep probing, then hold level
   if (showOn && pcaOk) {                                     // Ceres turret_duet.ino, verbatim behaviour: tilt sine 74–118°, pan nudge as tilt passes centre
     static uint32_t lastStep = 0; uint32_t now = millis();
     if (now - lastStep >= 20) { lastStep = now;
