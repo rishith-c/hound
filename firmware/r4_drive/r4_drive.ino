@@ -58,7 +58,7 @@ bool     circleOn   = false; uint32_t circleT0 = 0; float circleR = 300, circleT
 // ── pack voltage: 47k (VMOT) / 10k (GND) divider into A3, 5 V reference. Reads ~0 with no divider fitted → check bypassed.
 const uint8_t VBAT_PIN = A3; const float VBAT_RATIO = 57.0f / 10.0f; const float VBAT_REF = 5.0f;
 float    vbat = 0;                           // filtered pack volts (0 = no divider)
-float    vcut = 10.5f;                       // 'V <volts>': refuse to drive below this (3.5 V/cell); 0 disables
+float    vcut = 0.0f;                        // 0 = lockout OFF. Fit the 47k/10k divider on A3, then 'V 10.5' (3.5 V/cell). A floating A3 must never lock the drive.                       // 'V <volts>': refuse to drive below this (3.5 V/cell); 0 disables
 bool     lowVolt = false;
 uint8_t  inv[4]     = { 0, 0, 0, 0 };        // per-wheel direction flip (EEPROM)
 bool     holdEnable = false;                 // keep drivers energised while parked
@@ -369,7 +369,7 @@ void handleSerial() {
         case '+': speedPct = speedPct + 10 > 100 ? 100 : speedPct + 10; break;
         case '-': speedPct = speedPct - 10 < 10 ? 10 : speedPct - 10; break;
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
-        case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 10.5f; break;   // 'V <volts>' — 'b' is taken by back
+        case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
         case 'c': circleR = a > 0 ? a : 300.0f; circleT = b > 0 ? b : 8.0f; circleT0 = millis(); circleOn = true; kick(); break;
         case 'j': jog((int)a, (int)b, d); break;
