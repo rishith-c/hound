@@ -154,7 +154,11 @@ class Camera:
         self.cap = cv2.VideoCapture(0)
 
     def score(self):
-        ok, img = self.cap.read()
+        # V4L2 keeps up to 4 frames queued and drops NEW ones while they wait, so a plain read() after a pan nudge
+        # returns a frame from before it. Skip past the queue; the 5th grab waits for a frame taken now.
+        for _ in range(5):
+            self.cap.grab()
+        ok, img = self.cap.retrieve()
         if not ok:
             return 0.0
         blob = self.cv2.dnn.blobFromImage(self.cv2.resize(img, (300, 300)), 0.007843, (300, 300), 127.5)
