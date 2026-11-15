@@ -492,8 +492,10 @@ elif ARGV and ARGV[0] == "--still":
 else:
     a, b = int(ARGV[0]), int(ARGV[1])
     for fr in range(a, min(b, TL.NFRAMES)):
+        if fr % 2: continue                                  # animated on twos: each drawing is held for two frames
         path = os.path.join(FRAMES, "f_%05d.png" % fr)
         if os.path.exists(path) and os.path.getsize(path) > 0: continue
         t = fr / TL.FPS; set_time(t, fr); sc.render.filepath = path
         t0 = time.time(); bpy.ops.render.render(write_still=True)
         print("FRAME %d t=%.2f %.1fs" % (fr, t, time.time() - t0), flush=True)
+    sys.stdout.flush(); os._exit(0)                          # Blender 2.80's own shutdown sometimes crashes or hangs: skip it
