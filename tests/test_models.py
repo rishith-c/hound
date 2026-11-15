@@ -85,3 +85,13 @@ def test_radars_json_overrides_but_keeps_the_rest(devs):
     cfg = devs / "radars.json"; cfg.write_text('{"ld2450": "/dev/ttyAMA0", "left": "X"}')
     p = _ports(devs, "stock", cfg)
     assert p["ld2450"] == "/dev/ttyAMA0" and p["left"] == "X" and p["right"].endswith("0002-if00-port0")
+
+
+def test_station_runs_a_simulated_stop_to_its_sentence(tmp_path):
+    """sensing/station.py --sim: the whole stop (settle, dwell, fuse) on simulated sensors ends in one honest sentence."""
+    pytest.importorskip("scipy")
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "sensing", "station.py"), "--sim"], cwd=tmp_path,
+                       capture_output=True, text=True, timeout=300)
+    assert r.returncode == 0, r.stderr[-2000:]
+    last = [l for l in r.stdout.splitlines() if l.strip()][-1]
+    assert last.startswith("S1:") and "alive" not in r.stdout.lower(), last
