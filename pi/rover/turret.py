@@ -1,14 +1,15 @@
 """
-turret.py — the tilt servo, driven by the UNO R4 over the same serial link as the wheels.
+turret.py — the Ceres turret, driven by the UNO R4 over the same serial link as the wheels.
 
-No PCA9685 any more: the tilt servo's signal sits on the CNC shield's Z+ end-stop pin (R4 D11) and the pan servo's on
-the X+ end-stop pin (R4 D9), both hardware PWM; their power comes from the XL4015 5 V rail. The firmware clamps to 65–150° (Ceres mechanical floor ~62°).
+The R4 drives a PCA9685 on the CNC shield's I2C pins: tilt = positional MG996R on channel 3 (the firmware clamps
+78–150°, the head meets the platform below that), pan = continuous-rotation MG996R on channel 2, moved only by timed
+nudges. Nothing is driven at boot — the turret starts wherever it was set by hand.
 
     from r4 import R4; from turret import Turret
     t = Turret(R4())
     t.tilt(90)      # level
-    t.tilt(75)      # look down a little
-    t.relax()       # stop the pulses so the servo stops holding (no current, no heat)
+    t.tilt(80)      # look down a little
+    t.relax()       # stop the pulses so the servos stop holding (no current, no heat)
 """
 
 
