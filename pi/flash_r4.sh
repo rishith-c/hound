@@ -15,6 +15,6 @@ BIN="$ROOT/firmware/$SKETCH/build/arduino.renesas_uno.unor4wifi/$SKETCH.ino.bin"
 
 command rsync -az "$BIN" "$PI:rover/$SKETCH.ino.bin"
 command ssh "$PI" "export PATH=\$HOME/.local/bin:\$PATH; \
-  P=\$(ls /dev/serial/by-id/*Arduino* 2>/dev/null | head -1); [ -n \"\$P\" ] || P=\$(ls /dev/ttyACM* 2>/dev/null | head -1); \
+  P=\$(readlink -f /dev/serial/by-id/*Arduino* 2>/dev/null | head -1); [ -n \"\$P\" ] || P=\$(ls /dev/ttyACM* 2>/dev/null | head -1); \
   [ -n \"\$P\" ] || { echo 'no R4 on the Pi USB'; exit 1; }; \
   echo flashing \$P; arduino-cli upload -p \"\$P\" --fqbn $FQBN --input-file rover/$SKETCH.ino.bin 2>&1 | grep -E 'Done|error|fail' | tail -1"
