@@ -196,3 +196,13 @@ def test_dc_drive_study():
     assert dc.dc_mass(0.1, 0.080) < 0.85 * __import__("drivetrain").design_mass()[1]      # the DC build is lighter
     assert dc.min_stall_for(170, 0.097) < dc.min_stall_for(170, 0.080)                    # bigger wheels need less speed
     assert dc.min_stall_for(100, 0.080) is None                                           # too slow at any torque
+
+
+def test_thermal_array_ranges():
+    """sensing/thermal_arrays.py: worst-case pixel coverage, and the ranking it gives (finer arrays see farther)."""
+    import thermal_arrays as ta
+    assert ta.cover(0.5) == 0.25 and ta.cover(1.5) == 0.75 and ta.cover(2.0) == 1.0
+    r = [ta.max_range(a, 0.5, 0.5) for a in ta.ARRAYS]
+    assert r[0] > r[1] > r[2]
+    amg = ta.ARRAYS[2]
+    assert abs(ta.worst_fill(amg, 0.5, 0.5, r[2]) - ta.F_MIN) < 1e-3              # the range is where the fill hits the threshold
