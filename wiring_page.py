@@ -17,6 +17,23 @@ import yaml
 DOCS = {n: yaml.safe_load(YML[n]) for n in D["diagrams"]}
 
 TITLES = {n: DOCS[n]["metadata"]["title"] for n in D["diagrams"]}
+import re as _re
+def inline_svg(path, prefix):
+    """Inline an SVG sheet: strip the XML prolog, namespace its ids, point part artwork at wiring/parts/, size to the box."""
+    t = open(path, encoding="utf-8").read()
+    t = _re.sub(r"<\?xml[^>]*\?>\s*", "", t); t = _re.sub(r"<!DOCTYPE[^>]*>\s*", "", t)
+    t = t.replace('href="parts/', 'href="wiring/parts/')
+    t = _re.sub(r'\bid="([^"]+)"', lambda m: f'id="{prefix}-{m.group(1)}"', t)
+    t = _re.sub(r'href="#([^"]+)"', lambda m: f'href="#{prefix}-{m.group(1)}"', t)
+    t = _re.sub(r'url\(#([^)]+)\)', lambda m: f'url(#{prefix}-{m.group(1)})', t)
+    t = _re.sub(r'<svg\b([^>]*?)\swidth="[^"]*"', r'<svg\1', t, count=1); t = _re.sub(r'<svg\b([^>]*?)\sheight="[^"]*"', r'<svg\1', t, count=1)
+    t = t.replace("<svg", '<svg class="sheet" preserveAspectRatio="xMidYMid meet"', 1)
+    return t
+def viewer(svg_path, prefix, caption):
+    return (f'<figure class="viewer"><div class="tools"><button data-z="in" title="zoom in">+</button><button data-z="out" title="zoom out">−</button>'
+            f'<button data-z="reset" title="fit">fit</button><button data-z="full" title="full screen">⤢</button><span class="hint">drag to pan · wheel or pinch to zoom · double-click to fit</span></div>'
+            f'<div class="vp">{inline_svg(svg_path, prefix)}</div><figcaption>{caption}</figcaption></figure>')
+WD = os.path.join(ROOT, "bom-site", "wiring")
 E = html.escape
 
 
@@ -100,6 +117,10 @@ code{font-family:ui-monospace,Menlo,monospace;background:#e9edf1;padding:0 4px;b
 button{font:inherit;padding:8px 14px;border:1px solid #2a3641;border-radius:6px;background:#172029;color:#fff;cursor:pointer}
 details summary{cursor:pointer;font-weight:600;margin:8px 0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:800px){.two{grid-template-columns:1fr}}
+.viewer{padding:0;overflow:hidden}.viewer .vp{height:72vh;min-height:420px;background:#fff;cursor:grab;touch-action:none;overflow:hidden;position:relative}.viewer .vp.drag{cursor:grabbing}
+.viewer svg.sheet{width:100%;height:100%;display:block;user-select:none}.viewer .tools{display:flex;gap:6px;align-items:center;padding:6px 8px;background:#eef1f4;border-bottom:1px solid #d8dde3}
+.viewer .tools button{padding:4px 10px;font-size:14px;line-height:1.2}.viewer .hint{font-size:12px;color:#5a6672;margin-left:8px}.viewer figcaption{padding:6px 10px 8px}
+.viewer:fullscreen{background:#fff}.viewer:fullscreen .vp{height:calc(100vh - 80px)}
 """
 SWATCH = {"RD": "#e03131", "BK": "#111", "YE": "#ffd43b", "BU": "#1c7ed6", "GN": "#2f9e44", "WH": "#fff", "OG": "#f76707", "BN": "#8b5a2b", "VT": "#7048e8", "GY": "#868e96"}
 
@@ -124,14 +145,14 @@ for n in D["diagrams"]:
     cls = " class=alt" if n.startswith("3b") else ""
     figs.append(f"""
 <h3 id="{n}">{E(TITLES[n])}</h3>
-<figure{cls}><a href="wiring/{n}.svg" target="_blank"><img src="wiring/{n}.svg" alt="{E(TITLES[n])}"></a>
-<figcaption>Click for the full-size SVG (searchable text). Source: <a href="wiring/{n}.yml">{n}.yml</a> · PNG: <a href="wiring/{n}.png">{n}.png</a></figcaption></figure>
+{viewer(os.path.join(WD, f"{n}.svg"), f"w{n.replace('-', '')}", f'Harness sheet. Source: <a href="wiring/{n}.yml">{n}.yml</a> · <a href="wiring/{n}.png">PNG</a> · <a href="wiring/{n}.svg" download>SVG</a>')}
 <details><summary>Connections ({len(D['connections'][n])} wires)</summary>{table(n)}</details>
 <details><summary>Connector pin lists and notes</summary>{pins(n)}</details>""")
 
 vp_rows = "".join(f"<tr><td>{E(c['name'])}</td><td class=c>{c['value']} {c['unit']}</td><td class=c>{'≥' if c['name'].startswith(('VMOT','XL4015 input','Pi input','LD2450','webcam','fan')) else '≤'} {c['limit']} {c['unit']}</td><td>{'PASS' if c['ok'] else 'FAIL'}</td></tr>" for c in VP["checks"])
 am_rows = ", ".join(f"{k}: {v['wires']} wires, {v['crossings']} crossings, {v['overlaps']} overlaps" for k, v in AM.items())
-art_figs = "".join(f'<figure{" class=alt" if n.startswith("3b") else ""}><a href="wiring/art-{n}.png" target="_blank"><img src="wiring/art-{n}.png" alt="{E(TITLES[n])}"></a><figcaption>{E(TITLES[n])}</figcaption></figure>' for n in D["diagrams"])
+poster_view = viewer(os.path.join(WD, "art-poster.svg"), "poster", 'Everything on one sheet, as built. <a href="wiring/art-poster-standalone.svg" download>Download the standalone SVG</a> (all artwork embedded) · <a href="wiring/art-poster.png">PNG</a>.')
+art_figs = "".join(f'<h3 id="art-{n}">{E(TITLES[n])}</h3>' + viewer(os.path.join(WD, f"art-{n}.svg"), f"a{n.replace('-', '')}", f'{"ALTERNATIVE — not wired. " if n.startswith("3b") else ""}Vector sheet; <a href="wiring/art-{n}.png">PNG</a> · <a href="wiring/art-{n}.svg" download>SVG</a>.') for n in D["diagrams"])
 page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>Hound wiring</title><style>{CSS}</style></head><body><main>
 <h1>Hound — wiring</h1>
@@ -143,8 +164,8 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 
 <h2>Illustrated (Fritzing style)</h2>
 <p>The same net list drawn the way a Fritzing breadboard view looks: real part artwork from the open Fritzing libraries (<a href="https://github.com/fritzing/fritzing-parts">fritzing-parts</a>, <a href="https://github.com/adafruit/Fritzing-Library">Adafruit</a>, <a href="https://github.com/Protoneer/Fritzing_Parts">Protoneer's CNC Shield</a>, <a href="https://github.com/RafaGS/Fritzing">RafaGS's LD2410C</a>; CC-BY-SA), pin positions read from the parts' own connector definitions, wires routed by <code>wiring_art.py</code> from the net list. Parts no library has (the Deans plug, fan, hub, webcam, banks, LD2450, CP2102 sticks) are drawn by hand. Wires run in separated parallel tracks with square corners; the router never lets two wires overlap and reports the crossings it could not avoid. Stand-ins are labelled: the R4 is drawn as an Uno, both bucks as the LM2596 module, the ESP32-S3 as a C3 devkit, the INMP441 as Adafruit's I2S mic. Click any picture for full size.</p>
-<figure><a href="wiring/art-poster.png" target="_blank"><img src="wiring/art-poster.png" alt="Hound — everything wired"></a><figcaption>Everything on one sheet (as built). <a href="wiring/art-poster-standalone.svg" download>Standalone SVG</a> (zoomable, all artwork embedded).</figcaption></figure>
-<div class=two>{art_figs}</div>
+{poster_view}
+{art_figs}
 
 <h2>Harness sheets (WireViz)</h2>
 <p>Left-to-right: source → wire (colour, gauge, length) → destination. Every pin name is the part's own silkscreen or datasheet name.</p>
@@ -205,6 +226,30 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 <h2>Or: the prompt for GPT</h2>
 <p>Everything above, as one self-contained brief generated from the same net list (so it cannot drift from the diagrams). It tells GPT to produce WireViz YAML or SVG by code, not an image-generator picture, because generated images get pin text wrong. <a href="wiring/gpt-prompt.txt" download>Download gpt-prompt.txt</a> · <button onclick="navigator.clipboard.writeText(document.getElementById('pr').textContent).then(()=>this.textContent='copied')">copy prompt</button></p>
 <pre id=pr>{E(PROMPT)}</pre>
-</main></body></html>"""
+</main>
+<script>
+document.querySelectorAll('.viewer').forEach(fig=>{{
+ const vp=fig.querySelector('.vp'),svg=fig.querySelector('svg.sheet');if(!svg)return;
+ const vb0=svg.getAttribute('viewBox').split(/[\s,]+/).map(Number);let vb=vb0.slice();
+ const apply=()=>svg.setAttribute('viewBox',vb.map(v=>v.toFixed(1)).join(' '));
+ const pt=(cx,cy)=>{{const r=vp.getBoundingClientRect();const sx=vb[2]/r.width,sy=vb[3]/r.height,s=Math.max(sx,sy);
+   const ox=(r.width-vb[2]/s)/2,oy=(r.height-vb[3]/s)/2;return [vb[0]+(cx-r.left-ox)*s,vb[1]+(cy-r.top-oy)*s,s];}};
+ const zoomAt=(cx,cy,f)=>{{const [px,py]=pt(cx,cy);const w=Math.min(Math.max(vb[2]/f,vb0[2]/40),vb0[2]*4);const k=w/vb[2];
+   vb=[px-(px-vb[0])*k,py-(py-vb[1])*k,w,vb[3]*k];apply();}};
+ vp.addEventListener('wheel',e=>{{e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY<0?1.15:1/1.15);}},{{passive:false}});
+ let drag=null,pinch=null;
+ vp.addEventListener('pointerdown',e=>{{vp.setPointerCapture(e.pointerId);drag={{x:e.clientX,y:e.clientY,vb:vb.slice()}};vp.classList.add('drag');}});
+ vp.addEventListener('pointermove',e=>{{if(!drag||pinch)return;const s=pt(0,0)[2];vb[0]=drag.vb[0]-(e.clientX-drag.x)*s;vb[1]=drag.vb[1]-(e.clientY-drag.y)*s;apply();}});
+ ['pointerup','pointercancel'].forEach(ev=>vp.addEventListener(ev,()=>{{drag=null;vp.classList.remove('drag');}}));
+ vp.addEventListener('touchstart',e=>{{if(e.touches.length===2){{pinch={{d:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}};}}}},{{passive:true}});
+ vp.addEventListener('touchmove',e=>{{if(pinch&&e.touches.length===2){{e.preventDefault();const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+   zoomAt((e.touches[0].clientX+e.touches[1].clientX)/2,(e.touches[0].clientY+e.touches[1].clientY)/2,d/pinch.d);pinch.d=d;}}}},{{passive:false}});
+ vp.addEventListener('touchend',e=>{{if(e.touches.length<2)pinch=null;}});
+ vp.addEventListener('dblclick',()=>{{vb=vb0.slice();apply();}});
+ fig.querySelectorAll('.tools button').forEach(b=>b.addEventListener('click',()=>{{const r=vp.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;
+   if(b.dataset.z==='in')zoomAt(cx,cy,1.3);else if(b.dataset.z==='out')zoomAt(cx,cy,1/1.3);else if(b.dataset.z==='reset'){{vb=vb0.slice();apply();}}
+   else if(b.dataset.z==='full'){{document.fullscreenElement?document.exitFullscreen():fig.requestFullscreen();}}}}));
+}});
+</script></body></html>"""
 open(os.path.join(ROOT, "bom-site", "wiring.html"), "w").write(page)
 print(f"wiring.html ({len(page)//1024} kB) and gpt-prompt.txt ({len(PROMPT)//1024} kB) written")
