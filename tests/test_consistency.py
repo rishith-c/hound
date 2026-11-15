@@ -28,6 +28,7 @@ def test_servo_channels_agree():
     assert f"tilt servo on PCA9685 channel {tilt}" in wiring and f"channels {tilt} / {pan}" in wiring
     parts = {p["id"]: p for p in json.load(open(os.path.join(ROOT, "assembly.json")))["parts"]}
     assert f"Tilt ch {tilt}, pan ch {pan}" in parts["PCA"]["note"], "assembly.py's PCA9685 note names other channels"
+    assert f"Tilt on channel {tilt}, pan on {pan}" in read("bom-site", "manual.html"), "manual's PCA9685 channels ≠ firmware"
 
 
 def test_tilt_limits_agree():
@@ -45,6 +46,10 @@ def test_wheel_to_axis_map_agrees():
     assert net_map == fw_map, f"wiring sheet motor order {net_map} ≠ firmware {fw_map}"
     assert re.search(r"const DRV=\[(.*?)\]", WEB).group(1).replace("'", "").split(",") == list(axis)
     assert "X = BL, Y = FL, Z = BR, A = FR" in json.dumps(json.load(open(os.path.join(ROOT, "bom-site", "bom.json"))), ensure_ascii=False)
+    rear = {"BL": "RL", "BR": "RR"}                                       # the manual says rear-left/right
+    wheel_of = {ax: w for w, ax in fw_map.items()}
+    order = ", ".join(f"{ax} = {rear.get(wheel_of[ax], wheel_of[ax])}" for ax in "XYZA")          # X = RL, Y = FL, Z = RR, A = FR
+    assert order in read("bom-site", "manual.html"), f"manual motor order ≠ firmware ({order})"
 
 
 def test_radar_adapters_agree():
