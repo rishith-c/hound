@@ -1,6 +1,39 @@
 {
+  "prose": {
+    "design": [
+      "Four independently driven 80 mm mecanum wheels, a low 2020 frame, fixed forward-facing radar mounts, a camera and four short-range obstacle sensors. Use your LiPo for motor power and your power bank for logic. The fifth motor and TB6600 stay spare. No linear rail, belt, sweep switches, tall gantry, or additional radar/ESP32 purchase.",
+      "The first working milestone is a camera-guided rover that moves slowly, stops, lets vibration settle, and reports radar evidence. Then add a bounded indoor route using known visual markers and obstacle-stop logic. Four range sensors are useful for guarding forward/reverse/sideways motion, but do not provide complete obstacle or stair coverage. The BOM does not include ready-to-run navigation or detection software.",
+      "LD2410C is the primary presence sensor, including stationary/micro-moving presence. LD2450 adds positions and speeds of moving targets; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements. The second LD2410C is spare. Start with one radar powered; test the two radar types separately, then test simultaneous operation for interference before enabling both. Keep antenna faces unobstructed by metal.",
+      "A linear slide is not required for presence sensing. Rotate the rover between stationary scans if another view is useful. Different readings alone do not establish accurate triangulation. This is an indoor search demonstration; these sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present."
+    ],
+    "power": [
+      "LiPo -> suitable battery overcurrent protection -> verified DC-rated switch -> shield VMOT -> four DRV8825 drivers -> four motors.",
+      "Power bank -> Pi power input. Pi USB-A -> included USB-A-to-B cable -> selected Uno USB-B for logic power and serial.",
+      "Pi -> camera by USB. One ESP32-S3 can bridge radar UART data to the Pi; the CP2102 is useful for bench setup or a single direct UART link.",
+      "Radars require their specified 5 V supply and 3.3 V UART signaling. Check the CP2102 board's actual I/O voltage; a selectable power-output pin does not necessarily change UART levels. Do not power radars from a weak 3.3 V adapter regulator.",
+      "Four VL53L1X modules share I2C only after individual XSHUT control assigns unique addresses at boot. Keep Pi-side signaling at 3.3 V.",
+      "Keep signal grounds correctly referenced, including the Uno/shield motor-supply reference. Never put LiPo voltage on a logic rail or connect two independent 5 V outputs together."
+    ],
+    "power_after": [
+      "Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion. The 5200 mAh pack runs them for roughly two hours. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.",
+      "The Pi model and bank rating are still needed to finish the power design. The active-radar supply requirement alone exceeds 200 mA for LD2450; each fan adds 150 mA at 5 V. Use only a verified bank output with enough simultaneous current for the Pi and peripherals. Suitable battery overcurrent protection is still unresolved and unpriced; the owned switch must have an adequate DC rating."
+    ],
+    "fit": [
+      "The steel bracket drawing has 4.3 mm base slots: use M4, not M5, to attach it to the 2020 rail. Mount wheel brackets inverted on the rail underside, with two M4 T-nuts per bracket (eight total). The kit has twenty M4 x10 screws and forty M4 T-nuts. Check screw protrusion, engagement and bottoming on the real extrusion before tightening.",
+      "The bracket's nominal axle-to-foot offset is 31 mm. With 80 mm wheels: shaft height = 40 mm, rail underside = 71 mm, rail top = 91 mm. The motor bottom is nominally 18.85 mm above the floor. Four 350 mm rails butt-jointed produce a 350 x 390 mm frame. Bracket holes match the 31 mm motor pitch and M3 threads. The four M3 motor screws see under 5 N each at a full-torque jam — margin is not a concern there.",
+      "Use the purchased 5 mm wheel couplings; do not print a substitute load-bearing wheel hub. Mount each wheel as close to the motor face as the coupling allows: the motor's shaft bearing is the thinnest margin in the whole design (1.18 against an assumed 28 N radial rating that has not been confirmed for this motor). The old CAD contains a linear rail, different battery and different brackets and must not be used as fabrication instructions."
+    ],
+    "compute": [
+      "Load cases at the 4.84 kg design mass, 80 mm wheels, mecanum roller factor √2, mechanical efficiency 0.85, carpet rolling coefficient 0.12: level cruise 0.103 N·m per wheel; level at 0.3 m/s² 0.119; strafing 0.143; a 5° carpet ramp at 0.3 m/s² 0.187. The ramp governs. Available torque is holding torque × (I / 1.7 A) × 0.70, where 0.70 is a conservative low-speed pull-out factor that has not been measured. Full arithmetic, every input tagged measured / allocated / assumed, is in drivetrain.txt.",
+      "At 1/8 microstepping, 0.1 m/s is about 637 pulses/s per wheel and 0.3 m/s about 1,910 — inside a 5,000/axis timer-interrupt budget on the Uno. Use a timed four-axis custom controller with acceleration limits, shared enable and communication timeout; ordinary three-axis GRBL is unsuitable. Clamp combined translation/rotation commands to the tested maximum wheel rate.",
+      "Set DRV8825 current with Vref = 5 × Rsense × I. With 0.100 Ω sense resistors, 1.5 A is 0.75 V; identify the actual sense resistor before setting it. Do not use the A4988 formula (8 × I × Rs) on a DRV8825. Start at 1.5 A with heatsinks and the fan, then test temperature and missed steps under load before considering 1.7 A.",
+      "Before calling the rover working: measure pull-out torque at 24 rpm and 1.5 A on the real battery with a lever arm and the hanging scale — this single number retires the 0.70 assumption above. Then test all four wheel directions with wheels raised; loaded forward, reverse, strafe and turning; stop/watchdog behavior; sustained power and temperature; stationary/moving person and empty-room sensor trials; radar mutual interference; and marked-route obstacle stops. None of these tests has been performed."
+    ]
+  },
   "meta": {
-    "subtitle": "Four owned NEMA 17 steppers, four 80 mm mecanum wheels, a low 2020 frame, fixed radar mounts. No linear rail. Parts grouped by what they do.",
+    "title": "Indoor search rover — practical BOM",
+    "intro": "This includes four obstacle sensors, camera, a new motor battery, charger and charging leads, and the DRV8825 driver kit the torque check requires. Omit any equivalents you already own. Prices were observed September 4–5, 2026; stock and checkout prices can change. This is the preferred hackathon configuration, with physical validation still outstanding.",
+    "margin_note": "Margin = torque available ÷ torque required; acceptance ≥ 1.25 because the running torque is calculated, not measured. Design mass 4.84 kg. Keep total mass under about 5.2 kg or the ramp margin is gone. The one measurement that matters most: pull-out torque at 24 rpm, 1.5 A, on the real battery.",
     "price_date": "Sept 4–5, 2026",
     "mass_kg": 4.84,
     "verdict": "Four JK42HS40-1704-13A motors carry the 4.84 kg design at 1.5 A per phase. That current needs DRV8825 drivers — the A4988s that ship with most CNC Shield kits fail the 5° ramp case at every setting they can run without cooking. Governing load is a 5° carpet ramp at 0.3 m/s²; steppers that lose it stall silently and lose position. Keep total mass under about 5.2 kg or the ramp margin is gone.",
