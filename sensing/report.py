@@ -55,7 +55,7 @@ def table(headers, rows):
 
 
 S = R["summary"]; fan = R["fan_discrimination"]; th = R["thermal_vs_range"]; m = R["mission"]
-page = f"""<title>Rover Sensing Simulation</title>
+page = f"""<title>Hound Sensing Simulation</title>
 <style>
 :root{{--ground:#F4F6F8;--surface:#fff;--ink:#17212B;--muted:#5B6B7A;--line:#D5DCE3;--accent:#2E5C8A}}
 @media (prefers-color-scheme: dark){{:root:not([data-theme="light"]){{--ground:#0F151B;--surface:#172029;--ink:#E6EBF0;--muted:#93A1AE;--line:#2A3641;--accent:#7FB0E0}}}}
@@ -67,7 +67,7 @@ table{{border-collapse:collapse;font-size:14px;margin:10px 0}}th,td{{border:1px 
 .sub{{color:var(--muted)}}.warn{{border-left:4px solid #c9430a;padding:8px 12px;background:var(--surface)}}
 </style>
 <main>
-<h1>Rover Sensing Simulation</h1>
+<h1>Hound Sensing Simulation</h1>
 <p class="sub">{R['n_per_scenario']} stations per scenario, calibrated on a separate set of the same size. Sensor models in models.py; every number tagged datasheet, paper, bench or allocated.</p>
 <div class="kpi"><div><b>{S['false_alarm_rate_no_person']:.1%}</b><span>person reported with nobody there</span></div>
 <div><b>{S['detection_visible']:.0%}</b><span>person found when visible</span></div>
