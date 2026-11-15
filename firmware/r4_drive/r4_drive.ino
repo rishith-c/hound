@@ -60,6 +60,8 @@ volatile uint8_t  pulseHigh[4];
 volatile uint32_t wdTicks    = 0;
 volatile bool     wdTripped  = false;
 volatile bool     anyMotion  = false;
+volatile uint32_t isrTicks   = 0;
+bool timerOk = false;
 
 static const uint32_t ACC_PER_STEP_PER_SEC = (uint32_t)(4294967296.0 / TICK_HZ);   // 214748
 
@@ -67,6 +69,7 @@ FspTimer stepTimer;
 
 void stepIsr(timer_callback_args_t*) {
   static uint16_t slewDiv = 0;
+  isrTicks++;
 
   if (++wdTicks > WATCHDOG_TICKS) {
     bool had = false;
@@ -171,12 +174,12 @@ const char* statusJson() {
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"tmr\":%d,\"ticks\":%lu,\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), MAX_RATE / stepsPerMm(), WiFi.localIP().toString().c_str());
+    stepsPerMm(), MAX_RATE / stepsPerMm(), timerOk ? 1 : 0, (unsigned long)isrTicks, WiFi.localIP().toString().c_str());
   return jsonBuf;
 }
 
@@ -319,7 +322,8 @@ void setup() {
   pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH);          // drivers OFF until commanded
   Serial.begin(115200);
   loadSettings();
-  if (!startTimer()) Serial.println("{\"error\":\"no free GPT timer\"}");
+  timerOk = startTimer();
+  if (!timerOk) Serial.println("{\"error\":\"no free GPT timer\"}");
 
   if (WiFi.status() == WL_NO_MODULE) { Serial.println("{\"error\":\"no WiFi module\"}"); }
   else {
