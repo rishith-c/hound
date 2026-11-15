@@ -1,8 +1,8 @@
 {
  "1-power": {
-  "wires": 11,
-  "parts": 9,
-  "crossings": 4,
+  "wires": 7,
+  "parts": 7,
+  "crossings": 3,
   "overlaps": 2
  },
  "2-drive": {
@@ -11,23 +11,17 @@
   "crossings": 40,
   "overlaps": 0
  },
- "3a-turret-pi": {
-  "wires": 9,
-  "parts": 5,
-  "crossings": 8,
-  "overlaps": 0
- },
- "3b-turret-shield": {
-  "wires": 9,
+ "3-turret": {
+  "wires": 5,
   "parts": 6,
-  "crossings": 10,
-  "overlaps": 0
+  "crossings": 6,
+  "overlaps": 4
  },
  "4-pi-sensors": {
   "wires": 20,
   "parts": 5,
-  "crossings": 137,
-  "overlaps": 14
+  "crossings": 118,
+  "overlaps": 11
  },
  "5-radars-usb": {
   "wires": 18,
@@ -42,9 +36,9 @@
   "overlaps": 0
  },
  "poster": {
-  "wires": 75,
-  "parts": 30,
-  "crossings": 345,
-  "overlaps": 22
+  "wires": 67,
+  "parts": 29,
+  "crossings": 291,
+  "overlaps": 25
  }
 }

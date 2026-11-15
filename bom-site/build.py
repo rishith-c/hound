@@ -170,7 +170,7 @@ page = f"""<!doctype html>
 .lvl-FAIL{{color:#b00020;font-weight:600}}.lvl-WARN{{color:#8a4b00;font-weight:600}}.lvl-VERIFY{{color:#1a5fb4;font-weight:600}}.lvl-PROCEDURE{{color:#333;font-weight:600}}.lvl-PASS{{color:#2a7a2a}}
 input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}}.have-cell{{text-align:center;white-space:nowrap}}tr.owned td{{background:#eff8f0}}#checklist-note{{font-size:14px;color:#555}}
 </style></head><body><main><h1>{esc(meta["title"])}</h1>
-<p class="note"><a href="manual.html">Assembly manual</a> · <a href="wiring.html">Wiring diagrams</a> · <a href="sensing/report.html">Sensing simulation</a> · <a href="sensing/RESEARCH.md">Prior art</a> · <a href="CHATGPT-CHECK.md">Verification prompt</a> · <a href="bom.csv">bom.csv</a> · <a href="assembly.csv">assembly.csv</a></p>
+<p class="note"><a href="manual.html">Assembly manual</a> · <a href="wiring.html">Wiring diagrams</a> · <a href="rover3d/">3D rover</a> · <a href="sensing/report.html">Sensing simulation</a> · <a href="sensing/RESEARCH.md">Prior art</a> · <a href="CHATGPT-CHECK.md">Verification prompt</a> · <a href="bom.csv">bom.csv</a> · <a href="assembly.csv">assembly.csv</a></p>
 <p><strong>Buy: {money(buy_total)} USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): {money(opt_total)}. Already owned: {owned_n} items.</strong> {esc(meta["intro"])}</p>
 <p><a href="bom.csv" download>Download the BOM as CSV</a> · <a href="assembly.csv" download>Download every placement as CSV</a> · <a href="drivetrain.txt">Read the full drivetrain calculation</a></p>
 <h2>The design I would build</h2>

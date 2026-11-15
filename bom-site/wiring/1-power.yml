@@ -1,5 +1,5 @@
 metadata:
-  title: 'Hound 1 — power: pack → shield → one buck → servo board; Pi on its bank'
+  title: 'Hound 1 — power: pack → shield → one buck (servo + fan, sheet 3); Pi on its bank'
 connectors:
   PACK:
     type: HOOVO 3S 2200 mAh 80C LiPo — T-plug (Deans)
@@ -30,26 +30,7 @@ connectors:
     - OUT+
     - OUT−
     notes: 'HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT
-      (pot turns counter-clockwise to lower). 4 A continuous derated. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.'
-  PCA_PWR:
-    type: PCA9685 servo-power screw terminal
-    pinlabels:
-    - V+
-    - GND
-    notes: The big 2-pin terminal at the end of the board = the 5.0 V rail in. Every channel header's middle (V+) and bottom (GND) pin is bussed to it — that is how the fan gets its 5 V.
-  PCA_CH15:
-    type: PCA9685 channel 15 header — used as a 5 V tap
-    pinlabels:
-    - PWM
-    - V+
-    - GND
-    notes: 'Only V+ and GND are used: the fan''s red to V+, black to GND. PWM pin stays empty.'
-  FAN:
-    type: 40 mm 5 V fan on the driver heatsinks
-    pinlabels:
-    - 5V (red)
-    - GND (black)
-    notes: 5 V 0.15 A (listing). Plugs onto the PCA9685's channel-15 V+/GND pins.
+      (pot turns counter-clockwise to lower). 4 A continuous derated. Two wires per OUT pad: servo + fan. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.'
   BANK:
     type: USB power bank 5 V / 3 A (logic island)
     pinlabels:
@@ -86,22 +67,6 @@ cables:
     - BK
     category: bundle
     notes: second wire in each shield power screw
-  W_SERVO:
-    gauge: 22 AWG
-    length: 0.12
-    colors:
-    - RD
-    - BK
-    category: bundle
-    notes: 5.0 V rail into the PCA9685 terminal; OUT− → the PCA9685 GND terminal is the return for servo, fan and ESP32
-  W_FAN:
-    gauge: 24 AWG
-    length: 0.2
-    colors:
-    - RD
-    - BK
-    category: bundle
-    notes: Dupont onto the channel-15 header
   W_BANK:
     gauge: 22 AWG
     length: 0.2
@@ -146,30 +111,6 @@ connections:
     - 2
   - XL4015:
     - IN−
-- - XL4015:
-    - OUT+
-  - W_SERVO:
-    - 1
-  - PCA_PWR:
-    - V+
-- - XL4015:
-    - OUT−
-  - W_SERVO:
-    - 2
-  - PCA_PWR:
-    - GND
-- - PCA_CH15:
-    - V+
-  - W_FAN:
-    - 1
-  - FAN:
-    - 5V (red)
-- - PCA_CH15:
-    - GND
-  - W_FAN:
-    - 2
-  - FAN:
-    - GND (black)
 - - BANK:
     - USB-A out
   - W_BANK:

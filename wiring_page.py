@@ -50,14 +50,14 @@ COL = {"RD": "red", "BK": "black", "YE": "yellow", "BU": "blue", "GN": "green", 
 
 # ── the GPT prompt, generated from the same data ─────────────────────────────────────────────────────────────
 P = []
-P.append("""You are an electronics documentation engineer. Produce the complete wiring diagram set for "Hound", an indoor search rover (Raspberry Pi 4 + Arduino UNO R4 WiFi + CNC Shield v3 + 4× DRV8825 + 4× NEMA 17 mecanum drive, 3S LiPo, ONE buck converter (XL4015 at 5.0 V) feeding the PCA9685 servo board which also powers the fan from a spare channel header, an ESP32-S3 on its own small power bank, MLX90640 thermal array, 2× VL53L1X ToF, INMP441 mic, 2–3 HLK radars on CP2102 USB-UART adapters, ESP32-S3 WiFi-CSI node, webcam).
+P.append("""You are an electronics documentation engineer. Produce the complete wiring diagram set for "Hound", an indoor search rover (Raspberry Pi 4 + Arduino UNO R4 WiFi + CNC Shield v3 + 4× DRV8825 + 4× NEMA 17 mecanum drive, 3S LiPo, ONE buck converter (XL4015 at 5.0 V) powering the tilt servo and the fan directly from its output pads, the servo signal from the CNC shield's own Z+ end-stop pin (R4 D11), no servo board, an ESP32-S3 on its own small power bank, MLX90640 thermal array, 2× VL53L1X ToF, INMP441 mic, 2–3 HLK radars on CP2102 USB-UART adapters, ESP32-S3 WiFi-CSI node, webcam).
 
 HARD RULES — read before drawing anything
 1. Use ONLY the connectors, pins and wires listed below. Every pin name is taken from a datasheet or the board silkscreen. Do not add, rename, merge or "helpfully" reroute anything. If something looks wrong, say so in a note; do not fix it silently.
 2. Every wire is drawn with BOTH ends labelled "CONNECTOR:pin", its colour and its gauge, exactly as listed.
 3. Colour the rails consistently: 11.1 V pack = red, 6.0 V servo rail = orange, 5.0 V rail = yellow, 3.3 V = violet, GND = black, signals = blue/green/white as listed.
 4. Do NOT produce pin-level diagrams with an image generator: generated images get pin labels wrong. Produce them as code: a WireViz YAML file per diagram (https://github.com/wireviz/WireViz, `pip install wireviz`, needs Graphviz) rendered with Python, or hand-written SVG. An image generator may be used ONLY for a block-level overview picture with no pin text.
-5. Seven diagrams, landscape, one per section below, named exactly as the section headings. Each diagram gets a notes box with the section's NOTES.
+5. Six diagrams, landscape, one per section below, named exactly as the section headings. Each diagram gets a notes box with the section's NOTES.
 6. Before you hand anything over, run the SELF-CHECK at the end and print its results.
 """)
 for n in D["diagrams"]:
@@ -82,15 +82,15 @@ for c in Wj["checks"]:
 
 P.append("""
 === DECISION ALREADY MADE: which bus drives the PCA9685 ===
-AS BUILT = diagram 3A: the Raspberry Pi drives the PCA9685 over I2C-1 (BCM 2/3), 3.3 V logic, VCC = Pi 3V3. The software (turret.py, station.py) is written for this. Diagram 3B (PCA9685 on the CNC Shield's A4/A5, 5 V logic, VCC = shield 5V, driven by the UNO R4) is the ALTERNATIVE, only if the servo misbehaves on 3.3 V PWM; it requires new R4 firmware. Draw both, mark 3A "AS BUILT" and 3B "ALTERNATIVE — NOT WIRED". Never wire both at once: the PCA9685 must never see 5 V pull-ups while its SDA/SCL touch the Pi.
+There is NO PCA9685: the tilt servo's signal comes from the CNC shield's Z+ end-stop pin (UNO R4 D11, 5 V hardware PWM, firmware command 't <deg>'), and its power from the XL4015's OUT pads, which the fan shares. Draw sheet 3 exactly so.
 
 === SELF-CHECK (run it, print PASS/FAIL per line) ===
 1. Every CONNECTOR:pin used in CONNECTIONS exists in that connector's pin list.
 2. Each LD2410C and the LD2450 has exactly TWO GND wires: one to WAGO5_N, one to its CP2102 GND. Their VCC/5V comes from WAGO5_P, never from the CP2102's 5V pin.
-3. Nothing on the Pi 40-pin header carries 5 V: all I2C/I2S devices are on 3V3 pins; PCA9685 VCC = 3V3 in 3A.
-4. The MLX90640 is on BCM 4/5 (i2c3), alone. The two VL53L1X and the PCA9685 are on BCM 2/3 (I2C-1). Addresses on I2C-1: 0x40, 0x29, 0x30 — no clash.
+3. Nothing on the Pi 40-pin header carries 5 V: all I2C/I2S devices are on 3V3 pins.
+4. The MLX90640 and the two VL53L1X share I2C-1 (BCM 2/3). Addresses: 0x33, 0x29, 0x30 — no clash.
 5. Motor bus: WAGO_P → SHIELD_PWR VMOT and WAGO_N → SHIELD_PWR GND, 22 AWG, with the 1000 µF cap noted, stripe to GND.
-6. XL4015 OUT− goes to the PCA9685 GND TERMINAL by its own wire (servo return); it is not shared with any signal ground.
+6. The servo's brown and the fan's black both land on the XL4015 OUT− pad (the buck's negative is common with the shield GND, so D11 is referenced correctly).
 7. The E-STOP sits in the pack + lead between the T-plug and WAGO_P; the Pi is on the USB bank, not on the pack.
 8. The divider is 47 kΩ WAGO_P → A3, 10 kΩ A3 → WAGO_N; A3 is the shield's CoolEn pin.
 9. ESP32-S3 no.3 is fed at its 5V pin from WAGO5_P and its USB port is marked "never while 5V is fed".
@@ -158,10 +158,11 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 <h1>Hound — wiring</h1>
 <p class=lead>Seven harness diagrams generated from one net list, rendered with <a href="https://github.com/wireviz/WireViz">WireViz</a> (open source, Python + Graphviz), and cross-checked by script against the electrical model <code>wiring.py</code>: every load is fed from the rail the model says, every signal link has a wire, the Pi and R4 pins match. The model itself: <b>{cnt['FAIL']} FAIL · {cnt['WARN']} WARN · {cnt['VERIFY']} VERIFY · {cnt['PROCEDURE']} PROCEDURE · {cnt['PASS']} PASS</b>; pack {S['pack_avg']} A avg / {S['pack_peak']} A peak, bank {S['bank_avg']} A avg / {S['bank_peak']} A peak, Pi USB {S['pi_usb_peak']} A of 1.2.</p>
 
-<div class="box ok"><b>Can the PCA9685 be wired straight to the CNC Shield's pins?</b> Yes. The shield breaks out the R4's A4 (SDA) and A5 (SCL) — the R4's primary <code>Wire</code> bus, 5 V logic — plus 5V and GND pins. That is diagram 3B. <b>But the rover is built the other way (3A):</b> the Raspberry Pi drives the PCA9685 over its I2C-1 (BCM 2/3) at 3.3 V, and turret.py / station.py already work that way. Keep 3A. Switch to 3B only if the MG996R jitters or ignores 3.3 V PWM — then the shield's 5 V logic fixes it, and the R4 firmware needs a tilt command (not written yet). Never wire both: a PCA9685 with 5 V pull-ups must not touch the Pi's SDA/SCL.</div>
+<div class="box ok"><b>Do we need the PCA9685 at all? No.</b> The CNC shield already exposes a spare PWM pin with a ground next to it: the "Z+" end-stop pair is R4 pin D11, free because no limit switches are fitted. The tilt servo's orange lead goes there, its red/brown go to the XL4015's output pads, and the drive firmware gained a <code>t &lt;degrees&gt;</code> command (hardware PWM, 65–150°, <code>t -1</code> releases it). One board fewer, no I2C wires between the Pi and the turret, and the thermal array moves onto the Pi's ordinary I2C bus with the ToFs, so the i2c3 overlay and its pull-up question disappear too.</div>
 
 <div class=box><b>The power scheme, simplified (v3.1).</b> No lever nuts, no resistor boards, one buck. Pack → Deans pull-plug on the deck (that plug is the e-stop) → the CNC shield's VMOT/GND screw terminal with the 1000 µF cap. The same two screws take a second, thinner wire each to the XL4015 (set to <b>5.0 V</b>), whose output goes into the PCA9685's V+/GND terminal. The tilt servo sits on channel 0; the fan plugs onto channel 15's V+ and GND pins, because every channel header carries the rail. The Pi runs on its 3 A bank and powers the R4, the hub, the webcam and, through the CP2102 adapters' 5V pins, the three radars (four wires each). The ESP32-S3 CSI node has its own small bank. Thermal, ToF ×2, mic and the PCA9685 logic hang on the Pi's 3.3 V header. No pack voltage divider and no alarm: 30-minute timer, then meter the pack.</div>
 
+<div class="box ok"><b>Walk around it in 3D:</b> <a href="rover3d/">rover3d/</a> — every part where the placement model puts it, every wire from this net list as a tube from pin to pin, real board artwork on the boards. Orbit, fly with W A S D, click a part to see its wires, unplug it, lift the whole deck.</div>
 <h2>Illustrated (Fritzing style)</h2>
 <p>The same net list drawn the way a Fritzing breadboard view looks: real part artwork from the open Fritzing libraries (<a href="https://github.com/fritzing/fritzing-parts">fritzing-parts</a>, <a href="https://github.com/adafruit/Fritzing-Library">Adafruit</a>, <a href="https://github.com/Protoneer/Fritzing_Parts">Protoneer's CNC Shield</a>, <a href="https://github.com/RafaGS/Fritzing">RafaGS's LD2410C</a>; CC-BY-SA), pin positions read from the parts' own connector definitions, wires routed by <code>wiring_art.py</code> from the net list. Parts no library has (the Deans plug, fan, hub, webcam, banks, LD2450, CP2102 sticks) are drawn by hand. Wires run in separated parallel tracks with square corners; the router never lets two wires overlap and reports the crossings it could not avoid. Stand-ins are labelled: the R4 is drawn as an Uno, both bucks as the LM2596 module, the ESP32-S3 as a C3 devkit, the INMP441 as Adafruit's I2S mic. Click any picture for full size.</p>
 {poster_view}
@@ -197,18 +198,18 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 <li>The remote GUI with the per-motor test panel was exercised through the Cloudflare tunnel earlier today; the Pi was powered down at the time of the last check.</li>
 <li>Illustrated sheets: wires per sheet, and the crossings the router could not avoid (no two wires overlap): {am_rows}.</li>
 </ul>
-<div class="box warn"><b>Still to verify on the bench:</b> each I2C board powered alone must show ≤ 3.3 V on SDA; the MG996R must accept 3.3 V PWM (else sheet 3B); the bank must hold ≥ 4.8 V at 2.5 A; the CP2102 adapters' silkscreen order (varies by vendor — wire by label, not position); which boards have a second header for chaining 3V3/SDA/SCL.</div>
+<div class="box warn"><b>Still to verify on the bench:</b> each I2C board powered alone must show ≤ 3.3 V on SDA; the tilt servo follows the remote's slider (5 V PWM from D11); the bank must hold ≥ 4.8 V at 2.5 A; the CP2102 adapters' silkscreen order (varies by vendor — wire by label, not position); which boards have a second header for chaining 3V3/SDA/SCL.</div>
 
 <h2>Finish checklist</h2>
 <ol>
 <li><b>Set the buck.</b> Solder 22 AWG leads to the HiLetgo XL4015 pads. Feed IN+/IN− from the pack (nothing on OUT), meter OUT, turn the pot counter-clockwise until it reads 5.00 V. Unplug.</li>
 <li><b>Set the four drivers.</b> Motors unplugged, R4 on USB, pack on. Meter black on the shield GND pin, red on each trimpot screw: 0.75 V. Caps under the drivers on MS1 and MS3 (1/32), D12/D13 jumpers on the A header.</li>
-<li><b>Pack side.</b> Pack → Deans plug → shield VMOT/GND, 1000 µF across the terminal (stripe to GND). Twist the XL4015's 22 AWG input wires with the pack leads in the same two screws, tug-test. XL4015 OUT → PCA9685 V+/GND terminal. Tilt servo on channel 0 (brown to the board edge). Fan red/black onto channel 15 V+/GND.</li>
+<li><b>Pack side.</b> Pack → Deans plug → shield VMOT/GND, 1000 µF across the terminal (stripe to GND). Twist the XL4015's 22 AWG input wires with the pack leads in the same two screws, tug-test. Solder the servo's red/brown and the fan's red/black to the XL4015 OUT+/OUT− pads. Servo orange → the shield's Z+ end-stop pin.</li>
 <li><b>Pi side.</b> Short 22 AWG cable bank → Pi USB-C. Webcam → Pi USB. Hub → Pi USB; R4 and the CP2102 adapters into the hub. Each radar: VCC → adapter 5V, GND → GND, TX → RXD, RX → TXD.</li>
-<li><b>Pi header.</b> PCA9685 logic: GND pin 6, SCL pin 5, SDA pin 3, VCC pin 1. MLX90640 on pins 7/29 (i2c3) with 3V3/GND. ToF ×2 on pins 3/5 with XSHUT on 15 and 13. Mic on 12/35/38. Chain 3V3, SDA and SCL through the boards' second headers or a mini breadboard: one female per Pi pin.</li>
+<li><b>Pi header.</b> MLX90640 and both ToFs on SDA pin 3 / SCL pin 5, 3V3 from pins 1/17, XSHUT on 15 and 13. Mic on 12/35/38. Chain 3V3, SDA and SCL through the boards' second headers or a mini breadboard: one female per Pi pin.</li>
 <li><b>ESP32 no.3</b> on its own small bank, USB-C only, velcroed next to it. ESP32 no.2 on any charger off the rover.</li>
 <li><b>Power-up order, every time:</b> bank → Pi → R4 (USB) → then the pack. Pack unplugged whenever the R4 is flashed or reset.</li>
-<li><b>First light.</b> On the Pi: <code>i2cdetect -y 1</code> shows 0x40 and 0x29 (0x30 after the front ToF is re-addressed); <code>i2cdetect -y 3</code> shows 0x33; <code>ls /dev/serial/by-id</code> lists the R4 and the adapters; the ESP32 joins the hotspot.</li>
+<li><b>First light.</b> On the Pi: <code>i2cdetect -y 1</code> shows 0x33 and 0x29 (0x30 after the front ToF is re-addressed); <code>ls /dev/serial/by-id</code> lists the R4 and the adapters; the ESP32 joins the hotspot. In the remote, move the tilt slider: the servo follows.</li>
 <li><b>Wheels up.</b> Open the remote, run "all four" in the motor test panel, then each wheel forward and back. Any motor pin that warms gets re-crimped.</li>
 <li><b>On the floor.</b> Forward, back, strafes, rotate, crab circle from the remote at 415 mm/s.</li>
 <li><b>First station.</b> <code>station.py --sim</code>, then a real station: stop, settle 5 s, listen 60 s, sweep, sentence.</li>

@@ -4,7 +4,7 @@ demo.py — drive the rover through every motion from the Pi.
 
     venv/bin/python demo.py            # forward, back, strafe L/R, rotate both ways, crab circle
     venv/bin/python demo.py circle     # just the crab circle
-    venv/bin/python demo.py tilt       # turret tilt sweep (needs the PCA9685 wired)
+    venv/bin/python demo.py tilt       # turret tilt sweep (servo on the shield's Z+ pin)
 
 Wheels up or a clear floor. Ctrl-C stops everything.
 """
@@ -45,7 +45,7 @@ def main():
     what = sys.argv[1] if len(sys.argv) > 1 else "all"
     if what == "tilt":
         from turret import Turret
-        t = Turret()
+        t = Turret(r)
         for deg in (90, 75, 105, 90):
             print("tilt", t.tilt(deg)); time.sleep(0.8)
         t.relax(); return

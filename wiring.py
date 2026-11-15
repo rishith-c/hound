@@ -13,7 +13,7 @@ import json, sys
 # ── Reference data ────────────────────────────────────────────────────────────
 OHM_PER_M = {14: 0.00828, 16: 0.0132, 18: 0.0210, 20: 0.0333, 22: 0.0530, 24: 0.0842, 26: 0.134, 28: 0.213}  # copper, 20 °C
 AMPACITY  = {14: 32, 16: 22, 18: 16, 20: 11, 22: 7, 24: 3.5, 26: 2.2, 28: 1.4}   # chassis wiring, short runs, free air
-CONNECTOR_A = {"T-plug (Deans)": 50, "Wago 221-415": 32, "screw terminal 5.08": 10, "Dupont 2.54": 2.0,
+CONNECTOR_A = {"T-plug (Deans)": 50, "Wago 221-415": 32, "screw terminal 5.08": 10, "solder pad": 10, "Dupont 2.54": 2.0,
                "JST-XH 2.54": 3.0, "JST 1.25": 1.0, "USB-A": 1.5, "USB-C": 3.0, "header 2.54": 2.0}
 V_DROP_MAX = 0.03           # 3 % of rail per segment
 BUCK_EFF = 0.85             # XL4015 / LM2596 at these ratios, DS typical
@@ -23,7 +23,7 @@ BUCK_EFF = 0.85             # XL4015 / LM2596 at these ratios, DS typical
 RAILS = {
     "PACK":     dict(desc="HOOVO 3S 2200 mAh 80C, T-plug",        v_nom=11.1, v_min=10.5, v_max=12.6, i_cont=44.0, i_peak=100.0, src=None,
                      note="2200 mAh × 20C = 44 A continuous, taken as the honest figure, not 80C. (LISTING/ALLOC)"),
-    "V_SERVO":  dict(desc="XL4015 trimmed to 5.0 V (servo + fan rail, distributed by the PCA9685's V+ terminal and a spare channel header)", v_nom=5.0, v_min=4.85, v_max=5.15, i_cont=4.0, i_peak=5.0, src="PACK",
+    "V_SERVO":  dict(desc="XL4015 trimmed to 5.0 V (servo + fan rail, both soldered to its OUT pads)", v_nom=5.0, v_min=4.85, v_max=5.15, i_cont=4.0, i_peak=5.0, src="PACK",
                      note="5 A module derated to 4 A continuous with the heatsink. 5.0 V instead of 6.0 V so a 5 V fan and the ESP32's 5V pin can share it: MG996R runs 4.8–7.2 V (DS), tilt load is tiny. (LISTING/DS)"),
     "V5_BANK2": dict(desc="second USB power bank → ESP32-S3 #3 USB-C", v_nom=5.0, v_min=4.75, v_max=5.25, i_cont=1.0, i_peak=2.0, src=None,
                      note="Any small bank (≥ 1 A). Its only load is the CSI node, so the rover's own power never touches it. (ALLOC)"),
@@ -40,8 +40,8 @@ RAILS = {
 LOADS = [
     ("4× DRV8825 + JK42HS40 motors (bus side)", "PACK",     8.2, 45.0, 1.96, 4.00, "screw terminal 5.08", "DT: 20.5 W at 10.5 V cruise; 4 A allocated for a ramp burst"),
     ("XL4015 input (second wires in the shield's power screws)", "PACK", 4.0, 38.0, None, None, "screw terminal 5.08", "LISTING; current computed from its load"),
-    ("MG996R tilt servo via PCA9685 V+",        "V_SERVO",  4.8, 7.2,  0.30, 2.10, "header 2.54",         "DS: stall ≈ 2.5 A at 6 V → ~2.1 A at 5 V; pan servo disconnected"),
-    ("40 mm 5 V fan on the driver heatsinks (PCA9685 channel 15 V+/GND pins)", "V_SERVO", 4.5, 5.5, 0.15, 0.20, "header 2.54", "LISTING: 5 V 0.15 A"),
+    ("MG996R tilt servo (power leads soldered to the XL4015 OUT pads)", "V_SERVO", 4.8, 7.2, 0.30, 2.10, "solder pad", "DS: stall ≈ 2.5 A at 6 V → ~2.1 A at 5 V; pan servo disconnected"),
+    ("40 mm 5 V fan on the driver heatsinks (leads soldered to the XL4015 OUT pads)", "V_SERVO", 4.5, 5.5, 0.15, 0.20, "solder pad", "LISTING: 5 V 0.15 A"),
     ("ESP32-S3 #3 CSI receiver (USB-C from its own power bank)", "V5_BANK2", 4.75, 5.25, 0.25, 0.50, "USB-C", "DS: WiFi bursts to ~500 mA; csi_rx_udp firmware"),
     ("Raspberry Pi 4 itself",                   "V5_BANK",  4.75, 5.25, 0.70, 1.20, "USB-C",              "DS: idle 0.6 A, loaded 1.2 A without USB peripherals"),
     ("Webcam (C920-class, 1080p)",              "V5_PI_USB",4.75, 5.25, 0.25, 0.30, "USB-A",              "MEASURED-class: a C920 draws ~240 mA; its 500 mA descriptor is the enumeration allowance, not draw (peak taken as 0.30 A)"),
@@ -53,7 +53,6 @@ LOADS = [
     ("MLX90640 thermal array",                  "V3_PI",    3.0,  3.6,  0.023, 0.025, "header 2.54",      "DS: 23 mA"),
     ("VL53L1X ToF front",                       "V3_PI",    2.6,  3.6,  0.02, 0.04, "header 2.54",        "DS"),
     ("VL53L1X ToF rear",                        "V3_PI",    2.6,  3.6,  0.02, 0.04, "header 2.54",        "DS"),
-    ("PCA9685 logic (VCC)",                     "V3_PI",    2.3,  5.5,  0.01, 0.01, "header 2.54",        "DS"),
     ("INMP441 microphone",                      "V3_PI",    1.8,  3.6,  0.0015, 0.002, "header 2.54",     "DS"),
     ("SCD41 CO2 (optional)",                    "V3_PI",    2.4,  5.5,  0.018, 0.205, "header 2.54",      "DS: 205 mA peak during a measurement"),
 ]
@@ -62,10 +61,9 @@ LOADS = [
 WIRES = [
     ("pack lead: HOOVO T-plug → OliRC extension (the pull-plug disconnect on the deck) → shield VMOT/GND terminal", 14, 0.45, "screw terminal 5.08", "PACK_TOTAL"),
     ("shield VMOT/GND screws (second wire) → XL4015 IN",             22, 0.15, "screw terminal 5.08", "XL_IN"),
-    ("XL4015 OUT → PCA9685 V+ / GND terminal",                      22, 0.12, "screw terminal 5.08", "RAIL:V_SERVO"),
+    ("XL4015 OUT pads → tilt servo red/brown (+ fan red/black on the same pads)", 22, 0.30, "solder pad", "RAIL:V_SERVO"),
     ("shield driver socket → 4-pin motor cable → motor (per phase)", 26, 0.40, "Dupont 2.54",      "PHASE"),
     ("bank → Pi USB-C cable (SPEC: ≤ 0.2 m, 22 AWG or heavier power conductors)", 22, 0.20, "USB-C", "RAIL:V5_BANK"),
-    ("PCA9685 channel 15 V+/GND pins → fan",                        24, 0.20, "header 2.54",      "PACK_LOAD:40 mm 5 V fan on the driver heatsinks (PCA9685 channel 15 V+/GND pins)"),
     ("bank 2 → ESP32-S3 #3 USB-C",                                  28, 0.30, "USB-C",            "PACK_LOAD:ESP32-S3 #3 CSI receiver (USB-C from its own power bank)"),
     ("Pi USB-A → webcam (captive cable, 1.5 m)",                    28, 1.50, "USB-A",            "PACK_LOAD:Webcam (C920-class, 1080p)"),
     ("Pi USB-A → UNO R4 USB-C",                                     28, 0.30, "USB-A",            "PACK_LOAD:UNO R4 WiFi + shield logic"),
@@ -82,8 +80,8 @@ SIGNALS = [
     ("CP2102 #2 TXD", "TXD", 3.3, "LD2410C right", "RX", 3.6, 2.0, "USB"),
     ("LD2450 TX (3.3 V)", "TX", 3.3, "CP2102 #3", "RXD", 3.6, 2.0, "USB"),
     ("CP2102 #3 TXD", "TXD", 3.3, "LD2450", "RX", 3.6, 2.0, "USB"),
-    ("Pi I2C-1 (BCM 2/3, pull-ups 3.3 V)", "SDA/SCL", 3.3, "PCA9685 0x40, VL53L1X 0x29→0x30, SCD41 0x62", "SDA/SCL", 3.6, 2.3, "I2C1"),
-    ("Pi i2c3 (BCM 4/5, pull-ups 3.3 V)", "SDA/SCL", 3.3, "MLX90640 0x33", "SDA/SCL", 3.6, 2.3, "I2C3"),
+    ("Pi I2C-1 (BCM 2/3, pull-ups 3.3 V)", "SDA/SCL", 3.3, "MLX90640 0x33, VL53L1X 0x29→0x30, SCD41 0x62", "SDA/SCL", 3.6, 2.3, "I2C1"),
+    ("UNO R4 D11 (5 V PWM, the shield's Z+ end-stop pin)", "D11", 5.0, "MG996R tilt servo", "signal", 5.5, 2.4, "R4"),
     ("Pi BCM 22 / 27", "XSHUT out", 3.3, "VL53L1X front / rear", "XSHUT (pull-up to VIN = 3.3)", 3.6, 1.2, "GPIO"),
     ("Pi I2S (BCM 18/19/20)", "BCLK/LRCLK/DIN", 3.3, "INMP441", "SCK/WS/SD", 3.6, 2.3, "I2S"),
     ("Pi ↔ UNO R4", "USB CDC", 5.0, "UNO R4", "USB", 5.25, 0, "USB"),
@@ -91,14 +89,14 @@ SIGNALS = [
     ("ESP32-S3 #2 csi_tx, OFF the rover 3 m along the wall on any USB 5 V: 100 Hz ESP-NOW probes, channel 6", "radio", 0, "ESP32-S3 #3 csi_rx_udp on the rover: CSI of every probe → UDP to the Pi hotspot (channel 6) port 5005", "wlan0", 0, 0, "WIFI"),
 ]
 
-PI_BCM = {"I2C1 SDA": 2, "I2C1 SCL": 3, "i2c3 SDA": 4, "i2c3 SCL": 5, "I2S BCLK": 18, "I2S LRCLK": 19, "I2S DIN": 20, "XSHUT front": 22, "XSHUT rear": 27}
-R4_PINS = {"X STEP": 2, "Y STEP": 3, "Z STEP": 4, "X DIR": 5, "Y DIR": 6, "Z DIR": 7, "ENABLE": 8, "A STEP (jumper SpnEn)": 12, "A DIR (jumper SpnDir)": 13}
-R4_RESERVED_BY_SHIELD = {9: "X limit", 10: "Y limit", 11: "Z limit", 14: "A0 abort", 15: "A1 hold", 16: "A2 resume", 17: "A3 coolant (free: no divider fitted, vcut stays 0)"}
+PI_BCM = {"I2C1 SDA": 2, "I2C1 SCL": 3, "I2S BCLK": 18, "I2S LRCLK": 19, "I2S DIN": 20, "XSHUT front": 22, "XSHUT rear": 27}
+R4_PINS = {"X STEP": 2, "Y STEP": 3, "Z STEP": 4, "X DIR": 5, "Y DIR": 6, "Z DIR": 7, "ENABLE": 8, "A STEP (jumper SpnEn)": 12, "A DIR (jumper SpnDir)": 13,
+           "TILT servo PWM (the shield's Z+ end-stop pin)": 11}
+R4_RESERVED_BY_SHIELD = {9: "X limit", 10: "Y limit", 14: "A0 abort", 15: "A1 hold", 16: "A2 resume", 17: "A3 coolant (free: no divider fitted, vcut stays 0)"}
 ESP1_GPIO = {}   # ESP32 #1 is now the spare: the radars reach the Pi through CP2102 adapters
 ESP32S3_AVOID = {0: "strap", 3: "strap", 45: "strap", 46: "strap", 19: "USB D-", 20: "USB D+", 43: "UART0 TX (console)", 44: "UART0 RX (console)"}
 I2C_BUSES = {
-    "I2C1": [("PCA9685", 0x40, 1000), ("VL53L1X front (re-addressed)", 0x30, 400), ("VL53L1X rear", 0x29, 400), ("SCD41 (optional)", 0x62, 100)],
-    "I2C3": [("MLX90640", 0x33, 1000)],
+    "I2C1": [("MLX90640", 0x33, 400), ("VL53L1X front (re-addressed)", 0x30, 400), ("VL53L1X rear", 0x29, 400), ("SCD41 (optional)", 0x62, 100)],
 }
 
 # ── Checks ────────────────────────────────────────────────────────────────────
@@ -194,11 +192,11 @@ out(WARN, "usb", "Pi 5 only: default 600 mA USB cap → set usb_max_current_enab
 
 # 9. grounds: attachment points between the bank island (Pi, R4 logic, ESP32 #1, PCA9685 logic) and the pack ground
 branches = {"shield GND screw (pack −; the R4's USB GND ties it to the Pi)": 0.0,
-            "PCA9685 GND terminal (via XL4015 OUT− / IN− from the shield GND screw)": XL_IN_PK * OHM_PER_M[22] * 0.15}
+            "servo/fan return at the XL4015 OUT− pad (via IN− from the shield GND screw)": XL_IN_PK * OHM_PER_M[22] * 0.15}
 dv = max(branches.values()) - min(branches.values()); i_circ = dv / 0.4
 out(PASS if dv < 0.1 else FAIL, "ground", f"star = the shield's GND screw (pack −, XL4015 IN− and the motor return all land there). Peak drop per branch: " + ", ".join(f"{k} {v*1000:.0f} mV" for k, v in branches.items()) +
     f" → ≤ {dv*1000:.0f} mV between attachment points, ~{i_circ*1000:.0f} mA circulating through USB grounds (limit 100 mV)")
-out(PROC, "ground", "Servo/fan/ESP32 return: PCA9685 V+ GND terminal → XL4015 OUT− (its own wire). Radars return through their adapters (USB side). Pack current never flows through a board GND pin or a USB cable.")
+out(PROC, "ground", "Servo/fan return: XL4015 OUT−, which is the same node as IN− (a buck shares its negative) and so the shield GND screw — the D11 signal is referenced to it automatically. Radars return through their adapters (USB side). Pack current never flows through a board GND pin or a USB cable.")
 
 # 10. things a checker cannot check but a build must do
 out(PROC, "sequence", "Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. Power-down and BEFORE every flash/reset of the R4: pull the pack plug first. Reason: DRV8825 nENABLE has a pull-down, so while the R4 is dead or resetting all four drivers sit at full holding current (no pull-up resistor fitted — by choice; the plug order replaces it).")
@@ -227,15 +225,15 @@ out(WARN, "V-chain", f"A 1 m 28 AWG phone cable to the Pi would drop {bad:.2f} V
 # 12. things that turn a PASS into a FAIL if someone forgets them
 out(PASS, "usb", "The radars are powered through their CP2102 adapters (80 + 80 + 200 mA on the hub); the webcam keeps its own port; ESP32 #3 is on its own bank, not on the Pi, the main bank or the servo rail")
 out(WARN, "enable", "No EN pull-up fitted: during an R4 reset (~1 s at boot, every sketch upload) all four drivers are ENABLED at full holding current. Harmless for a second; NOT harmless if you flash repeatedly with the pack plugged in (drivers heat). So: pack unplugged whenever the USB cable is doing anything but driving.")
-out(VERIFY, "i2c3", "BCM 4/5 have NO on-board I2C pull-ups (BCM 2/3 have 1.8 kΩ). Adafruit-pattern MLX90640 breakouts carry 10 kΩ pull-ups, so no resistors are needed — check with i2cdetect -y 3 (expect 0x33); if it is absent, that module has none and needs 2.2–4.7 kΩ to 3.3 V. And w1-gpio (1-Wire) defaults to BCM 4 — leave that overlay off")
-out(VERIFY, "servo-pwm", "PCA9685 VCC is 3.3 V, so the tilt servo gets 3.3 V PWM — the signal line only carries a logic level, and MG996R-class servos accept it (confirmed in use with Pi + PCA9685 builds). If the servo jitters or ignores commands, that is the level: diagram 3B (shield A4/A5, 5 V logic) fixes it. Do NOT raise VCC to 5 V while SDA/SCL touch the Pi")
-out(WARN, "connector", f"Tilt servo stall {rail_sum('V_SERVO', 5):.1f} A through the PCA9685's 2.54 mm channel header (rated {CONNECTOR_A['header 2.54']} A). Momentary, and how every servo board works; keep stalls short with tilt limits in software")
-out(PASS, "splice", "No lever nuts, no resistor boards, one buck at 5.0 V: pack → shield terminal → (second wires) XL4015 → PCA9685 V+ terminal; the fan picks up 5 V from a spare PCA9685 channel header; the radars from their USB adapters; the ESP32 from its own bank; everything else from the Pi")
+out(VERIFY, "i2c1", "One I2C bus for everything: the Pi's 1.8 kΩ pull-ups plus the boards' own 10 kΩ. i2cdetect -y 1 must show 0x33 (thermal) and 0x29 (rear ToF); the front ToF appears at 0x30 only after station.py re-addresses it. If the SCD41 is fitted the bus drops to 100 kHz — fine for 4 fps thermal.")
+out(PROC, "tilt", "Tilt servo: orange (signal) → the shield's Z+ end-stop header pin (= R4 D11, 5 V PWM from the firmware's 't <deg>' command, 65–150°); red → XL4015 OUT+, brown → XL4015 OUT− (2 A at stall, never through the shield). The fan's red/black share the same two OUT pads. No PCA9685 any more.")
+out(WARN, "connector", f"Tilt servo stall {rail_sum('V_SERVO', 5):.1f} A on the servo's own 2.54 mm lead contacts (rated {CONNECTOR_A['header 2.54']} A). Momentary, and how every servo works; keep stalls short with the 65–150° limits in firmware")
+out(PASS, "splice", "No lever nuts, no resistor boards, no servo board, one buck at 5.0 V: pack → shield terminal → (second wires) XL4015 → servo + fan on its OUT pads; the servo signal comes from the shield's own Z+ pin; the radars from their USB adapters; the ESP32 from its own bank; everything else from the Pi")
 
 # 13. pass 3 — the paths a schematic hides
 radar_ret = sum(l[4] for l in LOADS if l[0].startswith("LD24"))
 out(PROC, "radar-power", f"Each radar is a 4-wire job to its own CP2102: VCC → the adapter's 5V pin, GND → GND, TX → RXD, RX → TXD. The three radars add {radar_ret*1000:.0f} mA to the Pi's USB budget (checked above). The adapter must be a 3.3 V-logic type: meter its TXD pin at idle — 3.3 V, not 5 V")
-out(PROC, "i2c-chain", "The Pi header has only two 3V3 pins and one SDA/SCL pair, but five boards want 3V3 and three want SDA/SCL — one Dupont female per pin. Chain through the boards' second header/STEMMA port (Adafruit-pattern MLX/ToF/PCA boards have one), or use a mini breadboard as the 3V3/SDA/SCL splitter. Never force two females onto one pin.")
+out(PROC, "i2c-chain", "The Pi header has two 3V3 pins and one SDA/SCL pair, but four boards want 3V3 and three want SDA/SCL — one Dupont female per pin. Chain through the boards' second header/STEMMA port (Adafruit-pattern MLX/ToF boards have one), or use a mini breadboard as the 3V3/SDA/SCL splitter. Never force two females onto one pin.")
 out(PROC, "pack-splice", "The shield's VMOT/GND screw terminal is the only pack splice: the 14 AWG pack lead and the 22 AWG XL4015 input wire share each screw (2.4 mm² total, inside the 5.08 mm terminal's range). Strip 7 mm, twist the two conductors together before inserting, tug-test both.")
 out(PROC, "driver-orient", "DRV8825 into the shield socket with its EN pin over the socket's EN label (the trimpot ends up toward the shield's power terminal on genuine Pololu layouts; clones vary — go by the label). Backwards = dead driver on power-up, no warning")
 out(PROC, "cap-polarity", "1000 µF electrolytic across VMOT: stripe = negative, to the GND terminal. Reversed, it vents on the first power-up")

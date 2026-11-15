@@ -64,6 +64,10 @@ class R4:
         with self._lock:
             self._cmd = "s"
 
+    def tilt(self, deg):
+        """Tilt servo on the shield's Z+ pin: 65–150°, or -1 to release the servo (no pulses)."""
+        self._send(f"t {int(deg)}")
+
     def hold_enable(self, on):
         """Keep the drivers energised while stopped (holding torque, more heat)."""
         self._send(f"e {1 if on else 0}")

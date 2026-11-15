@@ -151,32 +151,30 @@ def on_deck(pid, inst, name, dims, x, y, mounts, fast, torque, mass, verify="", 
 on_deck("UNO", "—", "UNO R4 WiFi + DRV8825 CNC Shield stack", (UNO[0], UNO[1], SHIELD_STACK_H), -115.7, 86.7,
         "deck top, rear-left", "printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4's 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties", "hand-tight",
         M["uno_stack"], verify="stack height with heatsinks",
-        note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces −X. Jumpers: D12 + D13 on the A header, MS3 under each driver (1/16), EN/GND open. Drivers in with EN on EN.")
+        note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces −X. Jumpers: D12 + D13 on the A header, caps on MS1 + MS3 under each driver (1/32), EN/GND open. Drivers in with EN on EN. Tilt servo signal on the Z+ end-stop pin (D11).")
 on_deck("FAN", "—", "40×40×10 5 V fan over the drivers", FAN, -115.7, 86.7, "printed PETG bridge over the shield",
         "printed bridge on 2× M3×8 into deck bosses; fan held to the bridge by 2 cable ties", "hand-tight", M["fan"],
         note=f"Blows down onto the four DRV8825 heatsinks. Fan face at Z ≈ {DECK_TOP + 10 + SHIELD_STACK_H + 8:.0f}.")
 on_deck("PI", "—", "Raspberry Pi", PI, -107.5, -88.0, "deck top, rear-right",
         "printed 8 mm bosses on the deck tile (58×49 pattern) + 4× M2×20 + nut (bosses 8 + tile 5 + PCB 1.6 + nut 1.6 = 16.2; the M2×16 first specified had 1 mm left for board and nut)", "hand-tight", M["pi"],
         note="Spans X −150..−65, Y −116..−60. USB ports face −X (rear). Powered from the USB bank on USB-C; the fallback is a buck at 5.10 V on PHYSICAL header pins 2/4 (+) and 6 (−), never with the bank connected too.")
-on_deck("PCA", "—", "PCA9685 servo driver (Ceres)", PCA9685, -29.0, -97.5, "deck top, beside the Pi",
-        "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the 6 V buck. I2C from Pi. Servo cables run forward to the turret.")
 on_deck("BANK", "→ Pi", "USB power bank, compact (owned)", (100.0, 60.0, 15.0), 0.0, 0.0, "deck top, centre, over the LiPo cradle",
         "printed lip on the deck tile + 2 cable ties through printed slots", "hand-tight", 0.130, verify="WEIGH IT: ≤ 130 g, footprint",
         note="USB-C to the Pi. Must deliver 5 V at 3 A. Centred to keep the CG on the axis.")
-on_deck("XL4015", "→ servos 6.0 V", "XL4015 5 A buck (owned)", BUCK, -44.5, 110.5, "deck top, ahead of the R4",
-        "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 6.0 V before connecting the PCA9685. Own return to the shield GND.")
-on_deck("LM2596", "→ fan + radars 5.0 V", "LM2596 buck (owned)", (43.0, 21.0, 14.0), -44.5, 150.0, "deck top, outboard of the XL4015",
-        "printed bosses + 2 cable ties", "hand-tight", 0.020, note="Trim to 5.0 V unloaded. Feeds the fan and both radars so they stay off the Pi's USB budget; dedicated GND wire to the ESP32 alongside the radar signals.")
-on_deck("WAGO", "pack split", "2× Wago 221-415 5-way lever nuts in a printed clip", (40.0, 30.0, 18.0), -150.0, -165.0, "deck top, rear-right corner",
-        "printed clip + 1 cable tie", "hand-tight", 0.020, note="Two 5-way Wago 221-415: one for +, one for − — each takes the pigtail plus three branches (shield VMOT, XL4015 IN, LM2596 IN). A 3-way cannot: source plus three branches is four conductors per polarity.")
-on_deck("T-plug", "e-stop", "T-plug mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -140.0, -132.0, "deck top, between the Pi and the Wago",
+on_deck("XL4015", "→ servo + fan 5.0 V", "HiLetgo XL4015 5 A buck (owned)", BUCK, -44.5, 110.5, "deck top, ahead of the R4",
+        "printed bosses + 2 cable ties", "hand-tight", M["buck"], note="Trim to 5.0 V unloaded. IN from the shield's VMOT/GND screws (second wire each); tilt servo red/brown and fan leads soldered to the OUT pads.")
+on_deck("T-plug", "e-stop", "T-plug mating pair on the deck top, rear edge", (30.0, 16.0, 12.0), -140.0, -132.0, "deck top, rear edge beside the Pi",
         "printed saddle + 1 cable tie on the fixed half", "hand-tight", 0.010, note="The pack lead comes up through the rear slot to here. One-handed disconnect from above = the emergency stop.")
-on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
-        "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
-        note="UART1 → LD2410C left, UART2 → LD2450; the right LD2410C on a third UART (GPIO 4/5). USB-C to the Pi, WiFi OFF in firmware.")
 on_deck("ESP32", "#3 CSI receiver", "ESP32-S3 DevKitC", ESP32, 60.0, 120.0, "deck top, front-left, antenna toward +X, nothing metal within 20 mm",
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
-        note="csi_rx_udp firmware: 5 V from the LM2596 rail (never USB), streams CSI to the Pi hotspot on channel 6. ESP32 #2 (csi_tx) is dropped on a 10 cm stand as far along the wall as the room allows.")
+        note="csi_rx_udp firmware: USB-C from its own small power bank beside it, streams CSI to the Pi hotspot on channel 6. ESP32 #2 (csi_tx) is dropped on a 10 cm stand as far along the wall as the room allows.")
+on_deck("BANK2", "→ ESP32 #3", "small USB power bank (ESP32 only)", (90.0, 26.0, 26.0), 60.0, 165.0, "deck top, front-left, outboard of ESP32 #3",
+        "velcro strap", "hand-tight", 0.090, verify="any ≥ 1 A bank; weigh it",
+        note="Its only load is the CSI node; nothing else plugs into it.")
+on_deck("HUB", "→ Pi USB", "4-port USB hub", (60.0, 30.0, 12.0), -95.0, -165.0, "deck top, rear-right corner",
+        "velcro", "hand-tight", 0.030, note="R4 + the three CP2102 adapters. 0.3 m cable to the Pi.")
+on_deck("CP2102", "×3 → radars", "three CP2102 USB-UART sticks in the hub", (60.0, 55.0, 10.0), -30.0, -160.0, "deck top, rear edge",
+        "cable tie", "hand-tight", 0.030, note="Four wires each to a radar: 5V, GND, TXD, RXD. Label LEFT / RIGHT / LD2450.")
 
 # ── Turret (Ceres pan/tilt) at the front centre ─────────────────────────────
 TX = 110.0
