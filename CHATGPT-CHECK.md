@@ -1,4 +1,4 @@
-I am building an indoor search rover for a hackathon. Please do an adversarial second check of this design: find anything that will NOT physically fit, NOT electrically connect, or NOT work as claimed. Be specific and cite which two parts conflict. Do not pad; if it all checks out, say so briefly.
+I am building an indoor search rover for a hackathon. SCOPE: it must find a person behind DRYWALL (stud walls, interior doors) in a normal building on flat floors. Concrete, rubble, stairs and outdoor terrain are explicitly out of scope. Please do an adversarial verification of this design: find anything that will NOT physically fit, NOT electrically connect, or NOT work as claimed for that scope. Be specific and cite which two parts conflict. A previous reviewer already found and fixed the faults listed near the end under 'Already found and fixed' — do not repeat those; hunt for what they missed. Do not pad; if a section checks out, say so in one line.
 
 ## Goal
 A 350 x 390 mm four-wheel mecanum rover on four owned NEMA 17 steppers, a pan/tilt turret carrying a webcam and a thermal array, two 24 GHz radars on a rear post, two ToF obstacle sensors, all run by a Raspberry Pi with an Arduino UNO R4 WiFi doing the step generation. Purpose: drive into a room and find people (thermal + camera in line of sight, radar behind doors/walls).
@@ -132,9 +132,61 @@ Drivetrain sizing at 5.19 kg design mass, 80 mm mecanum wheels, direct drive, JK
 - PCA9685: tilt on ch 0, pan on ch 2, as in the Ceres turret_duet firmware. V+ from the XL4015 at 6.0 V, VCC from the Pi 3.3 V, GND to both.
 - ESP32-S3 #3 (CSI receiver, on the rover): powered from the LM2596 5 V rail, data to the Pi over USB-C (fourth USB port — the Pi 4 has four; on a Pi 3 use a powered hub or drop the webcam to 720p). ESP32-S3 #2 (beacon): any USB 5 V source at the doorway, no data link needed.
 
+## Open design question for you
+The radar sits at Z = 300 mm. Earlier measurements on the same LD2410C (project Walleye) found floor-level radar effectively blind through drywall and chest height reliable. Raising the printed post from 200 to 400 mm puts the radar at ~500 mm for about +50 g, which drops the 5-degree ramp margin from 1.27 to roughly 1.25 (acceptance 1.25) — irrelevant on flat floors, which is the scope. Should the post be 400 mm? Is there a better height or placement for a 24 GHz 1T1R module on a 350 x 390 mm rover, given the pan/tilt turret 270 mm ahead of it?
+
+## Already found and fixed — do not repeat these
+- Microstepping jumpers sit under the driver sockets — caps, not wires, and they go on before the drivers. I first said Dupont leads would do; you caught it.
+- Four screw lengths I specified were in no kit on the list: M5×10, M5×20, M4×16 with nyloc, M3×30. Fixed with counterbores in the printed parts so the corner kit's M5×8 and the T-nut kit's M4×12 reach, the cradle and turret moved to M3 from the M3 kit, and the fan to cable ties. Zero purchases added.
+- When the 5 V buck left the list, the fan and the radars lost their 5 V source. Both now run on USB pass-through from the Pi, with the Pi's 1.2 A USB budget written out above.
+- Motor lead length has never been documented. The far-corner motor needs about 400 mm to reach the shield; plan to extend with your 22 AWG and crimp Dupont housings.
+- The design mass crept from 4.84 to 5.41 kg through three honest corrections — brackets at 113 g not 60, a 162 g webcam, the power bank — and failed the ramp at 1.5 A before the 2200 mAh pack brought it back to 5.11 kg. Every gram from here spends margin.
+- The frame drawing had two corner brackets per joint 'one top, one bottom'. A 2020 inner corner holds exactly one 20 mm bracket, and one on the top faces would sit under the deck. Fixed: four brackets, deck tiles as the second shear plane.
+- The deck tiles were drawn 350 mm wide with six M5s 'into the side-rail top slots'. A 350 mm tile reaches the side rails' inner faces at Y ±175 — the top slots are at Y ±185. It could never have been bolted down. Fixed: 390 mm tiles.
+- The build order assembled the frame before the motor brackets. The kits' T-nuts are sliding, not drop-in, and a butt-jointed frame closes every slot end. Fixed: every T-nut goes in before the corners close.
+- The thermal array was put on a bit-banged i2c-gpio bus 'at 1 MHz'. Software I2C on a Pi manages ~100–200 kHz; the MLX90640 would have run at ~3 fps. Fixed: hardware second bus (i2c3 on a Pi 4) at 400 kHz.
+- The Pi's USB budget counted the webcam at 250 mA. A C920 draws ~500 mA at 1080p and the R4 WiFi's radio ~150 mA; with fan and radars on USB pass-through it was over 1.2 A. Fixed: fan and radars on an LM2596 at 5.0 V, R4 radio off.
+- The turret is inside the radar beam — 270 mm ahead, 60 mm below boresight. Not a wiring fix: the radars are read only with the turret parked, and LD2450 targets under 0.5 m are discarded.
+- Nothing on the list could split the XT60 into three branches, hold a coupler on a shaft, or connect motor leads to the shield's 4-pin headers. Added a parts-box-first consumables group: threadlocker, Wago 221s, stepper cables, a 1000 µF cap for the servo rail, a plastic trimmer tool.
+- Two 390 mm deck tiles fit no common print bed. Now four 170 × 195 quadrants with tongue-and-rebate seams.
+- The wheels sat 25 mm outboard of the bracket legs (a fudge in the formula). Every millimetre multiplies the motor-bearing load; now 5 mm, and the bearing check uses the real overhang: indoor floors pass, a 20 mm threshold does not.
+- The Ceres pan servo is continuous-rotation — it cannot hold or report an angle, so the camera would have had no known bearing. Pan is now the rover rotating on its wheels with odometry; the pan stage is locked; tilt keeps its mechanical floor.
+- The radar bar called for heat-set inserts that nothing on the list supplies. Through-bolted with M3 + nuts.
+- The bracket's bundled screws are probably M3×8: through a 3 mm leg into a ~4.5 mm flange hole they bottom out and never clamp. Use M3×6 from the kit.
+- The sense-resistor code on the DRV8825 carriers decides Vref; assuming R100 on an R220 board gives 0.68 A and a rover that stalls. Read the code first.
+- Person detection was quoted at 25 fps; a Pi 4 running TFLite MobileNet-SSD at 300 px does ~10 fps. Corrected.
+- The LD2450 shares the 24 GHz band with the LD2410C 100 mm away and their interference is untested. It now defaults off.
+- The front ToF at 81 mm sees the floor beyond ~0.34 m through a 27° cone. ROI narrowed or clip tilted up.
+- The kit ships exactly four drivers. The owned TB6600 is now the documented emergency fourth axis.
+- Nothing said to unplug the pack when parked: idle draw from three regulators kills a LiPo overnight.
+- The deck tiles were 170 long; the cross-rail top slot sits at X ±165 and a 9 mm M5 counterbore centred there needs 4.5 mm of tile beyond it. It had 0.5 mm. Tiles are now 175.
+- Power-up order was never stated. VMOT with the R4 unpowered leaves every DRV8825 enabled at full holding current. Logic first, pack second; reverse to shut down.
+- The LD2410C's nearest gates look straight at the turret's metal. Unmasked, it reports a stationary person for the life of the rover. Gates 0–1 are now set to ignore.
+- Deck screws were specified at the corner brackets' 3.0 N·m, into 3 mm of PLA under the head. 1.5 N·m.
+- VL53L1X modules powered at 5 V would put 5 V pull-ups on Pi GPIO pins. 3.3 V.
+- The XT60 disconnect was under the deck. It is now brought up to the rear edge as a one-handed emergency stop.
+- The optional SCD41's I2C tops out at 100 kHz; fitted, it slows the shared bus. Stated.
+- Every under-deck wire needs a way through a full-coverage deck. Pass-through slots added.
+- The SCD41 sat on the post's rear face, which became the open side of the flat-printed U-channel. Moved to a side face.
+- Fastener counts were stale after the tile change (30 M5, not 22; 24 M3). Corrected; still inside both kits.
+- Two USB serial devices with the same /dev/ttyACM naming swap order between boots. Now addressed by serial-by-id; otherwise the first boot on stage sends step commands to the radar bridge.
+- The mecanum X/O rule is stated both ways by different vendors. Replaced with a drive-forward test that cannot be misread.
+- A top-heavy R4 + shield + four heatsinks was hanging on two cable ties. Now four M3×20 through the R4's mounting holes.
+- Sensor breakouts commonly ship with unsoldered headers while the iron was optional. Flagged at unboxing.
+- The front ToF module protruded 4 mm past the rail face as the rover's leading point. Now recessed in a printed bumper lip.
+- The Pi 5 uses a different i2c3 overlay name than the Pi 4. Both stated, since the Pi model is still unknown.
+- The second LM2596, the Wago block and the top-side XT60 e-stop were wired in the text and placed nowhere. Now placed: LM2596 outboard of the XL4015, Wago and XT60 at the rear-right corner, clear of the Pi and the post flange.
+- The printed-parts mass allowance (0.5 kg) no longer covered four tiles plus post, bridge, clips and lock. Tiles now specified at 20% infill (~80 g) and the allowance raised to 0.55 kg; the ramp margin still clears 1.25.
+- The post's flange, printed with the channel lying flat, would stand vertical and need supports. It is now a separate plate.
+- The pack's ~100 mm lead cannot reach the rear-corner e-stop. The pigtail kit's second pair is now the extension.
+- Sixth pass found nothing structural. The design converged; what remains is measurement.
+
 ## What I want from you
-1. Walk every mechanical interface above and say whether the two parts actually mate (bore vs shaft, bolt pattern vs holes, screw length vs stack, slot vs T-nut size). Flag anything nominal that could be wrong on the real part.
-2. Walk every electrical connection: voltage windows, current budgets (especially the Pi's USB ports and the servo rail), logic levels, I2C address clashes, grounds.
-3. Check the torque logic: is a 0.70 low-speed factor on holding torque a reasonable screening assumption for a 1.8-degree NEMA 17 at 24-72 rpm on 10.5 V with DRV8825 at 1/16 microstepping? What would you measure first?
-4. Tell me what is missing from the buy list that I will discover I need on build day.
-5. Rank the three most likely reasons this rover does not move on the first try.
+1. Mechanical: walk every interface and say whether the two parts actually mate (bore vs shaft, bolt pattern vs holes, screw length vs stack, slot vs T-nut, print-bed fit). Flag anything nominal that could be wrong on the real part.
+2. Electrical: every connection — voltage windows, current budgets (Pi USB ports, servo rail, LM2596 rails), logic levels, I2C addresses and bus speeds, grounds and ground loops, power-up order.
+3. Firmware: can an Arduino UNO R4 WiFi (Renesas RA4M1, 48 MHz) generate four independent step streams totalling ~15,000 pulses/s at 1/16 microstepping with acceleration ramps, a serial command link and a watchdog? If not, what microstepping or approach should I plan for?
+4. Sensor physics for DRYWALL: with a 24 GHz 1T1R LD2410C at 300 mm height reading per-gate energies, a 30 s dwell, and breathing extracted by autocorrelation in 0.13-0.60 Hz, what range and reliability should I expect through one layer of 12.7 mm drywall with a person standing, sitting, and lying? What will produce false positives in a normal building?
+5. Fusion: is the 0-3 scoring table sane? What weighting or veto rule would you add so a fan, a curtain, or a radiator does not become a 'person'?
+6. Build day: what is missing from the buy list and the owned list that I will discover I need?
+7. Rank the three most likely reasons this rover does not move on the first try, and the three most likely reasons it drives fine but reports no person through the drywall.
+8. Finally: list any fault you found that is NOT already in the 'Already found and fixed' section, in order of severity, one line each.
