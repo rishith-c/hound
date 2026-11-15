@@ -89,14 +89,25 @@ class RadarUSB:
         return np.array(t), np.array(rows, float)
 
 
-def radar_ports(by_id="/dev/serial/by-id", serial0="/dev/serial0", cfg="~/rover/radars.json"):
-    """Radar serial ports as the Pi sees them. The two LD2410Cs are the CP2102 adapters, sorted by serial number so
-    the order is stable across reboots (first = left, second = right); the LD2450 is the Pi's own UART, taken only when
-    /dev/serial0 is the PL011 (ttyAMA0) — on a stock Pi 4 that UART belongs to Bluetooth. ~/rover/radars.json
-    overrides any entry, e.g. {"left": "<by-id path>", "right": "...", "ld2450": "/dev/ttyAMA0"}: label each adapter
-    once and write down which is which."""
+def radar_ports(by_id="/dev/serial/by-id", serial0="/dev/serial0", cfg="~/rover/radars.json",
+                by_path="/dev/serial/by-path", sysfs="/sys/class/tty"):
+    """Radar serial ports as the Pi sees them. The two LD2410Cs are the CP2102 adapters (kernel driver cp210x), found by
+    the USB socket they are plugged into (/dev/serial/by-path) and sorted by it, so the order holds across reboots while
+    each stays in its socket (first = left, second = right). Not by /dev/serial/by-id: cheap CP2102 modules often
+    share one serial number (0001), and then by-id keeps a link to only one of them. The LD2450 is the Pi's own UART,
+    taken only when /dev/serial0 is the PL011 (ttyAMA0) — on a stock Pi 4 that UART belongs to Bluetooth.
+    ~/rover/radars.json overrides any entry, e.g. {"left": "<by-path link>", "right": "...", "ld2450": "/dev/ttyAMA0"}."""
     import glob
-    found = sorted(p for p in glob.glob(os.path.join(by_id, "*")) if "CP210" in p)
+
+    def cp210x(dev):
+        return os.path.basename(os.path.realpath(os.path.join(sysfs, os.path.basename(dev), "device", "driver"))) == "cp210x"
+    found, seen = [], set()
+    for p in sorted(glob.glob(os.path.join(by_path, "*"))):      # newer udev adds a usbv2- twin of each link: one per device
+        dev = os.path.realpath(p)
+        if dev not in seen and cp210x(dev):
+            seen.add(dev); found.append(p)
+    if not found:                                                # no by-path or sysfs to read: the by-id names
+        found = sorted(p for p in glob.glob(os.path.join(by_id, "*")) if "CP210" in p)
     ports = dict(zip(("left", "right"), found))
     if os.path.basename(os.path.realpath(serial0)) == "ttyAMA0":
         ports["ld2450"] = serial0

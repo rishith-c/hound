@@ -676,7 +676,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi BCM 22 / 27 XSHUT out → VL53L1X front / rear XSHUT (pull-up to VIN = 3.3): 3.3 V out, 1.2–3.6 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi I2S (BCM 18/19/20) BCLK/LRCLK/DIN → INMP441 SCK/WS/SD: 3.3 V out, 2.3–3.6 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi ↔ UNO R4 USB CDC → UNO R4 USB: 5.0 V out, 0–5.25 V accepted</td></tr>
-<tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi ↔ 2× CP2102 USB → /dev/serial/by-id/*CP2102* → LD2410C left/right at 256000 baud USB: 5.0 V out, 0–5.25 V accepted</td></tr>
+<tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>Pi ↔ 2× CP2102 USB → /dev/serial/by-path (by hub socket: cheap CP2102s share serial 0001, so by-id shows one) → LD2410C left/right at 256000 baud USB: 5.0 V out, 0–5.25 V accepted</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>level</code></td><td>ESP32-S3 #2 csi_tx, OFF the rover 3 m along the wall on any USB 5 V: 100 Hz ESP-NOW probes, channel 6 → ESP32-S3 #3 csi_rx_udp on the rover: CSI of every probe → UDP to the Pi hotspot (channel 6) port 5005: radio link, no wire</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>pins</code></td><td>Pi BCM: 9 pins, all distinct</td></tr>
 <tr><td class="lvl-PASS">PASS</td><td><code>pins</code></td><td>UNO R4 / shield: 11 pins, all distinct, none on [9, 10, 11, 14, 15, 16, 17]</td></tr>

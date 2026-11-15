@@ -520,7 +520,7 @@
   },
   {
    "driver": "Pi ↔ 2× CP2102",
-   "pins": "USB → /dev/serial/by-id/*CP2102*",
+   "pins": "USB → /dev/serial/by-path (by hub socket: cheap CP2102s share serial 0001, so by-id shows one)",
    "v_out": 5.0,
    "receiver": "LD2410C left/right at 256000 baud",
    "rpins": "USB",
@@ -908,7 +908,7 @@
   {
    "level": "PASS",
    "id": "level",
-   "text": "Pi ↔ 2× CP2102 USB → /dev/serial/by-id/*CP2102* → LD2410C left/right at 256000 baud USB: 5.0 V out, 0–5.25 V accepted"
+   "text": "Pi ↔ 2× CP2102 USB → /dev/serial/by-path (by hub socket: cheap CP2102s share serial 0001, so by-id shows one) → LD2410C left/right at 256000 baud USB: 5.0 V out, 0–5.25 V accepted"
   },
   {
    "level": "PASS",
