@@ -559,7 +559,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.117,
    "verify": "stack height with heatsinks",
-   "note": "Board spans X \u2212150..\u221281.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-B faces \u2212X."
+   "note": "Board spans X \u2212150..\u221281.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces \u2212X. Jumpers: D12 + D13 on the A header, MS3 under each driver (1/16), EN/GND open. Drivers in with EN on EN."
   },
   {
    "id": "FAN",
