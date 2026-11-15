@@ -82,6 +82,12 @@ DC_NEW = [("4× JGA25-370 12 V encoder gearmotor ('170 RPM_12V' variant, torque 
           ("6× 25 mm gearbox bracket, 33 × 26 × 33 mm, M3 (four used)", "B07HHY2BJN", 9.59),   # B0DCZVTYMY said 540/555 motors
           ("97 mm mecanum × 4 + 4 mm couplings", "B0F9TK5FSW", 40.99)]
 LISTING_N0 = 170                  # the cheapest listing's '170 RPM_12V' variant: no-load at 12 V, torque not published
+# All on Prime, shipped by Amazon (arrive 2026-09-27/28 as checked): the motor comes WITH its 25 mm bracket (and a 65 mm
+# wheel that goes unused), so no bracket pack. 200 rpm needs less stall torque than 170 (min_stall_for).
+DC_PRIME = [("4× JGA25-371 12 V 200 rpm encoder gearmotor + bracket (Emoshayoga 'Speed 200')", "B0H2JP84J7", 4 * 20.39),
+            ("3× TB6612FNG dual driver (two used)", "B0BLRSWTLM", 7.82),
+            ("97 mm mecanum × 4 + 4 mm couplings", "B0F9TK5FSW", 40.99)]
+PRIME_N0 = 200
 
 
 def min_stall_for(n0, wheel_d, m_motor=0.100):
@@ -113,6 +119,8 @@ def main():
     print(f"\nCOST, a new build's drivetrain (Amazon 2026-09-25):")
     print(f"  steppers (as Hound is built)       ${tot(STEPPER_NEW):7.2f}   " + " + ".join(f"{n.split(' (')[0]} ${p:.2f}" for n, _, p in STEPPER_NEW))
     print(f"  DC + encoders, cheapest listings   ${tot(DC_NEW):7.2f}   " + " + ".join(f"{n.split(' (')[0]} ${p:.2f}" for n, _, p in DC_NEW))
+    print(f"  DC + encoders, all on Prime        ${tot(DC_PRIME):7.2f}   " + " + ".join(f"{n.split(' (')[0]} ${p:.2f}" for n, _, p in DC_PRIME))
+    print(f"  the Prime {PRIME_N0} rpm motor on 97 mm wheels passes only if its 12 V stall torque is ≥ {min_stall_for(PRIME_N0, 0.097):.1f} kg·cm")
     for wd in (0.080, 0.097):
         need = min_stall_for(LISTING_N0, wd)
         print(f"  the listing's {LISTING_N0} rpm motor on {wd * 1000:.0f} mm wheels passes only if its 12 V stall torque is "
