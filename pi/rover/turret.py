@@ -27,18 +27,17 @@ class Turret:
         self.angle = deg
         return deg
 
-    def pan(self, deg):
-        """0–180° on a positional pan servo. On the Ceres continuous-rotation unit 90 stops it; use nudge_pan for timed moves."""
-        deg = int(max(0, min(180, float(deg))))
-        self.r4.pan(deg)
-        self.pan_angle = deg
-        return deg
-
     def nudge_pan(self, direction, ms=300):
+        """Ceres pan: continuous-rotation, so only timed nudges (~20° per 300 ms). Keeps a net-nudge count as a rough bearing."""
         self.r4.nudge_pan(direction, ms)
+        self.pan_steps = getattr(self, "pan_steps", 0) + (1 if direction > 0 else -1)
+        return self.pan_steps
+
+    def pan_stop(self):
+        self.r4.pan_stop()
 
     def park(self):
-        self.r4.pan(90)
+        self.r4.pan_stop()
         return self.tilt(self.PARK_DEG)
 
     def relax(self):

@@ -87,8 +87,8 @@ FspTimer stepTimer;
 // Servo power (V+ terminal) comes from the XL4015 at 5.0 V; the fan sits on channel 15's V+/GND pins. 50 Hz, 500–2500 µs.
 const uint8_t PCA = 0x40; const uint8_t PAN_CH = 0, TILT_CH = 1;
 const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; Ceres mechanical floor ~62°
-const int PAN_MIN = 0,   PAN_MAX = 180,  PAN_PARK = 90;
-int tiltDeg = TILT_PARK, panDeg = PAN_PARK; bool tiltOn = false, panOn = false, pcaOk = false; uint32_t panStopAt = 0, pcaRetryAt = 0;
+const int PAN_L_US = 1250, PAN_R_US = 1750, PAN_NUDGE_MS = 300;   // Ceres turret_duet.ino: the pan is CONTINUOUS-ROTATION — timed nudges only, then cut the pulse (coast to stop)
+int tiltDeg = TILT_PARK, panDeg = 0; bool tiltOn = false, panOn = false, pcaOk = false; uint32_t panStopAt = 0, pcaRetryAt = 0;
 uint8_t i2cFound[8]; uint8_t i2cN = 0;
 void i2cScan() {                              // which addresses answer on the shield's SDA/SCL (for the status line)
   i2cN = 0;
@@ -111,20 +111,18 @@ void pcaPulse(uint8_t ch, int us) {           // us = 0 → channel fully off (s
   Wire.write(0); Wire.write(0); Wire.write(off & 0xFF); Wire.write(us <= 0 ? 0x10 : (off >> 8));   // ON=0, OFF=count (or full-off bit)
   Wire.endTransmission();
 }
-static int usFor(int deg) { return 500 + (2000 * deg) / 180; }
+static int usFor(int deg) { return 600 + 10 * deg; }         // Ceres tilt mapping: 600 + 10 µs/°, 1500 = level
 void setTilt(int deg) {                       // -1 = release
   if (deg < 0) { pcaPulse(TILT_CH, 0); tiltOn = false; return; }
   tiltDeg = deg < TILT_MIN ? TILT_MIN : deg > TILT_MAX ? TILT_MAX : deg;
   pcaPulse(TILT_CH, usFor(tiltDeg)); tiltOn = true;
 }
-void setPan(int deg) {                        // positional servo: angle. Continuous-rotation servo: 90 = stop, <90 / >90 = turn
-  if (deg < 0) { pcaPulse(PAN_CH, 0); panOn = false; panStopAt = 0; return; }
-  panDeg = deg < PAN_MIN ? PAN_MIN : deg > PAN_MAX ? PAN_MAX : deg;
-  pcaPulse(PAN_CH, usFor(panDeg)); panOn = true;
+void panStop() { pcaPulse(PAN_CH, 0); panOn = false; panStopAt = 0; }   // no pulse = the continuous servo coasts to a stop
+void nudgePan(int dir, int ms) {              // Ceres-style: 1250 µs left / 1750 µs right for ms milliseconds, then pulse off
+  pcaPulse(PAN_CH, dir < 0 ? PAN_L_US : PAN_R_US); panOn = true; panDeg += dir < 0 ? -1 : 1;   // panDeg counts net nudges (≈ 20° each)
+  panStopAt = millis() + (ms > 0 && ms < 3000 ? ms : PAN_NUDGE_MS);
 }
-void nudgePan(int dir, int ms) {              // continuous-rotation pan: run one way for ms milliseconds, then stop (90)
-  setPan(dir < 0 ? 60 : 120); panStopAt = millis() + (ms > 0 && ms < 5000 ? ms : 300);
-}
+void setPan(int) { panStop(); }               // any 'p' just stops the pan — angles mean nothing to a continuous servo
 
 void stepIsr(timer_callback_args_t*) {
   static uint16_t slewDiv = 0;
@@ -415,8 +413,8 @@ void handleSerial() {
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
-        case 'I': pcaOk = pcaInit(); if (pcaOk) { setPan(panDeg); setTilt(tiltDeg); } break;   // re-probe the servo board now
-        case 'p': setPan(line.length() == 1 ? PAN_PARK : (int)a); break;      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
+        case 'I': pcaOk = pcaInit(); if (pcaOk) setTilt(tiltDeg); break;   // re-probe the servo board now
+        case 'p': setPan(0); break;                                                // any 'p' = stop the pan (continuous servo)      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
         case 'n': nudgePan((int)a, (int)b); break;                              // 'n -1 300' / 'n 1 300': continuous-rotation nudge left/right for ms
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
         case 'c': circleR = a > 0 ? a : 300.0f; circleT = b > 0 ? b : 8.0f; circleT0 = millis(); circleOn = true; kick(); break;
@@ -467,8 +465,8 @@ void runCircle() {
 }
 
 void loop() {
-  if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) { panStopAt = 0; setPan(90); }   // end of a continuous-rotation nudge
-  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk) { setPan(panDeg); setTilt(tiltDeg); } }   // hot-plugged board: keep probing
+  if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) panStop();                   // end of a nudge: cut the pulse
+  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk) setTilt(tiltDeg); }   // hot-plugged board: keep probing
   static uint32_t lastMotionMs = 0;
   readVbat();
   if (lowVolt && anyMotion) stopAll();
