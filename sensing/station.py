@@ -68,7 +68,11 @@ class RadarUSB:
         t, rows = [], []
         t0 = time.time()
         while time.time() - t0 < seconds:
-            for frame in self.reader.feed(self.ser.read(512)):
+            try:
+                data = self.ser.read(512)
+            except OSError as e:                 # SerialException is an OSError: adapter unplugged or USB reset mid-dwell
+                print(f"  radar {self.port}: read failed ({e}); keeping the {len(rows)} frames before it"); break
+            for frame in self.reader.feed(data):
                 if not frame.get("engineering"):
                     self.basic_run += 1
                     if self.basic_run >= 30:
