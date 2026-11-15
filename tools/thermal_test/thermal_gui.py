@@ -244,5 +244,9 @@ if __name__ == "__main__":
         sys.exit("no serial port found — plug the Arduino in or pass --port")
     root = tk.Tk(); app = App(root, port, a.demo, a.rate)
     root.protocol("WM_DELETE_WINDOW", app.close)
+    root.lift(); root.attributes("-topmost", True); root.after(1500, lambda: root.attributes("-topmost", False)); root.focus_force()   # macOS: come to the front
+    if sys.platform == "darwin":
+        import os, subprocess
+        subprocess.Popen(["osascript", "-e", f'tell application "System Events" to set frontmost of (first process whose unix id is {os.getpid()}) to true'])
     if a.seconds: root.after(int(a.seconds * 1000), app.close)
     root.mainloop()
