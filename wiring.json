@@ -153,6 +153,30 @@
    "source": "DS: ≤ 200 mA"
   },
   {
+   "name": "LD2410C radar #2 (right, toed out)",
+   "rail": "V5_LM",
+   "vin": [
+    4.5,
+    5.5
+   ],
+   "i_avg": 0.08,
+   "i_peak": 0.1,
+   "connector": "JST 1.25",
+   "source": "DS: ≤ 80 mA"
+  },
+  {
+   "name": "ESP32-S3 #3 CSI receiver (5 V pin, WiFi on)",
+   "rail": "V5_LM",
+   "vin": [
+    4.5,
+    5.5
+   ],
+   "i_avg": 0.25,
+   "i_peak": 0.5,
+   "connector": "header 2.54",
+   "source": "DS: WiFi bursts to ~500 mA; csi_rx_udp firmware"
+  },
+  {
    "name": "Raspberry Pi 4 itself",
    "rail": "V5_BANK",
    "vin": [
@@ -189,16 +213,16 @@
    "source": "DS: radio off"
   },
   {
-   "name": "ESP32-S3 #1 radar bridge (USB, WiFi off)",
+   "name": "3× CP2102 USB-serial adapters + 4-port hub",
    "rail": "V5_PI_USB",
    "vin": [
     4.75,
     5.25
    ],
-   "i_avg": 0.15,
-   "i_peak": 0.35,
+   "i_avg": 0.06,
+   "i_peak": 0.1,
    "connector": "USB-A",
-   "source": "DS"
+   "source": "DS: ~15 mA each + hub; radars are NOT powered from them"
   },
   {
    "name": "MLX90640 thermal array",
@@ -279,16 +303,16 @@
    "awg": 14,
    "length_m": 0.3,
    "connector": "T-plug (Deans)",
-   "i_avg": 2.33,
-   "i_peak": 5.96
+   "i_avg": 2.5,
+   "i_peak": 6.3
   },
   {
    "name": "Deans pigtail → 5-way Wagos (+ and −)",
    "awg": 14,
    "length_m": 0.15,
    "connector": "Wago 221-415",
-   "i_avg": 2.33,
-   "i_peak": 5.96
+   "i_avg": 2.5,
+   "i_peak": 6.3
   },
   {
    "name": "Wago → CNC Shield VMOT/GND terminal",
@@ -311,8 +335,8 @@
    "awg": 22,
    "length_m": 0.15,
    "connector": "screw terminal 5.08",
-   "i_avg": 0.17,
-   "i_peak": 0.28
+   "i_avg": 0.35,
+   "i_peak": 0.62
   },
   {
    "name": "XL4015 OUT → PCA9685 V+ / GND terminal",
@@ -327,8 +351,8 @@
    "awg": 22,
    "length_m": 0.3,
    "connector": "Wago 221-415",
-   "i_avg": 0.33,
-   "i_peak": 0.5
+   "i_avg": 0.66,
+   "i_peak": 1.1
   },
   {
    "name": "shield driver socket → 4-pin motor cable → motor (per phase)",
@@ -343,8 +367,8 @@
    "awg": 24,
    "length_m": 0.3,
    "connector": "USB-C",
-   "i_avg": 1.32,
-   "i_peak": 2.49
+   "i_avg": 1.23,
+   "i_peak": 2.24
   },
   {
    "name": "Pi USB-A → webcam (captive cable, 1.5 m)",
@@ -363,12 +387,12 @@
    "i_peak": 0.2
   },
   {
-   "name": "Pi USB-A → ESP32-S3 #1 USB-C",
+   "name": "Pi USB-A → hub → 3× CP2102 (TX/RX/GND only)",
    "awg": 28,
    "length_m": 0.3,
    "connector": "USB-A",
-   "i_avg": 0.15,
-   "i_peak": 0.35
+   "i_avg": 0.06,
+   "i_peak": 0.1
   }
  ],
  "signals": [
@@ -383,44 +407,64 @@
    "bus": "R4"
   },
   {
-   "driver": "LD2410C TX (3.3 V)",
+   "driver": "LD2410C left TX (3.3 V)",
    "pins": "TX",
    "v_out": 3.3,
-   "receiver": "ESP32-S3 #1",
-   "rpins": "GPIO 18 (UART1 RX)",
+   "receiver": "CP2102 #1",
+   "rpins": "RXD (3.3 V logic)",
    "v_in_max": 3.6,
-   "v_ih": 2.4,
-   "bus": "ESP1"
+   "v_ih": 2.0,
+   "bus": "USB"
   },
   {
-   "driver": "ESP32-S3 #1 GPIO 17 (UART1 TX)",
-   "pins": "GPIO 17",
+   "driver": "CP2102 #1 TXD",
+   "pins": "TXD",
    "v_out": 3.3,
-   "receiver": "LD2410C",
+   "receiver": "LD2410C left",
    "rpins": "RX",
    "v_in_max": 3.6,
    "v_ih": 2.0,
-   "bus": "ESP1"
+   "bus": "USB"
+  },
+  {
+   "driver": "LD2410C right TX (3.3 V)",
+   "pins": "TX",
+   "v_out": 3.3,
+   "receiver": "CP2102 #2",
+   "rpins": "RXD",
+   "v_in_max": 3.6,
+   "v_ih": 2.0,
+   "bus": "USB"
+  },
+  {
+   "driver": "CP2102 #2 TXD",
+   "pins": "TXD",
+   "v_out": 3.3,
+   "receiver": "LD2410C right",
+   "rpins": "RX",
+   "v_in_max": 3.6,
+   "v_ih": 2.0,
+   "bus": "USB"
   },
   {
    "driver": "LD2450 TX (3.3 V)",
    "pins": "TX",
    "v_out": 3.3,
-   "receiver": "ESP32-S3 #1",
-   "rpins": "GPIO 16 (UART2 RX)",
+   "receiver": "CP2102 #3",
+   "rpins": "RXD",
    "v_in_max": 3.6,
-   "v_ih": 2.4,
-   "bus": "ESP1"
+   "v_ih": 2.0,
+   "bus": "USB"
   },
   {
-   "driver": "ESP32-S3 #1 GPIO 15 (UART2 TX)",
-   "pins": "GPIO 15",
+   "driver": "CP2102 #3 TXD",
+   "pins": "TXD",
    "v_out": 3.3,
    "receiver": "LD2450",
    "rpins": "RX",
    "v_in_max": 3.6,
    "v_ih": 2.0,
-   "bus": "ESP1"
+   "bus": "USB"
   },
   {
    "driver": "Pi I2C-1 (BCM 2/3, pull-ups 3.3 V)",
@@ -473,21 +517,21 @@
    "bus": "USB"
   },
   {
-   "driver": "Pi ↔ ESP32-S3 #1",
-   "pins": "USB CDC (UART0 bridge)",
+   "driver": "Pi ↔ 3× CP2102",
+   "pins": "USB → /dev/serial/by-id/*CP2102*",
    "v_out": 5.0,
-   "receiver": "ESP32-S3 #1",
+   "receiver": "radars at 256000 baud",
    "rpins": "USB",
    "v_in_max": 5.25,
    "v_ih": 0,
    "bus": "USB"
   },
   {
-   "driver": "ESP32-S3 #2 and #3, OFF the rover (doorway / far wall), RuView receiver nodes",
-   "pins": "WiFi UDP → SINK_IP:5005",
+   "driver": "ESP32-S3 #2 csi_tx, OFF the rover 3 m along the wall on any USB 5 V: 100 Hz ESP-NOW probes, channel 6",
+   "pins": "radio",
    "v_out": 0,
-   "receiver": "Pi hotspot on the rover (the CSI transmitter)",
-   "rpins": "wlan0, 2.4 GHz",
+   "receiver": "ESP32-S3 #3 csi_rx_udp on the rover: CSI of every probe → UDP to the Pi hotspot (channel 6) port 5005",
+   "rpins": "wlan0",
    "v_in_max": 0,
    "v_ih": 0,
    "bus": "WIFI"
@@ -496,18 +540,13 @@
  "checks": [
   {
    "level": "WARN",
-   "id": "I-budget",
-   "text": "V5_PI_USB (Pi 4 downstream USB (4 ports, shared)): avg 0.55 A of 1.2 A (46%), peak 1.05 A of 1.2 A (88%)"
+   "id": "V-chain",
+   "text": "webcam sees 4.42 V at its 500 mA descriptor (4.58 V at a typical 250 mA) through its own captive 1.5 m cable; USB floor 4.75 V, most cameras run to ~4.4 V. If it drops out at 1080p, run 720p — its cable cannot be shortened"
   },
   {
    "level": "WARN",
    "id": "V-chain",
-   "text": "webcam sees 4.40 V at its 500 mA descriptor (4.56 V at a typical 250 mA) through its own captive 1.5 m cable; USB floor 4.75 V, most cameras run to ~4.4 V. If it drops out at 1080p, run 720p — its cable cannot be shortened"
-  },
-  {
-   "level": "WARN",
-   "id": "V-chain",
-   "text": "A 1 m 28 AWG phone cable to the Pi would drop 1.06 V → 3.84 V at the Pi = brownout. The bank cable is a spec: ≤ 0.3 m with ≥ 24 AWG power conductors (any '3 A fast-charge' cable)"
+   "text": "A 1 m 28 AWG phone cable to the Pi would drop 0.95 V → 3.95 V at the Pi = brownout. The bank cable is a spec: ≤ 0.3 m with ≥ 24 AWG power conductors (any '3 A fast-charge' cable)"
   },
   {
    "level": "WARN",
@@ -533,11 +572,6 @@
    "level": "WARN",
    "id": "usb",
    "text": "Pi 5 only: default 600 mA USB cap → set usb_max_current_enable=1, or use the Pi 4 this file assumes."
-  },
-  {
-   "level": "WARN",
-   "id": "wire",
-   "text": "bank → Pi USB-C cable: 24 AWG × 0.3 m, peak 2.49 A (ampacity 3.5 A, USB-C 3.0 A), round-trip drop 126 mV = 2.5%"
   },
   {
    "level": "VERIFY",
@@ -572,7 +606,7 @@
   {
    "level": "PROCEDURE",
    "id": "csi-nodes",
-   "text": "ESP32 #2 and #3 are NOT on the rover. Walleye's csi_rx firmware writes CSI to Serial (a wire to the Pi), and the RuView firmware's nodes are receivers of the AP's frames — so the transmitter is the Pi's own 2.4 GHz hotspot on the rover, and the two nodes sit at the doorway and the far wall on any USB power, streaming CSI back over that same WiFi as UDP. Two bistatic links through two walls, zero rover wiring, nothing on the Pi's USB budget."
+   "text": "CSI v2: ESP32 #2 runs csi_tx OFF the rover (dropped as far along the wall as the room allows, any USB 5 V, channel 6, 100 Hz probes). ESP32 #3 runs csi_rx_udp ON the rover from the LM2596 5 V pin — USB never connected while the 5 V pin is fed — and streams the CSI of every probe to the Pi hotspot, which must be on channel 6, UDP port 5005. ESP32 #1 is the spare."
   },
   {
    "level": "PROCEDURE",
@@ -592,7 +626,7 @@
   {
    "level": "PROCEDURE",
    "id": "lm-dist",
-   "text": "LM2596 OUT feeds three loads (fan, LD2410C, LD2450): four conductors per polarity, so two MORE 5-way Wagos (four of the pack of ten used) or a soldered splice. Never daisy-chain through a load's connector"
+   "text": "LM2596 OUT feeds five loads (fan, two LD2410C, LD2450, ESP32 #3): six conductors per polarity. Fan straight off the LM2596 OUT terminals, the four sensors from a 5-way Wago pair. Never daisy-chain through a load's connector"
   },
   {
    "level": "PROCEDURE",
@@ -607,17 +641,12 @@
   {
    "level": "PROCEDURE",
    "id": "radar-gnd",
-   "text": "Each radar's GND pin gets TWO wires: one to the LM2596 OUT− (its power return) and the cable's GND to ESP32 #1 (signal reference). With only the cable GND, the radars' 180 mA returns through ESP32 #1 → Pi → R4 USB → shield → Wago: 72 mV of ground shift on every serial link. That is the exact Ceres fault"
+   "text": "Each radar's GND gets TWO wires: one to the LM2596 OUT− Wago (its power return, 260 mA for the three) and one to its CP2102's GND pin (signal reference). Never power a radar from the CP2102's 5 V pin: that is the Pi USB budget, and the return would run through the Pi"
   },
   {
    "level": "PROCEDURE",
    "id": "sequence",
    "text": "Power-up: bank → Pi → R4 (USB) FIRST, then the pack at the T-plug. DRV8825 nENABLE floats LOW = enabled; with VMOT alone four motors sit at full holding current with nothing commanding them."
-  },
-  {
-   "level": "PROCEDURE",
-   "id": "usb",
-   "text": "ESP32-S3 #1 firmware must call WiFi.mode(WIFI_OFF): with its radio on, Pi USB peak is 1.20 A of 1.2 A — the port limiter trips and takes the R4's power and serial link with it"
   },
   {
    "level": "PROCEDURE",
@@ -627,7 +656,7 @@
   {
    "level": "PASS",
    "id": "I-budget",
-   "text": "PACK (HOOVO 3S 2200 mAh 80C, T-plug): avg 2.33 A of 44.0 A (5%), peak 5.96 A of 100.0 A (6%)"
+   "text": "PACK (HOOVO 3S 2200 mAh 80C, T-plug): avg 2.50 A of 44.0 A (6%), peak 6.30 A of 100.0 A (6%)"
   },
   {
    "level": "PASS",
@@ -637,12 +666,17 @@
   {
    "level": "PASS",
    "id": "I-budget",
-   "text": "V5_LM (LM2596 trimmed to 5.0 V): avg 0.33 A of 2.0 A (16%), peak 0.50 A of 3.0 A (17%)"
+   "text": "V5_LM (LM2596 trimmed to 5.0 V): avg 0.66 A of 2.0 A (33%), peak 1.10 A of 3.0 A (37%)"
   },
   {
    "level": "PASS",
    "id": "I-budget",
-   "text": "V5_BANK (USB power bank → Pi USB-C): avg 1.32 A of 3.0 A (44%), peak 2.49 A of 3.0 A (83%)"
+   "text": "V5_BANK (USB power bank → Pi USB-C): avg 1.23 A of 3.0 A (41%), peak 2.24 A of 3.0 A (75%)"
+  },
+  {
+   "level": "PASS",
+   "id": "I-budget",
+   "text": "V5_PI_USB (Pi 4 downstream USB (4 ports, shared)): avg 0.46 A of 1.2 A (38%), peak 0.80 A of 1.2 A (67%)"
   },
   {
    "level": "PASS",
@@ -652,7 +686,7 @@
   {
    "level": "PASS",
    "id": "V-chain",
-   "text": "Pi input 4.77 V from a bank holding 4.9 V under load through a 24 AWG × 0.3 m cable; the Pi's under-voltage warning is 4.63 V"
+   "text": "Pi input 4.79 V from a bank holding 4.9 V under load through a 24 AWG × 0.3 m cable; the Pi's under-voltage warning is 4.63 V"
   },
   {
    "level": "PASS",
@@ -692,6 +726,16 @@
   {
    "level": "PASS",
    "id": "V-window",
+   "text": "LD2410C radar #2 (right, toed out): 4.9–5.1 V inside 4.5–5.5 V"
+  },
+  {
+   "level": "PASS",
+   "id": "V-window",
+   "text": "ESP32-S3 #3 CSI receiver (5 V pin, WiFi on): 4.9–5.1 V inside 4.5–5.5 V"
+  },
+  {
+   "level": "PASS",
+   "id": "V-window",
    "text": "Raspberry Pi 4 itself: 4.75–5.25 V inside 4.75–5.25 V"
   },
   {
@@ -707,7 +751,7 @@
   {
    "level": "PASS",
    "id": "V-window",
-   "text": "ESP32-S3 #1 radar bridge (USB, WiFi off): 4.75–5.25 V inside 4.75–5.25 V"
+   "text": "3× CP2102 USB-serial adapters + 4-port hub: 4.75–5.25 V inside 4.75–5.25 V"
   },
   {
    "level": "PASS",
@@ -757,12 +801,12 @@
   {
    "level": "PASS",
    "id": "endurance",
-   "text": "pack draw avg 2.33 A, peak 5.96 A → 45 min per 2200 mAh pack (80 % usable)"
+   "text": "pack draw avg 2.50 A, peak 6.30 A → 42 min per 2200 mAh pack (80 % usable)"
   },
   {
    "level": "PASS",
    "id": "ground",
-   "text": "star = Wago negative. Peak drop per branch: shield GND terminal (via R4 USB GND) 32 mV, PCA9685 GND (via XL4015 OUT− / IN−) 13 mV, radar GND (via LM2596 OUT− / IN−) 2 mV → ≤ 30 mV between attachment points, ~74 mA circulating through USB grounds (limit 100 mV)"
+   "text": "star = Wago negative. Peak drop per branch: shield GND terminal (via R4 USB GND) 32 mV, PCA9685 GND (via XL4015 OUT− / IN−) 13 mV, radar GND (via LM2596 OUT− / IN−) 5 mV → ≤ 27 mV between attachment points, ~67 mA circulating through USB grounds (limit 100 mV)"
   },
   {
    "level": "PASS",
@@ -782,22 +826,32 @@
   {
    "level": "PASS",
    "id": "level",
-   "text": "LD2410C TX (3.3 V) TX → ESP32-S3 #1 GPIO 18 (UART1 RX): 3.3 V out, 2.4–3.6 V accepted"
+   "text": "LD2410C left TX (3.3 V) TX → CP2102 #1 RXD (3.3 V logic): 3.3 V out, 2.0–3.6 V accepted"
   },
   {
    "level": "PASS",
    "id": "level",
-   "text": "ESP32-S3 #1 GPIO 17 (UART1 TX) GPIO 17 → LD2410C RX: 3.3 V out, 2.0–3.6 V accepted"
+   "text": "CP2102 #1 TXD TXD → LD2410C left RX: 3.3 V out, 2.0–3.6 V accepted"
   },
   {
    "level": "PASS",
    "id": "level",
-   "text": "LD2450 TX (3.3 V) TX → ESP32-S3 #1 GPIO 16 (UART2 RX): 3.3 V out, 2.4–3.6 V accepted"
+   "text": "LD2410C right TX (3.3 V) TX → CP2102 #2 RXD: 3.3 V out, 2.0–3.6 V accepted"
   },
   {
    "level": "PASS",
    "id": "level",
-   "text": "ESP32-S3 #1 GPIO 15 (UART2 TX) GPIO 15 → LD2450 RX: 3.3 V out, 2.0–3.6 V accepted"
+   "text": "CP2102 #2 TXD TXD → LD2410C right RX: 3.3 V out, 2.0–3.6 V accepted"
+  },
+  {
+   "level": "PASS",
+   "id": "level",
+   "text": "LD2450 TX (3.3 V) TX → CP2102 #3 RXD: 3.3 V out, 2.0–3.6 V accepted"
+  },
+  {
+   "level": "PASS",
+   "id": "level",
+   "text": "CP2102 #3 TXD TXD → LD2450 RX: 3.3 V out, 2.0–3.6 V accepted"
   },
   {
    "level": "PASS",
@@ -827,12 +881,12 @@
   {
    "level": "PASS",
    "id": "level",
-   "text": "Pi ↔ ESP32-S3 #1 USB CDC (UART0 bridge) → ESP32-S3 #1 USB: 5.0 V out, 0–5.25 V accepted"
+   "text": "Pi ↔ 3× CP2102 USB → /dev/serial/by-id/*CP2102* → radars at 256000 baud USB: 5.0 V out, 0–5.25 V accepted"
   },
   {
    "level": "PASS",
    "id": "level",
-   "text": "ESP32-S3 #2 and #3, OFF the rover (doorway / far wall), RuView receiver nodes → Pi hotspot on the rover (the CSI transmitter): radio link, no wire"
+   "text": "ESP32-S3 #2 csi_tx, OFF the rover 3 m along the wall on any USB 5 V: 100 Hz ESP-NOW probes, channel 6 → ESP32-S3 #3 csi_rx_udp on the rover: CSI of every probe → UDP to the Pi hotspot (channel 6) port 5005: radio link, no wire"
   },
   {
    "level": "PASS",
@@ -846,13 +900,13 @@
   },
   {
    "level": "PASS",
-   "id": "pins",
-   "text": "ESP32-S3 #1: 4 pins, all distinct, none on [0, 3, 19, 20, 43, 44, 45, 46]"
+   "id": "usb",
+   "text": "Pi USB: 3 devices on 4 ports (Webcam, UNO R4 WiFi + shield logic, 3× CP2102 USB-serial adapters + 4-port hub)"
   },
   {
    "level": "PASS",
    "id": "usb",
-   "text": "Pi USB: 3 devices on 4 ports (Webcam, UNO R4 WiFi + shield logic, ESP32-S3 #1 radar bridge)"
+   "text": "No ESP32 on the Pi USB any more: the radars come in on CP2102 adapters (~15 mA each) through a 4-port hub with the R4; the webcam keeps its own port"
   },
   {
    "level": "PASS",
@@ -862,12 +916,12 @@
   {
    "level": "PASS",
    "id": "wire",
-   "text": "pack lead: HOOVO T-plug → OliRC extension → e-stop pair: 14 AWG × 0.3 m, peak 5.96 A (ampacity 32 A, T-plug (Deans) 50 A), round-trip drop 30 mV = 0.3%"
+   "text": "pack lead: HOOVO T-plug → OliRC extension → e-stop pair: 14 AWG × 0.3 m, peak 6.30 A (ampacity 32 A, T-plug (Deans) 50 A), round-trip drop 31 mV = 0.3%"
   },
   {
    "level": "PASS",
    "id": "wire",
-   "text": "Deans pigtail → 5-way Wagos (+ and −): 14 AWG × 0.15 m, peak 5.96 A (ampacity 32 A, Wago 221-415 32 A), round-trip drop 15 mV = 0.1%"
+   "text": "Deans pigtail → 5-way Wagos (+ and −): 14 AWG × 0.15 m, peak 6.30 A (ampacity 32 A, Wago 221-415 32 A), round-trip drop 16 mV = 0.1%"
   },
   {
    "level": "PASS",
@@ -882,7 +936,7 @@
   {
    "level": "PASS",
    "id": "wire",
-   "text": "Wago → LM2596 IN: 22 AWG × 0.15 m, peak 0.28 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 4 mV = 0.0%"
+   "text": "Wago → LM2596 IN: 22 AWG × 0.15 m, peak 0.62 A (ampacity 7 A, screw terminal 5.08 10 A), round-trip drop 10 mV = 0.1%"
   },
   {
    "level": "PASS",
@@ -892,12 +946,17 @@
   {
    "level": "PASS",
    "id": "wire",
-   "text": "LM2596 OUT → 5-way Wagos → fan, LD2410C, LD2450: 22 AWG × 0.3 m, peak 0.50 A (ampacity 7 A, Wago 221-415 32 A), round-trip drop 16 mV = 0.3%"
+   "text": "LM2596 OUT → 5-way Wagos → fan, LD2410C, LD2450: 22 AWG × 0.3 m, peak 1.10 A (ampacity 7 A, Wago 221-415 32 A), round-trip drop 35 mV = 0.7%"
   },
   {
    "level": "PASS",
    "id": "wire",
    "text": "shield driver socket → 4-pin motor cable → motor (per phase): 26 AWG × 0.4 m, peak 1.50 A (ampacity 2.2 A, Dupont 2.54 2.0 A), round-trip drop 161 mV = 1.4%"
+  },
+  {
+   "level": "PASS",
+   "id": "wire",
+   "text": "bank → Pi USB-C cable: 24 AWG × 0.3 m, peak 2.24 A (ampacity 3.5 A, USB-C 3.0 A), round-trip drop 113 mV = 2.3%"
   },
   {
    "level": "PASS",
@@ -912,27 +971,27 @@
   {
    "level": "PASS",
    "id": "wire",
-   "text": "Pi USB-A → ESP32-S3 #1 USB-C: 28 AWG × 0.3 m, peak 0.35 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 45 mV = 0.4%"
+   "text": "Pi USB-A → hub → 3× CP2102 (TX/RX/GND only): 28 AWG × 0.3 m, peak 0.10 A (ampacity 1.4 A, USB-A 1.5 A), round-trip drop 13 mV = 0.1%"
   }
  ],
  "summary": {
-  "pack_avg": 2.33,
-  "pack_peak": 5.96,
-  "bank_avg": 1.32,
-  "bank_peak": 2.49,
-  "pi_usb_peak": 1.05,
-  "minutes": 45,
-  "v_pi": 4.77,
-  "v_cam": 4.4,
-  "n_loads": 17,
+  "pack_avg": 2.5,
+  "pack_peak": 6.3,
+  "bank_avg": 1.23,
+  "bank_peak": 2.24,
+  "pi_usb_peak": 0.8,
+  "minutes": 42,
+  "v_pi": 4.79,
+  "v_cam": 4.42,
+  "n_loads": 19,
   "n_wires": 12,
-  "n_signals": 12,
+  "n_signals": 14,
   "counts": {
    "FAIL": 0,
-   "WARN": 9,
+   "WARN": 7,
    "VERIFY": 5,
-   "PROCEDURE": 12,
-   "PASS": 58
+   "PROCEDURE": 11,
+   "PASS": 64
   }
  }
 }
