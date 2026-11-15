@@ -69,8 +69,10 @@ void stepIsr(timer_callback_args_t*) {
   static uint16_t slewDiv = 0;
 
   if (++wdTicks > WATCHDOG_TICKS) {
-    for (int i = 0; i < 4; i++) targetRate[i] = 0;
-    wdTripped = true;
+    bool had = false;
+    for (int i = 0; i < 4; i++) { if (targetRate[i]) had = true; targetRate[i] = 0; }
+    if (had) wdTripped = true;
+    wdTicks = WATCHDOG_TICKS;
   }
 
   if (++slewDiv >= TICK_HZ / 1000) {          // 1 kHz ramp update
@@ -294,7 +296,8 @@ void handleSerial() {
     line.trim();
     if (line.length()) {
       char cmd = line[0]; float a = 0, b = 0, d = 0;
-      sscanf(line.c_str() + 1, "%f %f %f", &a, &b, &d);
+      char* p = (char*)line.c_str() + 1;          // newlib-nano has no float scanf: parse by hand
+      a = strtof(p, &p); b = strtof(p, &p); d = strtof(p, &p);
       switch (cmd) {
         case 'v': setVelocity(a, b, d); break;
         case 'j': jog((int)a, (int)b, d); break;
