@@ -87,7 +87,8 @@ FspTimer stepTimer;
 // Channels as the Ceres turret is plugged: TILT = channel 0 (positional MG996R, floor ~62–70°), PAN = channel 2 (continuous).
 // Servo power (V+ terminal) comes from the XL4015 at 5.0 V; the fan sits on channel 15's V+/GND pins. 50 Hz, 500–2500 µs.
 const uint8_t PCA = 0x40; const uint8_t TILT_CH = 0, PAN_CH = 2;   // Ceres: tilt ch 0, pan ch 2
-bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; bool showRight = true;   // Ceres turret_duet "kinematic show"
+bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; bool showRight = true; uint8_t showCount = 0;   // Ceres turret_duet "kinematic show"
+int panDir = 1; uint32_t panT0 = 0, panMs = 300;                 // current nudge, eased: pulse = 1500 ± 250·sin(π·t/T), then cut
 const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; Ceres mechanical floor ~62°
 const int PAN_L_US = 1250, PAN_R_US = 1750, PAN_NUDGE_MS = 300;   // Ceres turret_duet.ino: the pan is CONTINUOUS-ROTATION — timed nudges only, then cut the pulse (coast to stop)
 int tiltDeg = TILT_PARK, panDeg = 0; bool tiltOn = false, panOn = false, pcaOk = false; uint32_t panStopAt = 0, pcaRetryAt = 0;
@@ -120,9 +121,16 @@ void setTilt(int deg) {                       // -1 = release
   pcaPulse(TILT_CH, usFor(tiltDeg)); tiltOn = true;
 }
 void panStop() { pcaPulse(PAN_CH, 0); panOn = false; panStopAt = 0; }   // no pulse = the continuous servo coasts to a stop
-void nudgePan(int dir, int ms) {              // Ceres-style: 1250 µs left / 1750 µs right for ms milliseconds, then pulse off
-  pcaPulse(PAN_CH, dir < 0 ? PAN_L_US : PAN_R_US); panOn = true; panDeg += dir < 0 ? -1 : 1;   // panDeg counts net nudges (≈ 20° each)
-  panStopAt = millis() + (ms > 0 && ms < 3000 ? ms : PAN_NUDGE_MS);
+void nudgePan(int dir, int ms) {              // Ceres-style nudge, eased (kinematic): ramps up to 1250/1750 µs and back over ms, then pulse off
+  panDir = dir < 0 ? -1 : 1; panMs = (ms > 0 && ms < 3000) ? ms : PAN_NUDGE_MS; panT0 = millis();
+  panOn = true; panDeg += panDir;                              // panDeg counts net nudges
+  panStopAt = panT0 + panMs;
+  pcaPulse(PAN_CH, 1500);
+}
+void panTick() {                              // called every 20 ms while a nudge runs
+  if (!panStopAt) return;
+  float f = (millis() - panT0) / (float)panMs; if (f > 1) f = 1;
+  pcaPulse(PAN_CH, 1500 + panDir * (int)(250.0f * sinf(PI * f)));
 }
 void setPan(int) { panStop(); }               // any 'p' just stops the pan — angles mean nothing to a continuous servo
 
@@ -416,7 +424,7 @@ void handleSerial() {
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
         case 'I': pcaOk = pcaInit(); if (pcaOk && tiltOn) setTilt(tiltDeg); break;   // re-probe the servo board now
-        case 'K': showOn = a > 0.5f; if (showOn) { showT0 = millis(); showLastNudge = 0; } else { panStop(); setTilt(TILT_PARK); } break;   // 'K 1' Ceres kinematic show, 'K 0' stop
+        case 'K': showOn = a > 0.5f; if (showOn) { showT0 = millis(); showLastNudge = 0; showCount = 0; } else { panStop(); setTilt(TILT_PARK); } break;   // 'K 1' Ceres kinematic show, 'K 0' stop
         case 'p': setPan(0); break;                                                // any 'p' = stop the pan (continuous servo)      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
         case 'n': nudgePan((int)a, (int)b); break;                              // 'n -1 300' / 'n 1 300': continuous-rotation nudge left/right for ms
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
@@ -468,14 +476,17 @@ void runCircle() {
 }
 
 void loop() {
+  { static uint32_t lastPan = 0; if (panStopAt && millis() - lastPan >= 20) { lastPan = millis(); panTick(); } }
   if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) panStop();                   // end of a nudge: cut the pulse
   if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk && tiltOn) setTilt(tiltDeg); }   // hot-plugged board: keep probing
   if (showOn && pcaOk) {                                     // Ceres turret_duet.ino, verbatim behaviour: tilt sine 74–118°, pan nudge as tilt passes centre
     static uint32_t lastStep = 0; uint32_t now = millis();
     if (now - lastStep >= 20) { lastStep = now;
-      float t = (now - showT0) / 1000.0f; float tilt = 96.0f + 22.0f * sinf(2 * PI * t / 5.0f);
+      float t = (now - showT0) / 1000.0f; float sn = sinf(2 * PI * t / 5.0f);
+      float tilt = 90.0f + (sn > 0 ? 16.0f : 20.0f) * sn;                    // 70..106: less up, a little more down (floor ~62–70)
       pcaPulse(TILT_CH, (int)(600.0f + tilt * 10.0f)); tiltDeg = (int)tilt; tiltOn = true;
-      if (!panStopAt && fabsf(tilt - 96.0f) < 8.0f && now - showLastNudge > 2000) { nudgePan(showRight ? 1 : -1, 300); showRight = !showRight; showLastNudge = now; }
+      if (!panStopAt && fabsf(tilt - 90.0f) < 8.0f && now - showLastNudge > 1500) {   // pan turns more: 500 ms eased nudges, two the same way, then two back
+        nudgePan(showRight ? 1 : -1, 500); if (++showCount >= 2) { showCount = 0; showRight = !showRight; } showLastNudge = now; }
     }
   }
   static uint32_t lastMotionMs = 0;
