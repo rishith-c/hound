@@ -120,6 +120,16 @@ int main() {
   run_ms(150, true);                                                   // 450 ms since the last command
   CHECK(wdTripped && tVx == 0, "the R4 must stop itself 400 ms after the Pi goes quiet");
 
+  // 10. The status JSON the Pi parses must never be truncated by jsonBuf: typical, then every field at its widest.
+  printf("STATUS %s\n", statusJson());
+  i2cN = 8; for (int i = 0; i < 8; i++) i2cFound[i] = 0x40 + i;
+  for (int i = 0; i < 4; i++) { targetRate[i] = -MAX_RATE; curRate[i] = -MAX_RATE; inv[i] = 1; }
+  isrTicks = 4294967295u; panPos = -9.99e8f; panDeg = -32768; panTrim = -150; tiltDeg = 150; vbat = 12.6f; vcut = 10.5f;
+  accelSteps = 400000; kMaxSps = 40000; speedPct = 100;
+  const char* j = statusJson();
+  CHECK(strlen(j) < sizeof(jsonBuf) - 1 && j[strlen(j) - 1] == '}', "worst-case status is %zu of %zu bytes — truncated", strlen(j), sizeof(jsonBuf));
+  printf("STATUS %s\n", j);
+
   printf("%d checks, %d failed\n", checks, failures);
   return failures ? 1 : 0;
 }

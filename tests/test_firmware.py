@@ -25,3 +25,9 @@ def test_r4_drive_on_the_host(tmp_path):
     run = subprocess.run([str(exe)], capture_output=True, text=True, timeout=120)
     print(run.stdout)
     assert run.returncode == 0, run.stdout[-4000:]
+    import json
+    lines = [l[7:] for l in run.stdout.splitlines() if l.startswith("STATUS ")]
+    assert len(lines) == 2
+    for line in lines:                                       # what r4.py does with each status line
+        s = json.loads(line)
+        assert {"rate", "tilt", "pca", "show", "ptrim", "ppos", "wd"} <= set(s)
