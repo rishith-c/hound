@@ -33,10 +33,11 @@ class R4:
         self.status = {}
         self._cmd = "s"
         self._lock = threading.Lock()
+        self._io = threading.Lock()
+        self._send("?")                                      # first status BEFORE the keepalive thread exists
         self._alive = True
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
-        self._send("?")
 
     @staticmethod
     def find_port():
@@ -93,8 +94,10 @@ class R4:
             time.sleep(self.KEEPALIVE_S)
 
     def _send(self, cmd):
-        self.ser.write((cmd + "\n").encode())
-        self._buf = getattr(self, "_buf", b"") + self.ser.read(2000)
+        with self._io:                                       # one serial exchange at a time: two readers on the port crash pyserial
+            self.ser.write((cmd + "\n").encode())
+            chunk = self.ser.read(2000)
+        self._buf = getattr(self, "_buf", b"") + chunk
         *lines, self._buf = self._buf.split(b"\n")          # keep the unfinished tail for next time
         for line in reversed(lines):
             line = line.strip()
