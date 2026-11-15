@@ -67,7 +67,7 @@ with open("bom.csv", "w", newline="") as f:
         w.writerow([it["group"], it["status"], it["id"], it["item"], it["qty"],
                     f'{it.get("price", 0):.2f}' if it["status"] != "owned" else "",
                     f'{line_total(it):.2f}' if it["status"] != "owned" else "",
-                    it.get("asin", ""), f'https://www.amazon.com/dp/{it["asin"]}' if it.get("asin") else "",
+                    it.get("asin", ""), f'https://www.amazon.com/dp/{it["asin"]}' if it.get("asin") and it["asin"] != "TBD" else "",
                     where(it), fastening(it), it.get("note", "")])
 
 # ── The one big list ────────────────────────────────────────────────────────
