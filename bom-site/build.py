@@ -126,8 +126,9 @@ asm_summary = (f'Origin at the chassis centre on the floor; +X forward, +Y rover
 # ── Torque table ────────────────────────────────────────────────────────────
 m_rows = "".join(
     f'<tr>\n<td>{esc(k)}</td><td align="right">{v["t_avail_Nm"]:.3f} N·m</td>'
-    f'<td align="right">{v["margins_design"][1]:.2f}</td><td align="right">{v["margins_design"][3]:.2f}</td>'
-    f'<td align="right">{v["margins_design"][2]:.2f}</td><td>{"PASS" if v["pass"] else "FAIL ramp"}</td>\n</tr>\n'
+    f'<td align="right">{v["margins_firmware"]["E"]:.2f}</td><td align="right">{v["margins_firmware"]["F"]:.2f}</td>'
+    f'<td align="right">{v["margins_firmware"]["G"]:.2f}</td><td align="right">{min(v["margins_firmware"][c] for c in "HIJ"):.2f}</td>'
+    f'<td>{"PASS" if v["pass"] else "FAIL ramp"}</td>\n</tr>\n'
     for k, v in DT["drivers"].items())
 
 def paras(lines):
@@ -176,15 +177,16 @@ input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:point
 <h2>The design I would build</h2>
 {paras(prose["design"])}
 <h2>Can four motors carry it?</h2>
-<p>Design mass {DT["design_mass_kg"]:.2f} kg. Four load cases; the 5° carpet ramp at 0.3 m/s² governs. Lowest passing setting: <strong>{esc(DT["governing_setting"])}</strong>.</p>
+<p>Design mass {DT["design_mass_kg"]:.2f} kg. Ten load cases, including the firmware's own ramps — every start at 0.6 m/s², every stop at 1.8 m/s² — with margins against a 1.25 screening factor. As built ({esc(DT["as_built"]["setting"])}, 1.5 A) every level-floor case passes, worst {DT["as_built"]["level_worst_margin"]:.2f} (a strafe start); a start up a 5° carpet ramp governs at {DT["as_built"]["worst_margin"]:.2f}. {("Lowest passing setting: <strong>" + esc(DT["governing_setting"]) + "</strong>.") if DT["governing_setting"] else "No current setting passes the ramp case at this mass — and most of the mass is allocated, not weighed, so weighing the rover is the next step."} Traction at the 1.8 m/s² stops is in <a href="drivetrain.txt">drivetrain.txt</a>.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Driver / current setting</th>
 <th align="right">Torque available</th>
-<th align="right">Level floor</th>
-<th align="right">Strafe</th>
-<th align="right">5° ramp</th>
+<th align="right">Level start</th>
+<th align="right">Strafe start</th>
+<th align="right">5° ramp start</th>
+<th align="right">Stops</th>
 <th>Verdict</th>
 </tr>
 </thead>
