@@ -55,6 +55,11 @@ float    kMaxSps    = 0;                     // 'k <steps/s>': runtime top wheel
 float    aSlew      = 0;                     // 'a <steps/s²>': runtime slew, 0 = ACCEL_MM_S2
 int      speedPct   = 78;                    // single-key teleop speed: 78 % of the 530 mm/s cap = 415 mm/s; '+' / '-' in steps of 10
 bool     circleOn   = false; uint32_t circleT0 = 0; float circleR = 300, circleT = 8;
+// ── pack voltage: 47k (VMOT) / 10k (GND) divider into A3, 5 V reference. Reads ~0 with no divider fitted → check bypassed.
+const uint8_t VBAT_PIN = A3; const float VBAT_RATIO = 57.0f / 10.0f; const float VBAT_REF = 5.0f;
+float    vbat = 0;                           // filtered pack volts (0 = no divider)
+float    vcut = 10.5f;                       // 'V <volts>': refuse to drive below this (3.5 V/cell); 0 disables
+bool     lowVolt = false;
 uint8_t  inv[4]     = { 0, 0, 0, 0 };        // per-wheel direction flip (EEPROM)
 bool     holdEnable = false;                 // keep drivers energised while parked
 
@@ -162,6 +167,13 @@ float maxMm()       { return capSps() / stepsPerMm(); }
 void  updateAccel() { int32_t a = (int32_t)(aSlew > 0 ? aSlew : ACCEL_MM_S2 * stepsPerMm()); if (a < 1000) a = 1000; accelSteps = a; }
 
 void kick() { wdTicks = 0; wdTripped = false; }
+void readVbat() {
+  static uint32_t last = 0; if (millis() - last < 50) return; last = millis();
+  float v = analogRead(VBAT_PIN) * (VBAT_REF / 1023.0f) * VBAT_RATIO;
+  vbat = vbat == 0 ? v : 0.9f * vbat + 0.1f * v;
+  bool present = vbat > 5.0f;                // a pack is connected and the divider exists
+  lowVolt = present && vcut > 0 && vbat < vcut;
+}
 
 // vx forward mm/s, vy left mm/s, wz counter-clockwise rad/s
 void setVelocity(float vx, float vy, float wz) {
@@ -178,6 +190,7 @@ void setVelocity(float vx, float vy, float wz) {
     float s = fabsf(w[i]) * spm;
     if (s > cap) { float f = cap / s; if (f < scale) scale = f; }
   }
+  if (lowVolt) { vx = vy = wz = 0; for (int i = 0; i < 4; i++) w[i] = 0; }   // pack below the cutoff: the only command that works is stop
   for (int i = 0; i < 4; i++) targetRate[i] = (int32_t)(w[i] * spm * scale);   // reported as "target"
   spmNow = spm;
   tVx = vx * scale; tVy = vy * scale; tWz = wz * scale;
@@ -218,12 +231,12 @@ const char* statusJson() {
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"tmr\":%d,\"ticks\":%lu,\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -356,6 +369,7 @@ void handleSerial() {
         case '+': speedPct = speedPct + 10 > 100 ? 100 : speedPct + 10; break;
         case '-': speedPct = speedPct - 10 < 10 ? 10 : speedPct - 10; break;
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
+        case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 10.5f; break;   // 'V <volts>' — 'b' is taken by back
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
         case 'c': circleR = a > 0 ? a : 300.0f; circleT = b > 0 ? b : 8.0f; circleT0 = millis(); circleOn = true; kick(); break;
         case 'j': jog((int)a, (int)b, d); break;
@@ -374,6 +388,7 @@ void handleSerial() {
 void setup() {
   for (int i = 0; i < 4; i++) { pinMode(STEP_PIN[i], OUTPUT); pinMode(DIR_PIN[i], OUTPUT); digitalWrite(STEP_PIN[i], LOW); }
   pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH);          // drivers OFF until commanded
+  pinMode(VBAT_PIN, INPUT);
   Serial.begin(115200);
   loadSettings();
   updateAccel();
@@ -404,6 +419,8 @@ void runCircle() {
 
 void loop() {
   static uint32_t lastMotionMs = 0;
+  readVbat();
+  if (lowVolt && anyMotion) stopAll();
   runCircle();
 #if ENABLE_WIFI
   handleHttp();
