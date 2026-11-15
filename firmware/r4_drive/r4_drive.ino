@@ -127,7 +127,7 @@ void setTilt(int deg) {                       // -1 = release
   pcaPulse(TILT_CH, usFor(tiltDeg)); tiltOn = true;
 }
 void panStop() {                              // no pulse = the continuous servo coasts to a stop
-  if (panStopAt) { float f = (millis() - panT0) / (float)panMs; if (f > 1) f = 1; panPos += panDir * panMs * 0.5f * (1 - cosf(PI * f)); }   // share of the eased nudge done
+  if (panStopAt) { float f = (millis() - panT0) / (float)panMs; if (f > 1) f = 1; panPos += panDir * (float)panMs * 0.5f * (1 - cosf(PI * f)); }   // float: int × uint32_t would wrap a left turn to +4.3e9   // share of the eased nudge done
   pcaPulse(PAN_CH, 0); panOn = false; panStopAt = 0; panHoldUntil = 0;
 }
 void nudgePan(int dir, int ms) {              // Ceres-style nudge, eased (kinematic): ramps up to 1250/1750 µs and back over ms, then pulse off
