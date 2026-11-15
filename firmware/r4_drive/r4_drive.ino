@@ -44,8 +44,9 @@ const int     FULL_STEPS  = 200;
 const float   LX_MM       = 125.0f;          // half wheelbase (axles at X ±125)
 const float   LY_MM       = 215.5f;          // half track    (wheel centres at Y ±215.5)
 const int32_t TICK_HZ     = 20000;           // step ISR rate → max 10 000 steps/s per axis
-const int32_t MAX_RATE    = 5000;            // steps/s budget per axis (drivetrain.py)
-const int32_t ACCEL       = 15000;           // steps/s² → 0..5000 in ~0.33 s
+const int32_t MAX_RATE    = 9000;            // steps/s per axis: 90 % of what a 20 kHz ISR can pulse (bench-verified 19.5 kHz)
+const float   V_MAX_MM    = 480.0f;          // physics ceiling: half the 1.5 A corner speed (228 rpm = 955 mm/s, drivetrain.py)
+const float   ACCEL_MM_S2 = 600.0f;          // ramp in mm/s² (0.6 m/s²; case-B torque margin stays > 1.6 at 5.2 kg)
 const uint32_t WATCHDOG_TICKS = TICK_HZ * 4 / 10;   // 400 ms
 const uint32_t IDLE_DISABLE_MS = 3000;       // drivers off after 3 s of zero velocity
 
@@ -62,6 +63,7 @@ volatile uint32_t wdTicks    = 0;
 volatile bool     wdTripped  = false;
 volatile bool     anyMotion  = false;
 volatile uint32_t isrTicks   = 0;
+volatile int32_t  accelSteps = 15000;         // steps/s², recomputed from ACCEL_MM_S2 whenever microsteps change
 bool timerOk = false;
 
 static const uint32_t ACC_PER_STEP_PER_SEC = (uint32_t)(4294967296.0 / TICK_HZ);   // 214748
@@ -81,7 +83,7 @@ void stepIsr(timer_callback_args_t*) {
 
   if (++slewDiv >= TICK_HZ / 1000) {          // 1 kHz ramp update
     slewDiv = 0;
-    const int32_t d = ACCEL / 1000;
+    const int32_t d = accelSteps / 1000;
     bool moving = false;
     for (int i = 0; i < 4; i++) {
       int32_t t = targetRate[i], c = curRate[i];
@@ -123,6 +125,8 @@ bool startTimer() {
 
 // ───────────────────────── motion commands ───────────────────────
 float stepsPerMm() { return FULL_STEPS * (float)microsteps / (3.14159265f * WHEEL_D_MM); }
+float maxMm()       { float m = MAX_RATE / stepsPerMm(); return m < V_MAX_MM ? m : V_MAX_MM; }
+void  updateAccel() { int32_t a = (int32_t)(ACCEL_MM_S2 * stepsPerMm()); if (a < 1000) a = 1000; accelSteps = a; }
 
 void kick() { wdTicks = 0; wdTripped = false; }
 
@@ -135,10 +139,11 @@ void setVelocity(float vx, float vy, float wz) {
   w[BL] = vx + vy - wz * k;
   w[BR] = vx - vy + wz * k;
   const float spm = stepsPerMm();
+  const float cap = maxMm() * spm;             // steps/s: the lower of the ISR budget and the physics ceiling
   float scale = 1.0f;
   for (int i = 0; i < 4; i++) {
     float s = fabsf(w[i]) * spm;
-    if (s > MAX_RATE) { float f = MAX_RATE / s; if (f < scale) scale = f; }
+    if (s > cap) { float f = cap / s; if (f < scale) scale = f; }
   }
   for (int i = 0; i < 4; i++) targetRate[i] = (int32_t)(w[i] * spm * scale);
   kick();
@@ -146,7 +151,8 @@ void setVelocity(float vx, float vy, float wz) {
 
 void jog(int wheel, int dir, float mmps) {
   float r = mmps * stepsPerMm();
-  if (r > MAX_RATE) r = MAX_RATE;
+  const float cap = maxMm() * stepsPerMm();
+  if (r > cap) r = cap;
   for (int i = 0; i < 4; i++) targetRate[i] = 0;
   if (wheel >= 0 && wheel < 4) targetRate[wheel] = (int32_t)(dir < 0 ? -r : r);
   kick();
@@ -180,7 +186,7 @@ const char* statusJson() {
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), MAX_RATE / stepsPerMm(), timerOk ? 1 : 0, (unsigned long)isrTicks, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), timerOk ? 1 : 0, (unsigned long)isrTicks, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -262,7 +268,7 @@ bool route(const String& path) {           // shared by HTTP and serial; true = 
   if (path.startsWith("/stop"))      { stopAll(); return true; }
   if (path.startsWith("/inv?"))      { int w = (int)qf(path, "w", -1); if (w >= 0 && w < 4) { inv[w] ^= 1; saveSettings(); } return true; }
   if (path.startsWith("/en?"))       { holdEnable = qf(path, "v", 0) > 0.5f; return true; }
-  if (path.startsWith("/ms?"))       { int m = (int)qf(path, "v", 32); if (m == 8 || m == 16 || m == 32) { microsteps = m; saveSettings(); } return true; }
+  if (path.startsWith("/ms?"))       { int m = (int)qf(path, "v", 32); if (m == 8 || m == 16 || m == 32) { microsteps = m; updateAccel(); saveSettings(); } return true; }
   if (path.startsWith("/status"))    { return true; }
   return false;
 }
@@ -308,7 +314,7 @@ void handleSerial() {
         case 's': stopAll(); break;
         case 'i': if (a >= 0 && a < 4) { inv[(int)a] ^= 1; saveSettings(); } break;
         case 'e': holdEnable = a > 0.5f; break;
-        case 'm': if (a == 8 || a == 16 || a == 32) { microsteps = (uint8_t)a; saveSettings(); } break;
+        case 'm': if (a == 8 || a == 16 || a == 32) { microsteps = (uint8_t)a; updateAccel(); saveSettings(); } break;
         default: break;
       }
       Serial.println(statusJson());
@@ -323,6 +329,7 @@ void setup() {
   pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH);          // drivers OFF until commanded
   Serial.begin(115200);
   loadSettings();
+  updateAccel();
   timerOk = startTimer();
   if (!timerOk) Serial.println("{\"error\":\"no free GPT timer\"}");
 
