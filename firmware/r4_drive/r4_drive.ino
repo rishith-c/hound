@@ -67,6 +67,10 @@ volatile uint32_t wdTicks    = 0;
 volatile bool     wdTripped  = false;
 volatile bool     anyMotion  = false;
 volatile uint32_t isrTicks   = 0;
+volatile float    tVx = 0, tVy = 0, tWz = 0;  // target body velocity (mm/s, mm/s, rad/s) — ramped as ONE vector
+volatile float    cVx = 0, cVy = 0, cWz = 0;  // current body velocity
+volatile bool     bodyMode  = false;          // true: wheels follow the body vector; false: per-wheel targets (jog)
+volatile float    spmNow    = 25.46f;         // steps/mm cached for the ISR
 volatile int32_t  accelSteps = 15000;         // steps/s², recomputed from ACCEL_MM_S2 whenever microsteps change
 bool timerOk = false;
 
@@ -81,23 +85,44 @@ void stepIsr(timer_callback_args_t*) {
   if (++wdTicks > WATCHDOG_TICKS) {
     bool had = false;
     for (int i = 0; i < 4; i++) { if (targetRate[i]) had = true; targetRate[i] = 0; }
+    if (tVx != 0 || tVy != 0 || tWz != 0) had = true;
+    tVx = tVy = tWz = 0;
     if (had) wdTripped = true;
     wdTicks = WATCHDOG_TICKS;
   }
 
   if (++slewDiv >= TICK_HZ / 1000) {          // 1 kHz ramp update
     slewDiv = 0;
-    const int32_t d = accelSteps / 1000;
     bool moving = false;
-    for (int i = 0; i < 4; i++) {
-      int32_t t = targetRate[i], c = curRate[i];
-      bool opposing = (t > 0 && c < 0) || (t < 0 && c > 0);
-      if (opposing) c = 0;                                   // reversal: through zero, then ramp the other way
-      else if ((t >= 0 ? t : -t) <= (c >= 0 ? c : -c)) c = t; // slowing never stalls a stepper; STOP stays instant
-      else if (c < t) { c += d; if (c > t) c = t; }
-      else { c -= d; if (c < t) c = t; }
-      curRate[i] = c;
-      if (c) moving = true;
+    if (bodyMode) {
+      // Ramp the BODY velocity as one vector, then derive all four wheels from it: the mix is exact at every
+      // instant, so a strafe never starts as a turn. Decel is 3× accel so STOP is quick without skipping.
+      const float k = LX_MM + LY_MM;
+      const float aMm = accelSteps / spmNow / 1000.0f;       // mm/s per ms
+      float* cur[3] = { (float*)&cVx, (float*)&cVy, (float*)&cWz };
+      float  tgt[3] = { tVx, tVy, tWz * k };                  // rotation handled as rim mm/s so one limit fits all
+      float  now[3] = { cVx, cVy, cWz * k };
+      for (int j = 0; j < 3; j++) {
+        float t = tgt[j], c = now[j];
+        float lim = ((t >= 0 ? t : -t) < (c >= 0 ? c : -c)) ? 3 * aMm : aMm;   // slowing: 3×
+        if (c < t) { c += lim; if (c > t) c = t; } else if (c > t) { c -= lim; if (c < t) c = t; }
+        now[j] = c;
+      }
+      cVx = now[0]; cVy = now[1]; cWz = now[2] / k;
+      float w[4] = { cVx - cVy - now[2], cVx + cVy + now[2], cVx + cVy - now[2], cVx - cVy + now[2] };
+      for (int i = 0; i < 4; i++) { curRate[i] = (int32_t)(w[i] * spmNow); if (curRate[i]) moving = true; }
+    } else {
+      const int32_t d = accelSteps / 1000;
+      for (int i = 0; i < 4; i++) {
+        int32_t t = targetRate[i], c = curRate[i];
+        bool opposing = (t > 0 && c < 0) || (t < 0 && c > 0);
+        if (opposing) c = 0;
+        else if ((t >= 0 ? t : -t) <= (c >= 0 ? c : -c)) c = t;
+        else if (c < t) { c += d; if (c > t) c = t; }
+        else { c -= d; if (c < t) c = t; }
+        curRate[i] = c;
+        if (c) moving = true;
+      }
     }
     anyMotion = moving;
   }
@@ -153,7 +178,10 @@ void setVelocity(float vx, float vy, float wz) {
     float s = fabsf(w[i]) * spm;
     if (s > cap) { float f = cap / s; if (f < scale) scale = f; }
   }
-  for (int i = 0; i < 4; i++) targetRate[i] = (int32_t)(w[i] * spm * scale);
+  for (int i = 0; i < 4; i++) targetRate[i] = (int32_t)(w[i] * spm * scale);   // reported as "target"
+  spmNow = spm;
+  tVx = vx * scale; tVy = vy * scale; tWz = wz * scale;
+  bodyMode = true;
   kick();
 }
 
@@ -163,10 +191,11 @@ void jog(int wheel, int dir, float mmps) {
   if (r > cap) r = cap;
   for (int i = 0; i < 4; i++) targetRate[i] = 0;
   if (wheel >= 0 && wheel < 4) targetRate[wheel] = (int32_t)(dir < 0 ? -r : r);
+  tVx = tVy = tWz = 0; bodyMode = false;
   kick();
 }
 
-void stopAll() { for (int i = 0; i < 4; i++) targetRate[i] = 0; kick(); }
+void stopAll() { for (int i = 0; i < 4; i++) targetRate[i] = 0; tVx = tVy = tWz = 0; kick(); }
 
 // ───────────────────────── EEPROM ────────────────────────────────
 const int EE_MAGIC = 0x5A;
