@@ -5,12 +5,12 @@ station.py — the stop-and-dwell sequencer. One call = one station = one honest
     venv/bin/python station.py --sim                    # run the protocol on the simulated sensors (no hardware)
     venv/bin/python station.py --name "hall S1"         # on the rover: real sensors, real R4 (motors held OFF)
 
-Protocol (per station, ~65 s):
+Protocol (per station, ~75 s: 5 settle + 60 dwell + the sweep):
     0. STOP: motors off (R4 ENABLE released), turret left at its start pose.  A moving platform corrupts every RF sense
        (radar self-motion clutter, CSI channel change), so nothing RF is trusted while anything moves.
     1. SETTLE 5 s: radar static gates re-converge; CSI baseline window starts.
-    2. DWELL 2 × 30 s: radar gate energies (all gates, 10 Hz, timestamped) + CSI packets (UDP) logged.
-       Best gate = the one with the highest breathing-like confidence, as Walleye's VitalsTracker did.
+    2. DWELL 2 × 30 s: radar gate energies (all gates, 10 Hz, timestamped) + CSI packets (UDP) logged, all streams
+       at once (dwell()). Best gate = the one with the highest breathing-like confidence, as Walleye's VitalsTracker did.
     3. SWEEP: Ceres-style pan nudges (continuous servo, ~20° per 300 ms) step the camera + thermal array across
        five bearings with the rover still, then return; the optical track is associated by bearing.  Skipped in --sim.
     4. FUSE and REPORT: two-track log-odds → label → sentence; everything logged to stations.jsonl.
@@ -61,7 +61,9 @@ class RadarUSB:
             self.ser.write(cmd); self.ser.flush(); time.sleep(0.12)
 
     def collect(self, seconds: float):
-        """Timestamped static-gate energies for every gate: returns (t, gates[n, 9])."""
+        """Timestamped static-gate energies for every gate: returns (t, gates[n, 9]). Frames are stamped when read, so
+        whatever queued up before the call is thrown away: read late, a minute of backlog would all be stamped 'now'."""
+        self.ser.reset_input_buffer(); self.reader = type(self.reader)()
         t, rows = [], []
         t0 = time.time()
         while time.time() - t0 < seconds:
@@ -105,7 +107,15 @@ class CsiSink:
         self.sock.bind(("0.0.0.0", port)); self.sock.settimeout(0.2)
 
     def collect(self, seconds: float):
+        """(t, amplitudes[n, 52]) over the next `seconds`; packets already queued are dropped, as in RadarUSB.collect."""
         from csi import parse_udp
+        self.sock.settimeout(0)
+        try:
+            while True:
+                self.sock.recvfrom(4096)
+        except (BlockingIOError, socket.timeout):
+            pass
+        self.sock.settimeout(0.2)
         t, A = [], []
         t0 = time.time()
         while time.time() - t0 < seconds:
@@ -175,6 +185,19 @@ def open_drivers(sim: bool):
 
 
 # ── the station ─────────────────────────────────────────────────────────────
+def dwell(drivers: dict, window: float = 30.0):
+    """The RF senses over the SAME windows, at once: each LD2410C for 2 × window, CSI for the first window. One after
+    another, left and right would see different breaths (the bearing ratio compares them) and a stop would take 2.5 min.
+    Returns ({side: ((t1, g1), (t2, g2))}, (t, A) or None)."""
+    from concurrent.futures import ThreadPoolExecutor
+    radars = {k[6:]: v for k, v in drivers.items() if k.startswith("radar_") and k != "radar_ld2450"}
+    two = lambda d: (d.collect(window), d.collect(window))
+    with ThreadPoolExecutor(max_workers=len(radars) + 1) as ex:
+        fr = {side: ex.submit(two, d) for side, d in radars.items()}
+        fc = ex.submit(drivers["csi"].collect, window) if "csi" in drivers else None
+        return {side: f.result() for side, f in fr.items()}, (fc.result() if fc else None)
+
+
 def run_station(name: str, drivers: dict, sim: bool, rng=None, scenario=None, r4=None, baseline_var=None):
     t_start = time.time()
     if r4:
@@ -186,11 +209,12 @@ def run_station(name: str, drivers: dict, sim: bool, rng=None, scenario=None, r4
         feats = sim_station(rng, scenario)
     else:
         time.sleep(5.0)                          # settle
-        radars = {k[6:]: v for k, v in drivers.items() if k.startswith("radar_") and k != "radar_ld2450"}
+        radars, csi_data = dwell(drivers)
         if radars:
             best = None; energy = {}
-            for side, drv in radars.items():                     # both LD2410Cs, same 60 s
-                t1, g1 = drv.collect(30.0); t2, g2 = drv.collect(30.0)
+            for side, ((t1, g1), (t2, g2)) in radars.items():   # both LD2410Cs, same 60 s
+                if len(g1) == 0 or len(g2) == 0:                 # opened but silent (a loose TX lead): no evidence, no crash
+                    print(f"  radar {side}: no frames in a dwell window"); continue
                 for gate in range(2, min(9, g1.shape[1])):       # gates 0–1 masked: the turret sits in them
                     f = radar_features(t1, g1[:, gate], t2, g2[:, gate]); f["gate"] = gate; f["side"] = side
                     if best is None or f["conf"] > best["conf"]:
@@ -200,8 +224,8 @@ def run_station(name: str, drivers: dict, sim: bool, rng=None, scenario=None, r4
                 e = energy[best["gate"]]
                 best["lr_ratio"] = float(np.log(max(e["left"], 1e-3) / max(e["right"], 1e-3)))   # bearing evidence (localize.py)
             feats["radar"] = best
-        if "csi" in drivers:
-            tc, A = drivers["csi"].collect(30.0)
+        if csi_data is not None:
+            tc, A = csi_data
             feats["csi"] = csi_features(tc, A, baseline_var=baseline_var) if len(tc) > 200 else None
         # optical sweep: Ceres-style timed nudges of the continuous pan servo (~20° per 300 ms nudge), rover still.
         # Sequence: 2 left, then capture at -2, -1, 0, +1, +2, then 2 left back to centre (net zero).
