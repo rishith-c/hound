@@ -350,3 +350,34 @@ def test_camera_scores_a_frame_taken_now_not_one_queued_before_the_pan():
             blobFromImage = staticmethod(lambda img, *a: img)
     cam = object.__new__(station.Camera); cam.cap, cam.net, cam.cv2 = Cap(), Net(), CV2
     assert cam.score() == 0.9
+
+
+def test_station_real_path_glue(monkeypatch, tmp_path):
+    """run_station's hardware branch end to end with drivers that return what the real ones return: a 15 bpm chest on
+    gate 4, stronger on the left radar, the same breathing on CSI, nothing optical. No sleeps, no hardware."""
+    station = pytest.importorskip("station")
+    import numpy as np
+    monkeypatch.setattr(station.time, "sleep", lambda s: None)
+    monkeypatch.setattr(station, "LOG", str(tmp_path / "stations.jsonl"))
+    rng = np.random.default_rng(1)
+    # 15 bpm that drifts ±12 % over 17 s, as a chest does; a pure sine is (rightly) classed as a machine
+    breath = lambda t: np.sin(2 * np.pi * (0.25 * t - 0.03 * 17 / (2 * np.pi) * np.cos(2 * np.pi * t / 17)))
+    class Radar:
+        def __init__(self, gain): self.gain, self.t0 = gain, 0.0
+        def collect(self, s):
+            t = self.t0 + np.arange(0, s, 0.1); self.t0 += s
+            g = np.abs(rng.normal(5, 1, (len(t), 9)))
+            g[:, 4] += 20 * self.gain * (1 + 0.5 * breath(t))
+            return t, g
+    class Csi:
+        def collect(self, s):
+            t = np.arange(0, s, 0.01)
+            return t, 30 + 2 * breath(t)[:, None] + rng.normal(0, 0.3, (len(t), 52))
+    rec = station.run_station("S9", {"radar_left": Radar(1.0), "radar_right": Radar(0.5), "csi": Csi()}, sim=False)
+    f = rec["features"]
+    assert f["radar"]["gate"] == 4 and f["radar"]["side"] == "left" and f["radar"]["lr_ratio"] > 0.2
+    assert abs(f["radar"]["bpm"] - 15) < 1.5 and abs(f["csi"]["bpm"] - 15) < 1.5
+    assert f["radar"]["cls"] == f["csi"]["cls"] == "breathing-like" and f["radar"]["agree"] is True
+    assert {"radar_presence", "radar_breath", "csi_breath"} <= set(rec["result"]["contrib"])   # both tracks reach fusion
+    assert "alive" not in rec["sentence"].lower()                  # (the label itself rests on the sim-made calibration)
+    assert json.loads(open(tmp_path / "stations.jsonl").read())["station"] == "S9"
