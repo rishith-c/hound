@@ -84,8 +84,9 @@ def parse_payload(p: bytes) -> dict | None:
     i += n_sta + 1
 
     # Light sensor and OUT byte are present on the B/C variants, absent on some
-    # firmware revisions -- take them only if the bytes are actually there.
-    if len(p) >= i + 2:
+    # firmware revisions -- take them only if the bytes are actually there. The
+    # payload also carries the 55 00 tail, so "there" means 4 bytes, not 2.
+    if len(p) >= i + 4:
         out["light"] = p[i]
     return out
 
