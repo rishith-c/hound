@@ -95,3 +95,34 @@ def test_station_runs_a_simulated_stop_to_its_sentence(tmp_path):
     assert r.returncode == 0, r.stderr[-2000:]
     last = [l for l in r.stdout.splitlines() if l.strip()][-1]
     assert last.startswith("S1:") and "alive" not in r.stdout.lower(), last
+
+
+def _ld2410_frame(engineering: bool, static_gates=(0, 0, 5, 60, 20, 10, 5, 3, 2)):
+    import struct
+    import ld2410
+    p = bytes([0x01 if engineering else 0x02, 0xAA, 2]) + struct.pack("<HBHBH", 0, 0, 290, 60, 290)
+    if engineering:
+        p += bytes([8, 8]) + bytes(9) + bytes(static_gates) + bytes([0, 0])
+    p += b"\x55\x00"
+    return ld2410.DATA_HEAD + struct.pack("<H", len(p)) + p + ld2410.DATA_TAIL
+
+
+class _FakePort:
+    def __init__(self, chunks): self.chunks, self.written = list(chunks), []
+    def write(self, b): self.written.append(bytes(b))
+    def flush(self): pass
+    def read(self, n): return self.chunks.pop(0) if self.chunks else b""
+
+
+def test_station_radar_arms_engineering_mode_and_reads_gates(monkeypatch):
+    """The LD2410C forgets engineering mode at power-up; without it there are no gate energies and a stop sees nothing."""
+    station = pytest.importorskip("station")
+    import ld2410
+    monkeypatch.setattr(station.time, "sleep", lambda s: None)
+    port = _FakePort([_ld2410_frame(True) * 3, _ld2410_frame(False) * 30, _ld2410_frame(True)])
+    r = station.RadarUSB("fake", ser=port)
+    arm = [ld2410.ENABLE_CONFIG, ld2410.ENG_ON, ld2410.END_CONFIG]
+    assert port.written == arm                                              # armed at open
+    t, rows = r.collect(0.2)
+    assert rows.shape == (4, 9) and list(rows[0]) == [0, 0, 5, 60, 20, 10, 5, 3, 2]   # basic frames add no rows
+    assert port.written == arm * 2                                          # 30 basic frames → re-armed once

@@ -42,12 +42,23 @@ class RadarUSB:
     powered from the adapter's +5V pin); the LD2450 uses the Pi's own UART (/dev/serial0 → ttyAMA0 after
     pi/enable_gpio_uart.sh). Frames parsed by Walleye's ld2410.py."""
 
-    def __init__(self, port: str, baud=256000):
-        import serial
+    def __init__(self, port: str, baud=256000, ser=None):
         from ld2410 import FrameReader
         self.port = port
-        self.ser = serial.Serial(port, baud, timeout=0.05)
+        if ser is None:
+            import serial
+            ser = serial.Serial(port, baud, timeout=0.05)
+        self.ser = ser
         self.reader = FrameReader()
+        self.basic_run = 0
+        self.engineering()
+
+    def engineering(self):
+        """Per-gate energies only come in engineering mode, and the LD2410C forgets it at every power-up — so arm it
+        at open and again after 30 basic frames (a power-cycled radar), exactly as Walleye's bench.py does."""
+        from ld2410 import ENABLE_CONFIG, ENG_ON, END_CONFIG
+        for cmd in (ENABLE_CONFIG, ENG_ON, END_CONFIG):
+            self.ser.write(cmd); self.ser.flush(); time.sleep(0.12)
 
     def collect(self, seconds: float):
         """Timestamped static-gate energies for every gate: returns (t, gates[n, 9])."""
@@ -55,6 +66,12 @@ class RadarUSB:
         t0 = time.time()
         while time.time() - t0 < seconds:
             for frame in self.reader.feed(self.ser.read(512)):
+                if not frame.get("engineering"):
+                    self.basic_run += 1
+                    if self.basic_run >= 30:
+                        self.engineering(); self.basic_run = 0
+                    continue
+                self.basic_run = 0
                 g = frame.get("static_gates") or frame.get("static")
                 if g:
                     t.append(time.time()); rows.append(list(g)[:9] + [0] * max(0, 9 - len(g)))
@@ -143,6 +160,8 @@ def open_drivers(sim: bool):
         return {}
     d = {}
     for name, path in radar_ports().items():
+        if name == "ld2450":                     # the x/y tracker is for the moving-target demo; a stop never reads it
+            continue
         try:
             d[f"radar_{name}"] = RadarUSB(path)
         except Exception as e:
