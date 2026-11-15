@@ -83,9 +83,11 @@ bool timerOk = false;
 static const uint32_t ACC_PER_STEP_PER_SEC = (uint32_t)(4294967296.0 / TICK_HZ);   // 214748
 
 FspTimer stepTimer;
-// ── pan/tilt: PCA9685 (0x40) on the CNC shield's SDA/SCL comms header, driven by the R4. Pan = channel 0, tilt = channel 1.
+// ── pan/tilt: PCA9685 (0x40) on the CNC shield's SDA/SCL comms header, driven by the R4.
+// Channels as the Ceres turret is plugged: TILT = channel 0 (positional MG996R, floor ~62–70°), PAN = channel 1 (continuous).
 // Servo power (V+ terminal) comes from the XL4015 at 5.0 V; the fan sits on channel 15's V+/GND pins. 50 Hz, 500–2500 µs.
-const uint8_t PCA = 0x40; const uint8_t PAN_CH = 0, TILT_CH = 1;
+const uint8_t PCA = 0x40; const uint8_t TILT_CH = 0, PAN_CH = 1;
+bool showOn = false; uint32_t showT0 = 0, showLastNudge = 0; bool showRight = true;   // Ceres turret_duet "kinematic show"
 const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; Ceres mechanical floor ~62°
 const int PAN_L_US = 1250, PAN_R_US = 1750, PAN_NUDGE_MS = 300;   // Ceres turret_duet.ino: the pan is CONTINUOUS-ROTATION — timed nudges only, then cut the pulse (coast to stop)
 int tiltDeg = TILT_PARK, panDeg = 0; bool tiltOn = false, panOn = false, pcaOk = false; uint32_t panStopAt = 0, pcaRetryAt = 0;
@@ -273,12 +275,12 @@ const char* statusJson() {
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"pca\":%d,\"i2c\":\"%s\",\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"pca\":%d,\"show\":%d,\"i2c\":\"%s\",\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, pcaOk ? 1 : 0, i2cList(), ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, pcaOk ? 1 : 0, showOn ? 1 : 0, i2cList(), ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -413,7 +415,8 @@ void handleSerial() {
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
-        case 'I': pcaOk = pcaInit(); if (pcaOk) setTilt(tiltDeg); break;   // re-probe the servo board now
+        case 'I': pcaOk = pcaInit(); if (pcaOk && tiltOn) setTilt(tiltDeg); break;   // re-probe the servo board now
+        case 'K': showOn = a > 0.5f; if (showOn) { showT0 = millis(); showLastNudge = 0; } else { panStop(); setTilt(TILT_PARK); } break;   // 'K 1' Ceres kinematic show, 'K 0' stop
         case 'p': setPan(0); break;                                                // any 'p' = stop the pan (continuous servo)      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
         case 'n': nudgePan((int)a, (int)b); break;                              // 'n -1 300' / 'n 1 300': continuous-rotation nudge left/right for ms
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
@@ -466,7 +469,15 @@ void runCircle() {
 
 void loop() {
   if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) panStop();                   // end of a nudge: cut the pulse
-  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk) setTilt(tiltDeg); }   // hot-plugged board: keep probing
+  if (!pcaOk && (int32_t)(millis() - pcaRetryAt) >= 0) { pcaRetryAt = millis() + 2000; pcaOk = pcaInit(); if (pcaOk && tiltOn) setTilt(tiltDeg); }   // hot-plugged board: keep probing
+  if (showOn && pcaOk) {                                     // Ceres turret_duet.ino, verbatim behaviour: tilt sine 74–118°, pan nudge as tilt passes centre
+    static uint32_t lastStep = 0; uint32_t now = millis();
+    if (now - lastStep >= 20) { lastStep = now;
+      float t = (now - showT0) / 1000.0f; float tilt = 96.0f + 22.0f * sinf(2 * PI * t / 5.0f);
+      pcaPulse(TILT_CH, (int)(600.0f + tilt * 10.0f)); tiltDeg = (int)tilt; tiltOn = true;
+      if (!panStopAt && fabsf(tilt - 96.0f) < 8.0f && now - showLastNudge > 2000) { nudgePan(showRight ? 1 : -1, 300); showRight = !showRight; showLastNudge = now; }
+    }
+  }
   static uint32_t lastMotionMs = 0;
   readVbat();
   if (lowVolt && anyMotion) stopAll();

@@ -1,5 +1,5 @@
 metadata:
-  title: 'Hound 3 — turret: PCA9685 on the CNC Shield''s I2C pins, pan ch 0, tilt ch 1, fan on ch 15, powered by the XL4015'
+  title: 'Hound 3 — turret: PCA9685 on the CNC Shield''s I2C pins, tilt ch 0, pan ch 1, fan on ch 15, powered by the XL4015'
 connectors:
   SHIELD_I2C:
     type: CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)
@@ -37,33 +37,33 @@ connectors:
       (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. OUT goes to the PCA9685 terminal, which distributes it to both servos and the fan. 5.0 V (not 6) so the fan can share this rail; the
       MG996R runs 4.8–7.2 V.'
   PCA_CH0:
-    type: PCA9685 channel 0 — PAN
+    type: PCA9685 channel 0 — TILT
     pinlabels:
     - PWM
     - V+
     - GND
-    notes: 'Rows: PWM (top), V+ (middle), GND (bottom). Pan servo plugs straight on, brown/black to the GND row.'
+    notes: 'Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row (as the Ceres turret was wired).'
   PAN:
-    type: MG996R PAN servo
+    type: MG996R PAN servo (continuous-rotation)
     pinlabels:
     - signal (orange)
     - V+ (red)
     - GND (brown)
-    notes: Plugs onto channel 0. Firmware 'p DEG' (angle) or 'n DIR MS' (timed nudge for a continuous-rotation unit).
+    notes: 'Plugs onto channel 1. It cannot hold an angle: the firmware only nudges it Ceres-style, ''n DIR MS'' = 1250/1750 µs for 300 ms then pulse cut; ''p'' stops.'
   PCA_CH1:
-    type: PCA9685 channel 1 — TILT
+    type: PCA9685 channel 1 — PAN
     pinlabels:
     - PWM
     - V+
     - GND
-    notes: Tilt servo plugs straight on, brown/black to the GND row.
+    notes: Pan servo (continuous-rotation) plugs straight on, brown/black to the GND row.
   TILT:
-    type: MG996R TILT servo
+    type: MG996R TILT servo (positional)
     pinlabels:
     - signal (orange)
     - V+ (red)
     - GND (brown)
-    notes: Plugs onto channel 1. Limits 65–150° in the firmware ('t 90').
+    notes: Plugs onto channel 0. Limits 65–150° in the firmware ('t 90'), Ceres mapping 600 + 10 µs/°.
   PCA_CH15:
     type: PCA9685 channel 15 — used as a 5 V tap
     pinlabels:
@@ -161,39 +161,39 @@ connections:
     - GND
 - - PCA_CH0:
     - PWM
-  - W_PAN:
+  - W_TILT:
     - 1
-  - PAN:
+  - TILT:
     - signal (orange)
 - - PCA_CH0:
     - V+
-  - W_PAN:
+  - W_TILT:
     - 2
-  - PAN:
+  - TILT:
     - V+ (red)
 - - PCA_CH0:
     - GND
-  - W_PAN:
+  - W_TILT:
     - 3
-  - PAN:
+  - TILT:
     - GND (brown)
 - - PCA_CH1:
     - PWM
-  - W_TILT:
+  - W_PAN:
     - 1
-  - TILT:
+  - PAN:
     - signal (orange)
 - - PCA_CH1:
     - V+
-  - W_TILT:
+  - W_PAN:
     - 2
-  - TILT:
+  - PAN:
     - V+ (red)
 - - PCA_CH1:
     - GND
-  - W_TILT:
+  - W_PAN:
     - 3
-  - TILT:
+  - PAN:
     - GND (brown)
 - - PCA_CH15:
     - V+

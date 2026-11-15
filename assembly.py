@@ -169,7 +169,7 @@ on_deck("ESP32", "#3 CSI receiver", "ESP32-S3 DevKitC", ESP32, 60.0, 120.0, "dec
         "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
         note="csi_rx_udp firmware: USB-C from its own small power bank beside it, streams CSI to the Pi hotspot on channel 6. ESP32 #2 (csi_tx) is dropped on a 10 cm stand as far along the wall as the room allows.")
 on_deck("PCA", "→ pan/tilt", "PCA9685 servo driver (Ceres)", PCA9685, 30.0, -75.0, "deck top, front-right, beside the turret base",
-        "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Pan ch 0, tilt ch 1, fan on ch 15's V+/GND pins.")
+        "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Tilt ch 0, pan ch 1 (continuous, Ceres nudges), fan on ch 15's V+/GND pins.")
 on_deck("BANK2", "→ ESP32 #3", "small USB power bank (ESP32 only)", (90.0, 26.0, 26.0), 60.0, 165.0, "deck top, front-left, outboard of ESP32 #3",
         "velcro strap", "hand-tight", 0.090, verify="any ≥ 1 A bank; weigh it",
         note="Its only load is the CSI node; nothing else plugs into it.")

@@ -650,7 +650,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.01,
    "verify": "",
-   "note": "V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Pan ch 0, tilt ch 1, fan on ch 15's V+/GND pins."
+   "note": "V+ terminal from the XL4015 at 5.0 V; I2C from the CNC shield's comms header (5 V). Tilt ch 0, pan ch 1 (continuous, Ceres nudges), fan on ch 15's V+/GND pins."
   },
   {
    "id": "BANK2",
