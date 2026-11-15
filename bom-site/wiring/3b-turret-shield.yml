@@ -2,7 +2,7 @@ metadata:
   title: 'Hound 3B — turret: PCA9685 on the CNC Shield''s I2C pins (ALTERNATIVE — needs a firmware ''t'' command)'
 connectors:
   SHIELD_I2C:
-    type: CNC Shield v3 — A4/A5 + 5V/GND pins (= R4 Wire bus, 5 V logic)
+    type: CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)
     pinlabels:
     - A4 SDA
     - A5 SCL
@@ -24,14 +24,14 @@ connectors:
     pinlabels:
     - V+
     - GND
-    notes: The big 2-pin terminal at the end of the board = servo rail, NOT logic VCC.
+    notes: The big 2-pin terminal at the end of the board = the 5.0 V rail in. Every channel header's middle (V+) and bottom (GND) pin is bussed to it — that is how the fan gets its 5 V.
   PCA_CH0:
     type: PCA9685 channel 0 (3-pin, at the board's channel 0 end)
     pinlabels:
     - PWM
     - V+
     - GND
-    notes: 'Rows on the board: PWM (top, yellow), V+ (middle, red), GND (bottom, black). Channels 1–15 empty.'
+    notes: 'Rows on the board: PWM (top, yellow), V+ (middle, red), GND (bottom, black).'
   TILT:
     type: MG996R TILT servo
     pinlabels:
@@ -47,13 +47,14 @@ connectors:
     - GND
     notes: 'Continuous-rotation unit: cannot hold an angle. Pinned with the printed lock; leave its lead unplugged.'
   XL4015:
-    type: XL4015 5 A buck — trim OUT to 6.0 V
+    type: HiLetgo XL4015 5 A buck — trim OUT to 5.0 V
     pinlabels:
     - IN+
     - IN−
     - OUT+
     - OUT−
-    notes: Screw terminals. Set 6.00 V on the meter with nothing on OUT, then wire the PCA9685. Heatsink on. 4 A continuous derated.
+    notes: 'HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT
+      (pot turns counter-clockwise to lower). 4 A continuous derated. 5.0 V (not 6) so the fan can share this rail; the MG996R runs 4.8–7.2 V.'
 cables:
   W_I2C:
     gauge: 24 AWG

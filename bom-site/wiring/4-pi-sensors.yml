@@ -21,7 +21,8 @@ connectors:
     - 35 BCM19 I2S-LRCLK
     - 38 BCM20 I2S-DIN
     - 39 GND
-    notes: Physical pin numbers (odd = inner row from the SD-card end). i2c3 on BCM 4/5 needs dtoverlay=i2c3 in config.txt and has NO on-board pull-ups. w1-gpio must stay off (it defaults to BCM 4).
+    notes: 'Physical pin numbers (odd = inner row from the SD-card end). i2c3 on BCM 4/5 needs dtoverlay=i2c3 (setup_pi.sh does it) and has NO on-board pull-ups: the MLX breakout''s own 10 kΩ do the job.
+      w1-gpio must stay off.'
   MLX:
     type: MLX90640 thermal array breakout (0x33)
     pinlabels:
@@ -29,7 +30,7 @@ connectors:
     - GND
     - SCL
     - SDA
-    notes: 'On i2c3 (BCM 4/5) ALONE so it can run at 1 MHz. BCM 4/5 have no pull-ups: if the module has none either, add 4.7 kΩ SDA→3V3 and SCL→3V3. Rides beside the webcam on the tilt bracket.'
+    notes: 'On i2c3 (BCM 4/5) ALONE. The breakout''s own 10 kΩ pull-ups set the bus speed: 400 kHz (8 fps) — station.py uses 4 fps. Rides beside the webcam on the tilt bracket.'
   TOF_F:
     type: VL53L1X ToF FRONT (0x29 → re-addressed 0x30 by XSHUT)
     pinlabels:
@@ -58,13 +59,6 @@ connectors:
     - SD
     - L/R
     notes: L/R tied to GND = left channel. On the post front face, 120 mm up (assembly.py).
-  PULL:
-    type: 2 × 4.7 kΩ i2c3 pull-ups (only if the MLX module has none)
-    pinlabels:
-    - 3V3
-    - SDA
-    - SCL
-    notes: 'Meter the module first: SDA to GND must read ≤ 3.3 V when powered alone.'
 cables:
   W_MLX:
     gauge: 26 AWG
@@ -106,14 +100,6 @@ cables:
     - OG
     - VT
     - BK
-    category: bundle
-  W_PULL:
-    gauge: 26 AWG
-    length: 0.05
-    colors:
-    - RD
-    - BU
-    - YE
     category: bundle
 connections:
 - - PI:
@@ -236,23 +222,5 @@ connections:
     - 6
   - MIC:
     - L/R
-- - PI:
-    - 1 3V3
-  - W_PULL:
-    - 1
-  - PULL:
-    - 3V3
-- - MLX:
-    - SDA
-  - W_PULL:
-    - 2
-  - PULL:
-    - SDA
-- - MLX:
-    - SCL
-  - W_PULL:
-    - 3
-  - PULL:
-    - SCL
 options:
   bgcolor: '#ffffff'
