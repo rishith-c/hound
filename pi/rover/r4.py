@@ -94,13 +94,16 @@ class R4:
 
     def _send(self, cmd):
         self.ser.write((cmd + "\n").encode())
-        raw = self.ser.read(2000).decode(errors="replace")
-        i, j = raw.rfind("{"), raw.rfind("}")
-        if 0 <= i < j:
-            try:
-                self.status = json.loads(raw[i:j + 1])
-            except ValueError:
-                pass
+        self._buf = getattr(self, "_buf", b"") + self.ser.read(2000)
+        *lines, self._buf = self._buf.split(b"\n")          # keep the unfinished tail for next time
+        for line in reversed(lines):
+            line = line.strip()
+            if line.startswith(b"{") and line.endswith(b"}"):
+                try:
+                    self.status = json.loads(line.decode(errors="replace"))
+                    break
+                except ValueError:
+                    continue
 
     def __enter__(self):
         return self
