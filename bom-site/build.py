@@ -19,6 +19,7 @@ from collections import OrderedDict
 BOM = json.load(open("bom.json"))
 ASM = json.load(open("../assembly.json"))
 DT = json.load(open("../drivetrain.json"))
+WR = json.load(open("../wiring.json"))
 meta, prose, items = BOM["meta"], BOM["prose"], BOM["items"]
 shutil.copy("../assembly.csv", "assembly.csv")
 
@@ -138,9 +139,35 @@ def bullets(lines):
 def numbered(lines):
     return "<ol>\n" + "\n".join(f"<li>{esc(p)}</li>" for p in lines) + "\n</ol>"
 
+
+# ── Wiring tables (from wiring.py) ──────────────────────────────────────────
+_ws = WR["summary"]; _c = _ws["counts"]
+fmt = lambda v, p: "" if v is None else f"{v:.{p}f}"
+wiring_intro = (f'wiring.py is the netlist as code: {_ws["n_loads"]} loads on six rails, {_ws["n_wires"]} wire segments and {_ws["n_signals"]} signal links, '
+                f'checked for voltage windows, current budgets, wire ampacity and drop, connector ratings, logic levels, pin conflicts, I2C addresses, USB budget, '
+                f'the voltage chain from the bank to the webcam, and ground-loop drops. Result: {_c["FAIL"]} FAIL, {_c["WARN"]} WARN, {_c["VERIFY"]} VERIFY, '
+                f'{_c["PROCEDURE"]} PROCEDURE, {_c["PASS"]} PASS. Pack draw {_ws["pack_avg"]} A average, {_ws["pack_peak"]} A peak ({_ws["minutes"]} min per 2200 mAh pack); '
+                f'bank {_ws["bank_avg"]} A average, {_ws["bank_peak"]} A peak; Pi USB {_ws["pi_usb_peak"]} A of 1.2 A peak; Pi input {_ws["v_pi"]} V and webcam {_ws["v_cam"]} V worst case. '
+                f'The pin map and power sections above were corrected to match this file; where they disagree, this table wins.')
+wiring_checks = "".join(f'<tr><td class="lvl-{esc(c["level"])}">{esc(c["level"])}</td><td><code>{esc(c["id"])}</code></td><td>{esc(c["text"])}</td></tr>\n' for c in WR["checks"])
+wiring_wires = "".join(f'<tr><td>{esc(w["name"])}</td><td align="right">{w["awg"]}</td><td align="right">{w["length_m"]:.2f}</td><td align="right">{fmt(w["i_avg"], 2)}</td><td align="right">{fmt(w["i_peak"], 2)}</td><td>{esc(w["connector"])}</td></tr>\n' for w in WR["wires"])
+wiring_loads = "".join(f'<tr><td>{esc(l["name"])}</td><td><code>{esc(l["rail"])}</code></td><td align="right">{l["vin"][0]}–{l["vin"][1]} V</td><td align="right">{fmt(l["i_avg"], 3)}</td><td align="right">{fmt(l["i_peak"], 2)}</td><td class="note">{esc(l["source"])}</td></tr>\n' for l in WR["loads"])
+wiring_html = f"""<h2>Wiring, checked</h2>
+<p>{esc(wiring_intro)}</p>
+<div class="table-wrap"><table><thead><tr><th>Level</th><th>Check</th><th>Finding</th></tr></thead><tbody>
+{wiring_checks}</tbody></table></div>
+<p>Every wire segment, with the current it actually carries:</p>
+<div class="table-wrap"><table><thead><tr><th>Segment</th><th align="right">AWG</th><th align="right">m</th><th align="right">A avg</th><th align="right">A peak</th><th>Ends in</th></tr></thead><tbody>
+{wiring_wires}</tbody></table></div>
+<p>Every load, the rail it hangs on, and where its numbers come from:</p>
+<div class="table-wrap"><table><thead><tr><th>Load</th><th>Rail</th><th align="right">Accepts</th><th align="right">A avg</th><th align="right">A peak</th><th>Source</th></tr></thead><tbody>
+{wiring_loads}</tbody></table></div>
+"""
+
 page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rover Amazon BOM</title><style>
 *{{box-sizing:border-box}}body{{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}main{{max-width:1180px;margin:48px auto;padding:0 24px 60px}}h1{{font-size:30px;line-height:1.25}}h2{{font-size:22px;margin-top:36px}}a{{color:#165bc4;text-underline-offset:3px}}table{{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}}th,td{{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}}th{{background:#f5f6f7}}code{{background:#f3f4f5;padding:2px 4px;border-radius:3px}}.table-wrap{{overflow-x:auto}}p{{margin:16px 0}}ol li,ul li{{margin:6px 0}}.note{{font-size:13px;color:#555;margin-top:4px}}.where{{font-size:13px;white-space:nowrap}}td.where{{white-space:normal;min-width:180px}}tr.group th{{background:#e9ecef;font-weight:600}}.tag{{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}}.grp{{font-size:12px;color:#777;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}}table.totals{{font-size:16px}}table.totals tr.big td{{font-size:20px;padding:14px 12px;background:#f5f6f7}}em{{color:#8a4b00;font-style:normal;font-size:13px}}@media(max-width:600px){{main{{margin:28px auto;padding:0 16px 36px}}h1{{font-size:26px}}table{{min-width:620px}}}}@media print{{main{{max-width:none;margin:0;padding:0}}a{{color:inherit}}}}
+.lvl-FAIL{{color:#b00020;font-weight:600}}.lvl-WARN{{color:#8a4b00;font-weight:600}}.lvl-VERIFY{{color:#1a5fb4;font-weight:600}}.lvl-PROCEDURE{{color:#333;font-weight:600}}.lvl-PASS{{color:#2a7a2a}}
 input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}}.have-cell{{text-align:center;white-space:nowrap}}tr.owned td{{background:#eff8f0}}#checklist-note{{font-size:14px;color:#555}}
 </style></head><body><main><h1>{esc(meta["title"])}</h1>
 <p><strong>Buy: {money(buy_total)} USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): {money(opt_total)}. Already owned: {owned_n} items.</strong> {esc(meta["intro"])}</p>
@@ -180,6 +207,7 @@ input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:point
 <h2>Power and connections</h2>
 {bullets(prose["power"])}
 {paras(prose["power_after"])}
+{wiring_html}
 <h2>Motor and frame fit</h2>
 {paras(prose["fit"])}
 <h2>Compute before claiming it works</h2>

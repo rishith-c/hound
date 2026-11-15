@@ -183,9 +183,9 @@ def main(emit_json=False):
     ke = T_HOLD_NM / I_RATED_A
     print(f"  back-EMF at {V_MAX} m/s: {ke * V_MAX / WHEEL_R_M:.2f} V of {V_BUS_LOADED} V bus — negligible")
 
-    print(f"\nSTEP RATE   (1/8 microstep, four wheels)")
+    print(f"\nSTEP RATE   (1/16 microstep — one MS3 cap per DRV8825 — four wheels)")
     for v in (V_CRUISE, V_MAX):
-        s = step_rate(v, 8)
+        s = step_rate(v, 16)
         print(f"  {v:.1f} m/s = {rpm_at(v):5.1f} rpm → {s:6.0f} steps/s per wheel, {4*s:6.0f} total"
               f"   {'OK' if s < 5000 else 'EXCEEDS'} vs 5 000/axis ISR budget")
 
