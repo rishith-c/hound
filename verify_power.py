@@ -22,7 +22,7 @@ def wire(awg, m):        # out-and-back resistance of a two-conductor run
 
 # ── the worst-case instant: ramp burst + servo stall + WiFi burst, everything else at its peak ───────────────
 I_MOT = 4.00             # 4× DRV8825 bus current, ramp burst (drivetrain.py)
-V_SERVO, I_SERVO = 5.0, 2.1 + 0.2   # XL4015 at 5.0 V: MG996R stall at 5 V (DS 2.5 A at 6 V, scaled) + fan 0.2; the ESP32 is on its own bank
+V_SERVO, I_SERVO = 5.0, 2.1 + 2.1 + 0.2   # XL4015 at 5.0 V: pan + tilt MG996R both stalled (DS 2.5 A at 6 V, scaled) + fan 0.2
 ETA = 0.85               # XL4015 efficiency (DS typical)
 V_PACK_OC = 10.5         # pack floor, open circuit (3.5 V/cell)
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     chk("bank current vs 3.0 A rating", B["i_bank"], 3.0, "A", False)
     chk("Pi input vs its 4.63 V under-voltage warning + 0.1 V", B["v_pi_in"], 4.73)
     chk("Pi USB total vs the 1.2 A shared limit (Pi docs)", B["i_pi_usb"], 1.2, "A", False)
-    chk("XL4015 output (servo stall + fan) vs its 4 A continuous derating", I_SERVO, 4.0, "A", False)
+    chk("XL4015 output (both servos stalled + fan, momentary) vs its 5 A peak rating", I_SERVO, 5.0, "A", False)
     chk("LD2450 supply at the radar vs its 5 V ±10 % floor (DS 4.5 V)", B["v_ld2450"], 4.5)
     chk("webcam supply on its captive 1.5 m cable vs the ~4.4 V most cameras still run at (USB spec floor is 4.75: run 720p if it drops out)", B["v_webcam"], 4.4)
     chk("fan supply on the XL4015 rail during a servo stall vs 4.5 V", B["v_fan"], 4.5)

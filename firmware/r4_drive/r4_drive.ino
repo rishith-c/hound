@@ -85,11 +85,22 @@ static const uint32_t ACC_PER_STEP_PER_SEC = (uint32_t)(4294967296.0 / TICK_HZ);
 FspTimer stepTimer;
 // ── tilt servo: MG996R signal on D11 (CNC shield "Z+" end-stop header), power from the XL4015 5 V rail ──
 const int TILT_PIN = 11; const int TILT_MIN = 65, TILT_MAX = 150, TILT_PARK = 90;   // degrees; mechanical floor ~62°
+const int PAN_PIN = 9;   const int PAN_MIN = 0,   PAN_MAX = 180,  PAN_PARK = 90;    // pan on the shield's X+ end-stop pin (D9)
 PwmOut tiltPwm(TILT_PIN); int tiltDeg = TILT_PARK; bool tiltOn = false;
+PwmOut panPwm(PAN_PIN);   int panDeg = PAN_PARK;   bool panOn = false; uint32_t panStopAt = 0;
+static int usFor(int deg) { return 500 + (2000 * deg) / 180; }
 void setTilt(int deg) {                       // 500–2500 µs over 0–180°, 50 Hz; -1 = release (no pulses, servo goes limp)
   if (deg < 0) { tiltPwm.pulseWidth_us(0); tiltOn = false; return; }
   tiltDeg = deg < TILT_MIN ? TILT_MIN : deg > TILT_MAX ? TILT_MAX : deg;
-  tiltPwm.pulseWidth_us(500 + (2000 * tiltDeg) / 180); tiltOn = true;
+  tiltPwm.pulseWidth_us(usFor(tiltDeg)); tiltOn = true;
+}
+void setPan(int deg) {                        // positional servo: angle. Continuous-rotation servo: 90 = stop, <90 / >90 = turn
+  if (deg < 0) { panPwm.pulseWidth_us(0); panOn = false; panStopAt = 0; return; }
+  panDeg = deg < PAN_MIN ? PAN_MIN : deg > PAN_MAX ? PAN_MAX : deg;
+  panPwm.pulseWidth_us(usFor(panDeg)); panOn = true;
+}
+void nudgePan(int dir, int ms) {              // for a continuous-rotation pan: run one way for ms milliseconds, then stop (90)
+  setPan(dir < 0 ? 60 : 120); panStopAt = millis() + (ms > 0 && ms < 5000 ? ms : 300);
 }
 
 void stepIsr(timer_callback_args_t*) {
@@ -240,12 +251,12 @@ const char* statusJson() {
   snprintf(jsonBuf, sizeof(jsonBuf),
     "{\"map\":{\"FL\":\"%s\",\"FR\":\"%s\",\"BL\":\"%s\",\"BR\":\"%s\"},"
     "\"target\":[%ld,%ld,%ld,%ld],\"rate\":[%ld,%ld,%ld,%ld],\"inv\":[%d,%d,%d,%d],"
-    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"ip\":\"%s\"}",
+    "\"en\":%d,\"hold\":%d,\"wd\":%d,\"ms\":%d,\"spm\":%.2f,\"maxmm\":%.0f,\"k\":%.0f,\"a\":%ld,\"pct\":%d,\"circle\":%d,\"vbat\":%.2f,\"vcut\":%.1f,\"lv\":%d,\"tmr\":%d,\"ticks\":%lu,\"tilt\":%d,\"tilton\":%d,\"pan\":%d,\"panon\":%d,\"ip\":\"%s\"}",
     AXIS[0], AXIS[1], AXIS[2], AXIS[3],
     (long)targetRate[0], (long)targetRate[1], (long)targetRate[2], (long)targetRate[3],
     (long)curRate[0], (long)curRate[1], (long)curRate[2], (long)curRate[3],
     inv[0], inv[1], inv[2], inv[3], en, holdEnable ? 1 : 0, wdTripped ? 1 : 0, microsteps,
-    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
+    stepsPerMm(), maxMm(), capSps(), (long)accelSteps, speedPct, circleOn ? 1 : 0, vbat, vcut, lowVolt ? 1 : 0, timerOk ? 1 : 0, (unsigned long)isrTicks, tiltDeg, tiltOn ? 1 : 0, panDeg, panOn ? 1 : 0, ENABLE_WIFI ? WiFi.localIP().toString().c_str() : "off");
   return jsonBuf;
 }
 
@@ -380,6 +391,8 @@ void handleSerial() {
         case 'k': kMaxSps = (a >= 60 && a <= 40000) ? a : 0; break;
         case 'V': vcut = (a >= 0 && a <= 12.0f) ? a : 0.0f; break;   // 'V <volts>' — 'b' is taken by back
         case 't': setTilt(line.length() == 1 ? TILT_PARK : (int)a); break;   // 't 90' tilt degrees, 't -1' release, bare 't' = park
+        case 'p': setPan(line.length() == 1 ? PAN_PARK : (int)a); break;      // 'p 90' pan degrees (or speed for a continuous servo), 'p -1' release
+        case 'n': nudgePan((int)a, (int)b); break;                              // 'n -1 300' / 'n 1 300': continuous-rotation nudge left/right for ms
         case 'a': aSlew = (a >= 300 && a <= 400000) ? a : 0; updateAccel(); break;
         case 'c': circleR = a > 0 ? a : 300.0f; circleT = b > 0 ? b : 8.0f; circleT0 = millis(); circleOn = true; kick(); break;
         case 'j': jog((int)a, (int)b, d); break;
@@ -399,7 +412,8 @@ void setup() {
   for (int i = 0; i < 4; i++) { pinMode(STEP_PIN[i], OUTPUT); pinMode(DIR_PIN[i], OUTPUT); digitalWrite(STEP_PIN[i], LOW); }
   pinMode(EN_PIN, OUTPUT); digitalWrite(EN_PIN, HIGH);          // drivers OFF until commanded
   pinMode(VBAT_PIN, INPUT);
-  tiltPwm.begin((uint32_t)20000, (uint32_t)0);                                       // 50 Hz frame, no pulse until 't' arrives (servo limp)
+  tiltPwm.begin((uint32_t)20000, (uint32_t)0);
+  panPwm.begin((uint32_t)20000, (uint32_t)0);                                       // 50 Hz frame, no pulse until 't' arrives (servo limp)
   Serial.begin(115200);
   loadSettings();
   updateAccel();
@@ -429,6 +443,7 @@ void runCircle() {
 }
 
 void loop() {
+  if (panStopAt && (int32_t)(millis() - panStopAt) >= 0) { panStopAt = 0; setPan(90); }   // end of a continuous-rotation nudge
   static uint32_t lastMotionMs = 0;
   readVbat();
   if (lowVolt && anyMotion) stopAll();

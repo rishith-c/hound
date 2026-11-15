@@ -698,7 +698,7 @@
    "l": 100.0,
    "w": 60.0,
    "h": 6.0,
-   "orientation": "flat on deck; PAN STAGE LOCKED \u2014 the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3",
+   "orientation": "flat on deck; pan stage free \u2014 pan servo on the shield's X+ pin \u2014 the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3",
    "mounts_to": "front-left/right tiles across the seam",
    "fasteners": "4\u00d7 M3\u00d716 through base (6 mm) + deck (5 mm) + 4\u00d7 M3 nut (M3 kit)",
    "torque": "1.0 N\u00b7m",

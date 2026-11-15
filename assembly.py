@@ -179,7 +179,7 @@ on_deck("CP2102", "×3 → radars", "three CP2102 USB-UART sticks in the hub", (
 # ── Turret (Ceres pan/tilt) at the front centre ─────────────────────────────
 TX = 110.0
 add("PT", "base", "Ceres pan/tilt turret base plate 100×60×6", TX, 0, DECK_TOP + TURRET_BASE[2] / 2, *TURRET_BASE,
-    "flat on deck; PAN STAGE LOCKED — the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3", "front-left/right tiles across the seam",
+    "flat on deck; pan stage free — pan servo on the shield's X+ pin — the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3", "front-left/right tiles across the seam",
     "4× M3×16 through base (6 mm) + deck (5 mm) + 4× M3 nut (M3 kit)", "1.0 N·m", M["turret"],
     verify="hole positions on the actual Ceres base", note="Spans X +60..+160, Y −30..+30. Tilt servo cable to PCA9685 ch 0; the pan servo stays disconnected.")
 CAM_Z = DECK_TOP + TURRET_BASE[2] + TURRET_H
