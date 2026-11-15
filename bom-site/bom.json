@@ -63,7 +63,8 @@
    "Pi I2C-1 (GPIO 2/3, 400 kHz): PCA9685 0x40, VL53L1X front and rear (0x29 until re-addressed; XSHUT on GPIO 5 and 6), SCD41 0x62 (which caps the bus at 100 kHz if fitted). VL53L1X modules powered from 3.3 V so their pull-ups never put 5 V on a Pi pin. MLX90640 0x33 on a HARDWARE second bus — Pi 4: dtoverlay=i2c3,pins_4_5 (GPIO 4/5); Pi 5: dtoverlay=i2c3-pi5,pins_4_5 at 400 kHz, about 8 fps. Not i2c-gpio: bit-banged I2C tops out around 100–200 kHz and the thermal array would crawl at ~3 fps. On a Pi 3, share I2C-1 at 400 kHz instead.",
    "Pi I2S (GPIO 18 BCLK, 19 LRCLK, 20 DIN): INMP441 (dtoverlay=googlevoicehat-soundcard or an i2s-mic overlay). Pi USB: R4 (serial + power), ESP32-S3 (serial + power), webcam. Pi power: bank on USB-C.",
    "ESP32-S3: UART1 (GPIO 17/18) ↔ LD2410C TX/RX crossed at 256000 baud; UART2 (GPIO 15/16) ↔ LD2450 crossed at 256000. Both radars 5 V from the devkit's 5 V pin, 3.3 V signalling, nothing metal within 10 mm of the antenna faces.",
-   "PCA9685: tilt on ch 0, pan on ch 2, as in the Ceres turret_duet firmware. V+ from the XL4015 at 6.0 V, VCC from the Pi 3.3 V, GND to both."
+   "PCA9685: tilt on ch 0, pan on ch 2, as in the Ceres turret_duet firmware. V+ from the XL4015 at 6.0 V, VCC from the Pi 3.3 V, GND to both.",
+   "ESP32-S3 #3 (CSI receiver, on the rover): powered from the LM2596 5 V rail, data to the Pi over USB-C (fourth USB port — the Pi 4 has four; on a Pi 3 use a powered hub or drop the webcam to 720p). ESP32-S3 #2 (beacon): any USB 5 V source at the doorway, no data link needed."
   ],
   "review": [
    "Microstepping jumpers sit under the driver sockets — caps, not wires, and they go on before the drivers. I first said Dupont leads would do; you caught it.",
@@ -123,6 +124,13 @@
    "Pi I2C-1 (3.3 V, 400 kHz): PCA9685 0x40, VL53L1X ×2 at 0x29 re-addressed via XSHUT on GPIO 5/6, SCD41 0x62 — no address clashes. MLX90640 0x33 on a hardware second bus (Pi 4: i2c3 on GPIO 4/5, 400 kHz, ~8 fps). VL53L1X and MLX90640 modules run on 3.3 V from the Pi header.",
    "Pi I2S GPIO 18/19/20 → INMP441 (3.3 V). Pi ↔ R4 serial over the same USB cable that powers it.",
    "Firmware boundary: R4 runs the four-axis step generator (timer ISR, D2–D7 + D12/D13, enable D8) and takes velocity commands over serial; the Pi runs everything else. Nothing on the shield is driven by GRBL."
+  ],
+  "fusion": [
+   "Four ways of seeing a person, four different physics, so they fail differently: the radars see RF REFLECTED off a chest (range + breathing, through drywall); the ESP32 pair sees RF TRANSMITTED through a space and disturbed by a body (presence, through drywall, no range); the thermal array sees EMITTED heat (a warm blob, line of sight, through dark and smoke); the camera sees VISIBLE shape (a person-shaped box, line of sight, needs light). Agreement between two of them is evidence; agreement between three is a finding.",
+   "ESP32 #1 stays the radar bridge. ESP32 #2 becomes a BEACON: dropped at the doorway the rover enters through, powered by any USB source, transmitting the CSI probe stream (the RuView firmware already flashed on it does exactly this). ESP32 #3 rides the rover as the RECEIVER on the LM2596 5 V rail. That geometry is the point — it makes the sensing BISTATIC: the beacon is on one side of every wall the rover drives past and the receiver on the other, so a person standing between them is inside the RF path. Two ESP32s on the rover together would only see their own reflections, which RuView showed is presence at best.",
+   "Fusion is a scoring table, not a neural net — it has to be explainable in a sentence to a judge. Each modality reports 0–3: radar (0 none, 1 static presence, 2 presence at a range, 3 breathing at a plausible rate); CSI (0 quiet, 1 disturbed, 2 periodic disturbance in the breathing band); thermal (0 none, 1 warm blob, 2 blob of human size at the radar's range); camera (0 none, 1 person box, 2 person box overlapping the thermal blob). Sum ≥ 3 with two modalities contributing = PERSON; ≥ 5 = CONFIRMED; the word ALIVE is reserved for radar breathing, and only radar breathing. Every report shows the four bars so a judge can see which physics agreed.",
+   "The protocol that makes it work: stop; motors off; turret parked; 5 s for the radar to settle; 30 s dwell for breathing (Walleye's vitals.py on the Pi) while the receiver logs CSI; then one rover rotation in 20° steps for the thermal + camera sweep and the radar bearing; then report. About 60 s per station.",
+   "What it still cannot do, said plainly: nothing here sees through concrete; the radars measure breathing, not heartbeat; CSI gives presence, not position; thermal and camera need line of sight. The claim that survives a hard question is 'four independent sensors agreed a person was breathing 2 m behind that wall' — not 'the AI found them'."
   ]
  },
  "items": [
@@ -328,7 +336,7 @@
    "group": "Sensing and compute",
    "item": "HLK-LD2410C 24 GHz radar",
    "qty": 2,
-   "note": "Primary presence sensor; sees a motionless person. One on the post, one spare."
+   "note": "Primary through-wall sensor: reflected 24 GHz gives range and — with Walleye's vitals.py — a breathing rate and confidence. It measures breathing, not heartbeat; call it that. One on the post, one spare."
   },
   {
    "id": "LD2450",
@@ -344,7 +352,7 @@
    "group": "Sensing and compute",
    "item": "ESP32-S3 DevKitC (N16R8)",
    "qty": 3,
-   "note": "One bridges both radar UARTs to the Pi over USB. Two free for WiFi CSI experiments."
+   "note": "Three roles: #1 bridges both radar UARTs to the Pi over USB; #2 is the CSI BEACON dropped at the entrance on any USB 5 V source (RuView firmware already flashed and provisioned); #3 rides the rover as the CSI receiver on the LM2596 5 V rail, streaming to the Pi. The beacon-on-one-side, receiver-on-the-other geometry is what lets WiFi sensing work through the wall."
   },
   {
    "id": "CP2102",

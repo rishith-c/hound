@@ -23,6 +23,8 @@ for pp in asm["parts"]:
     if pp["id"] in ("MOT","WHL","BRK","LIPO","BANK","UNO","PI","PT","CAM","THERM","LD2410C","LD2450","TOF","XL4015","PCA") and "spare" not in pp["instance"]:
         L.append(f"- {pp['id']} {pp['instance']}: ({pp['x']:+.0f}, {pp['y']:+.0f}, {pp['z']:.0f}) — {pp['fasteners']}")
 L.append(f"\nDrivetrain sizing at {dt['design_mass_kg']:.2f} kg design mass, 80 mm mecanum wheels, direct drive, JK42HS40-1704-13A (0.41 N-m holding, 1.7 A, 1.5 ohm, 2.3 mH): required torque per wheel — " + "; ".join(f"{k}: {v['torque_design_Nm']:.3f} N-m" for k, v in dt["cases"].items()) + ". Available = holding x (I/1.7) x 0.70 (assumed low-speed factor). Margins at 1.5 A on DRV8825: " + ", ".join(f"{v['margins_design'][2]:.2f} ramp" for k, v in dt["drivers"].items() if "DRV8825, no" in k) + " (acceptance 1.25). Step rate at 1/16: ~3,800 steps/s per wheel at 0.3 m/s.")
+L.append("\n## Multimodal detection plan")
+for x in p["fusion"]: L.append(f"- {x}")
 L.append("\n## Electrical and interfaces as designed")
 for m in p["mesh"]: L.append(f"- {m}")
 L.append("\n## Power and connections")
