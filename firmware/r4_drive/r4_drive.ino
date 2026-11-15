@@ -53,7 +53,7 @@ const uint32_t IDLE_DISABLE_MS = 3000;       // drivers off after 3 s of zero ve
 uint8_t  microsteps = 32;                    // M0+M2 caps = 1/32; M2 alone = 1/16
 float    kMaxSps    = 0;                     // 'k <steps/s>': runtime top wheel rate, 0 = firmware cap (Fetch: sweep it to find the quiet band)
 float    aSlew      = 0;                     // 'a <steps/s²>': runtime slew, 0 = ACCEL_MM_S2
-int      speedPct   = 60;                    // single-key teleop speed, '+' / '-' in steps of 10
+int      speedPct   = 78;                    // single-key teleop speed: 78 % of the 530 mm/s cap = 415 mm/s; '+' / '-' in steps of 10
 bool     circleOn   = false; uint32_t circleT0 = 0; float circleR = 300, circleT = 8;
 uint8_t  inv[4]     = { 0, 0, 0, 0 };        // per-wheel direction flip (EEPROM)
 bool     holdEnable = false;                 // keep drivers energised while parked
