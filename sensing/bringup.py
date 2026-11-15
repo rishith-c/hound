@@ -48,7 +48,10 @@ def check_thermal(thermal=None):
     if thermal is None:
         from station import Thermal
         thermal = Thermal()
-    f = np.asarray(thermal.frame(), float)
+    f = thermal.frame()
+    if f is None:
+        return "FAIL", "no clean frame in 3 reads", "the driver kept rejecting frames: I2C errors — re-seat the thermal lead, keep it short"
+    f = np.asarray(f, float)
     lo, hi, med = float(f.min()), float(f.max()), float(np.median(f))
     txt = f"frame {f.shape[1]}×{f.shape[0]}, {lo:.1f}–{hi:.1f} °C (room {med:.1f})"
     if not 5 < med < 40 or hi - lo < 0.3:

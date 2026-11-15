@@ -381,3 +381,21 @@ def test_station_real_path_glue(monkeypatch, tmp_path):
     assert {"radar_presence", "radar_breath", "csi_breath"} <= set(rec["result"]["contrib"])   # both tracks reach fusion
     assert "alive" not in rec["sentence"].lower()                  # (the label itself rests on the sim-made calibration)
     assert json.loads(open(tmp_path / "stations.jsonl").read())["station"] == "S9"
+
+
+def test_thermal_bad_reads_retry_then_skip_instead_of_ending_the_stop(monkeypatch, tmp_path):
+    station = pytest.importorskip("station")
+    import numpy as np
+    class MLX:
+        def __init__(self, fails): self.fails = list(fails)
+        def getFrame(self, buf):
+            if self.fails and self.fails.pop(0): raise RuntimeError("Too many retries")
+            buf[:] = [22.0] * 768
+    th = object.__new__(station.Thermal)
+    th.mlx = MLX([True, True, False]); assert th.frame().shape == (24, 32)          # third read good
+    th.mlx = MLX([True] * 3); assert th.frame() is None                             # gives up, no exception
+    monkeypatch.setattr(station.time, "sleep", lambda s: None)
+    monkeypatch.setattr(station, "LOG", str(tmp_path / "s.jsonl"))
+    th.mlx = MLX([True] * 1000)
+    rec = station.run_station("S1", {"thermal": th}, sim=False)                     # a whole stop of bad frames
+    assert rec["features"]["thermal"] is None

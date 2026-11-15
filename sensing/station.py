@@ -137,10 +137,17 @@ class Thermal:
         self.mlx = adafruit_mlx90640.MLX90640(i2c)
         self.mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_4_HZ
 
-    def frame(self):
-        buf = [0.0] * 768
-        self.mlx.getFrame(buf)
-        return np.array(buf).reshape(24, 32)
+    def frame(self, tries=3):
+        """24×32 °C, or None after `tries` bad reads: the Adafruit driver raises RuntimeError on a frame that changed
+        mid-read ('Too many retries') or failed its checks ('Frame data error'), and one of those must not end a stop."""
+        for _ in range(tries):
+            buf = [0.0] * 768
+            try:
+                self.mlx.getFrame(buf)
+            except (RuntimeError, ValueError, OSError):
+                continue
+            return np.array(buf).reshape(24, 32)
+        return None
 
 
 class Camera:
@@ -240,7 +247,7 @@ def run_station(name: str, drivers: dict, sim: bool, rng=None, scenario=None, r4
             for _ in range(n):
                 r4.nudge_pan(d); time.sleep(0.45)
             if "thermal" in drivers:
-                frames += [drivers["thermal"].frame() for _ in range(2)]
+                frames += [f for f in (drivers["thermal"].frame() for _ in range(2)) if f is not None]
             if "camera" in drivers:
                 scores += [drivers["camera"].score() for _ in range(2)]
         if r4:
