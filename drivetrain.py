@@ -75,11 +75,12 @@ MASS_ITEMS = [
     ("Zeee 3S 5200 mAh LiPo",                  0.343,             "MEASURED"),
     ("5 V 3 A buck for Pi logic (replaces power bank)", 0.040,    "ALLOCATED"),  # −0.31 kg vs bank
     ("2x LD2410C + LD2450 + 2x ESP32-S3",      0.060,             "ALLOCATED"),
-    ("USB camera",                             0.050,             "ALLOCATED"),
-    ("4x VL53L1X",                             0.020,             "ALLOCATED"),
+    ("Owned USB webcam (C920-class)",          0.162,             "ALLOCATED"),  # Ceres DESIGN.md envelope
+    ("2x VL53L1X",                             0.010,             "ALLOCATED"),
+    ("MLX90640 thermal + SCD41 CO2 + INMP441 mic", 0.025,         "ALLOCATED"),
     ("PETG deck, cradle, radar post, clips",   0.500,             "ALLOCATED"),
-    ("Straps, ties, heat shrink",              0.050,             "ALLOCATED"),
-    ("18 AWG wiring + XT60",                   0.100,             "ALLOCATED"),
+    ("Cable ties, tape",                       0.030,             "ALLOCATED"),
+    ("22 AWG wiring + connectors",             0.080,             "ALLOCATED"),
 ]
 FASTENER_ALLOWANCE = 0.15
 MASS_CEILING_KG = 6.0                # sensitivity case from the earlier study

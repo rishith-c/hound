@@ -1,6 +1,6 @@
 # Indoor search rover — practical BOM
 
-**Recommended purchases: $430.02 USD before tax/shipping. Optional workshop tools: $97.43.** Superseded detail: the live list at https://rover-amazon-bom.vercel.app and `../bom-site/bom.json` are the source of truth (adds the DROK 5 V buck and an M2 kit, drops the power bank and the hacksaw, and ties every part to a position from `../assembly.py`). This includes four obstacle sensors, camera, a new motor battery, charger and charging leads. Omit any equivalents you already own. Prices were observed September 4–5, 2026; stock and checkout prices can change. This is the preferred hackathon configuration, with physical validation still outstanding.
+**Recommended purchases: $229.78 USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): $299.12.** Superseded detail: the live list at https://rover-amazon-bom.vercel.app and `../bom-site/bom.json` are the source of truth (adds the DROK 5 V buck and an M2 kit, drops the power bank and the hacksaw, and ties every part to a position from `../assembly.py`). This includes four obstacle sensors, camera, a new motor battery, charger and charging leads. Omit any equivalents you already own. Prices were observed September 4–5, 2026; stock and checkout prices can change. This is the preferred hackathon configuration, with physical validation still outstanding.
 
 ## The design I would build
 

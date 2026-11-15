@@ -3,15 +3,16 @@
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1180px;margin:48px auto;padding:0 24px 60px}h1{font-size:30px;line-height:1.25}h2{font-size:22px;margin-top:36px}a{color:#165bc4;text-underline-offset:3px}table{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}th,td{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}th{background:#f5f6f7}code{background:#f3f4f5;padding:2px 4px;border-radius:3px}.table-wrap{overflow-x:auto}p{margin:16px 0}.note{font-size:13px;color:#555;margin-top:4px}.where{font-size:13px;white-space:nowrap}td.where{white-space:normal;min-width:180px}tr.group th{background:#e9ecef;font-weight:600}.tag{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}em{color:#8a4b00;font-style:normal;font-size:13px}@media(max-width:600px){main{margin:28px auto;padding:0 16px 36px}h1{font-size:26px}table{min-width:620px}}@media print{main{max-width:none;margin:0;padding:0}a{color:inherit}}
 input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}.have-cell{text-align:center;white-space:nowrap}tr.owned td{background:#eff8f0}#checklist-note{font-size:14px;color:#555}
 </style></head><body><main><h1>Indoor search rover — practical BOM</h1>
-<p><strong>Buy: $430.02 USD before tax/shipping. Optional tools: $97.43. Already owned: 12 items.</strong> One list, everything on the rover, including what you already own. Owned rows are pre-ticked and cost $0. Every part has a position in millimetres and the fastener that holds it, computed in assembly.py from the frame geometry — not eyeballed. Prices observed September 4–5, 2026; stock and checkout prices can change. Physical validation is still outstanding.</p>
+<p><strong>Buy: $229.78 USD before tax/shipping. Optional (battery ecosystem, extra senses, tools): $299.12. Already owned: 15 items.</strong> One list, everything on the rover, including what you already own. Owned rows are pre-ticked and cost $0. The buy list is only what the rover cannot work without; everything else is in the optional groups below it with a plain reason. Every part has a position in millimetres and the fastener that holds it, computed in assembly.py — not eyeballed. Prices observed September 4–5, 2026. Physical validation is still outstanding.</p>
 <p><a href="bom.csv" download>Download the BOM as CSV</a> · <a href="assembly.csv" download>Download every placement as CSV</a> · <a href="drivetrain.txt">Read the full drivetrain calculation</a></p>
 <h2>The design I would build</h2>
-<p>Four independently driven 80 mm mecanum wheels on the four owned NEMA 17 steppers, a low 350 × 390 mm 2020 frame, the battery slung under the deck for a low centre of gravity, the Ceres pan/tilt turret at the front carrying the USB camera so it can look around and track, and both radars on a 200 mm post at the rear looking forward over the turret. Four short-range ToF sensors guard each side. The fifth motor and TB6600 stay spare.</p>
+<p>Four independently driven 80 mm mecanum wheels on the four owned NEMA 17 steppers, a low 350 × 390 mm 2020 frame, the battery slung under the deck for a low centre of gravity, the Ceres pan/tilt turret at the front carrying your webcam and a thermal array so it can look around and track, and both radars on a 200 mm post at the rear looking forward over the turret. Two short-range ToF sensors guard front and rear. The fifth motor and TB6600 stay spare.</p>
 <p>No kit does this. Every mecanum chassis kit on Amazon is built for TT or DC gearmotors; none has a NEMA 17 mount. Steel L-brackets under the rails are the cleanest way to put your steppers on mecanum wheels, and the 5 mm couplers in the wheel set match the 5 mm flatted shaft on your motors.</p>
-<p>Power is one LiPo. It feeds the motor drivers directly, a 5 V buck for the Pi, and the Ceres 6 V buck for the servos. The power bank is gone: 350 g of unknown mass was the difference between passing and failing the ramp case.</p>
-<p>LD2410C is the primary presence sensor, including stationary/micro-moving presence. LD2450 adds positions and speeds of moving targets; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements. Start with one radar powered; test the two radar types separately, then together for interference. These sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present.</p>
+<p>Power is one pack — your gel-blaster LiPo to start. It feeds the motor drivers directly, a 5 V buck for the Pi, and the Ceres 6 V buck for the servos. The power bank is gone: 350 g of unknown mass was the difference between passing and failing the ramp case.</p>
+<p>Finding people is a four-sensor job, and that is how professional search-and-rescue kit is built: CO2 to narrow the area, thermal to confirm a body, a microphone for voice and knocking, radar for behind obstacles. The rover had only the radar leg. So the pan/tilt turret now carries a thermal array beside the camera — a warm body is unmistakable in 768 pixels, in the dark or in smoke, and thermal-plus-visible on one sweep is the strongest line-of-sight detector on the vehicle. A CO2 sensor rides the radar post for closed rooms, and an I2S microphone listens when the motors are stopped. The Pi runs MobileNet-SSD person detection on the camera at roughly 25 frames per second; fusing that with the thermal blob is the demo.</p>
+<p>LD2410C is the primary presence sensor for anyone the camera cannot see: stationary or micro-moving people behind a door or a stud wall, plus breathing. LD2450 adds positions and speeds of moving targets and loses motionless bodies beyond about 2 m; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements — and the 60 GHz breathing/heartbeat modules on the market were skipped: their heart-rate figure benchmarks at a 0.33 correlation against a chest strap, and the owned LD2410C already covers breathing. Start with one radar powered; test the two radar types separately, then together for interference. These sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present.</p>
 <h2>Can four motors carry it?</h2>
-<p>Design mass 5.12 kg. Four load cases; the 5° carpet ramp at 0.3 m/s² governs. Lowest passing setting: <strong>DRV8825, no cooling</strong>.</p>
+<p>Design mass 5.21 kg. Four load cases; the 5° carpet ramp at 0.3 m/s² governs. Lowest passing setting: <strong>DRV8825, no cooling</strong>.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -25,19 +26,19 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 </thead>
 <tbody>
 <tr>
-<td>A4988, no cooling</td><td align="right">0.170 N·m</td><td align="right">1.35</td><td align="right">1.12</td><td align="right">0.86</td><td>FAIL ramp</td>
+<td>A4988, no cooling</td><td align="right">0.170 N·m</td><td align="right">1.32</td><td align="right">1.10</td><td align="right">0.84</td><td>FAIL ramp</td>
 </tr>
 <tr>
-<td>A4988, heatsink + fan</td><td align="right">0.203 N·m</td><td align="right">1.62</td><td align="right">1.35</td><td align="right">1.03</td><td>FAIL ramp</td>
+<td>A4988, heatsink + fan</td><td align="right">0.203 N·m</td><td align="right">1.59</td><td align="right">1.32</td><td align="right">1.01</td><td>FAIL ramp</td>
 </tr>
 <tr>
-<td>DRV8825, no cooling</td><td align="right">0.254 N·m</td><td align="right">2.02</td><td align="right">1.69</td><td align="right">1.28</td><td>PASS</td>
+<td>DRV8825, no cooling</td><td align="right">0.254 N·m</td><td align="right">1.98</td><td align="right">1.65</td><td align="right">1.26</td><td>PASS</td>
 </tr>
 <tr>
-<td>DRV8825, heatsink + fan</td><td align="right">0.288 N·m</td><td align="right">2.29</td><td align="right">1.91</td><td align="right">1.46</td><td>PASS</td>
+<td>DRV8825, heatsink + fan</td><td align="right">0.288 N·m</td><td align="right">2.25</td><td align="right">1.88</td><td align="right">1.43</td><td>PASS</td>
 </tr>
 </tbody></table></div>
-<p>Margin = torque available ÷ torque required; acceptance ≥ 1.25 because the running torque is calculated, not measured. Keep total mass under about 5.2 kg or the ramp margin is gone — that is why the power bank was dropped for a 5 V buck. The one measurement that matters most: pull-out torque at 24 rpm, 1.5 A, on the real battery.</p>
+<p>Margin = torque available ÷ torque required; acceptance ≥ 1.25 because the running torque is calculated, not measured. At 5.23 kg with your C920-class webcam the ramp margin at 1.5 A is 1.26 — passing by a hair. If the camera weighs more than 170 g, or anything else gets added, either run 1.7 A with the fan or swap to the 50 g ELP board camera. The one measurement that matters most: pull-out torque at 24 rpm, 1.5 A, on the real battery.</p>
 <h2>Everything on the rover — one list</h2>
 <p id="checklist-note" role="status">Selections are saved in this browser only.</p>
 <p>Owned items start ticked. Tick a bought item when you have the full listed quantity. Positions are part centres in millimetres from the chassis centre on the floor (+X forward, +Y left, +Z up); the full table with orientation and torque is below.</p>
@@ -95,20 +96,13 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">$13.99</td>
 <td class="where">—</td>
 <td class="where">—</td>
-</tr><tr class="group"><th colspan="7">Deck and body</th></tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="PETG" data-owned="0" aria-label="I have all required quantities of OVERTURE black PETG 1 kg 1.75 mm"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07PGYHYV8">OVERTURE black PETG 1 kg 1.75 mm</a><div class="note">Two deck tiles, battery cradle, radar post + bar, fan bridge, four ToF clips. ~0.5 kg of the spool.</div></td>
+</tr><tr class="group"><th colspan="7">Motion control</th></tr><tr class=owned>
+<td class="have-cell"><input type="checkbox" data-item="UNO" data-owned="1" aria-label="I have all required quantities of Arduino UNO R4 WiFi (from Walleye)"></td><td>Arduino UNO R4 WiFi (from Walleye)<div class="note">The CNC Shield V3 stacks on the R4&#x27;s headers; 5 V logic, same pinout. Custom timer-ISR firmware, not GRBL. Frees up when the Walleye rail retires.</div></td>
 <td align="right">1</td>
-<td align="right">$14.69</td>
-<td align="right">$14.69</td>
-<td class="where">front tile (+85, +0, 94); rear tile (-85, +0, 94); battery cradle (+0, +0, 76); radar post (-165, +0, 196) +1 more</td>
-<td class="where">6× M5×10 hex + 6× M5 T-nut (top slots: 3 per side-rail edge); 4× M4×16 through deck + 4× M4 nyloc, at X ±60, Y ±18</td>
-</tr><tr class="group"><th colspan="7">Motion control</th></tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="UNO" data-owned="0" aria-label="I have all required quantities of ELEGOO Uno R3 with USB cable"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B01EWOE0UU">ELEGOO Uno R3 with USB cable</a><div class="note">Generates the step pulses on a timer interrupt. The included USB cable runs to the Pi.</div></td>
-<td align="right">1</td>
-<td align="right">$16.99</td>
-<td align="right">$16.99</td>
+<td align="right">owned</td>
+<td align="right">owned</td>
 <td class="where">(-116, +87, 128)</td>
-<td class="where">4× M2.5×10 nylon standoff + M2.5 screw + M2.5 nut under deck (Uno holes 3.2 mm)</td>
+<td class="where">printed 10 mm bosses on the deck tile + 2 cable ties through printed slots</td>
 </tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="SHIELD" data-owned="0" aria-label="I have all required quantities of CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0B24YS695">CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks</a><div class="note">Required, not optional: A4988 fails the ramp case. Fit the D12/D13 jumpers for the fourth axis. Vref = 5 × Rsense × I.</div></td>
 <td align="right">1</td>
@@ -130,13 +124,13 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">owned</td>
 <td class="where">—</td>
 <td class="where">—</td>
-</tr><tr class="group"><th colspan="7">Power</th></tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="LIPO" data-owned="0" aria-label="I have all required quantities of Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0972RKJDS">Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60</a><div class="note">343 g, 132 × 43 × 25 mm. Slung under the deck centre — the lowest heavy part on the rover.</div></td>
+</tr><tr class="group"><th colspan="7">Power</th></tr><tr class=owned>
+<td class="have-cell"><input type="checkbox" data-item="PACK" data-owned="1" aria-label="I have all required quantities of 11.1 V gel-blaster LiPo + its charger"></td><td>11.1 V gel-blaster LiPo + its charger<div class="note">Read the label: mAh, C rating, connector. Needs ≥ 4 A continuous (any C ≥ 4 on 1000 mAh does it). Charge only with a balance charger; if yours is a two-wire wall brick, that is the first thing to replace, not the pack.</div></td>
 <td align="right">1</td>
-<td align="right">$34.99</td>
-<td align="right">$34.99</td>
-<td class="where">(+0, +0, 76)</td>
-<td class="where">1× 20×250 mm strap through cradle slots</td>
+<td align="right">owned</td>
+<td align="right">owned</td>
+<td class="where">—</td>
+<td class="where">—</td>
 </tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="BUCK5" data-owned="0" aria-label="I have all required quantities of DROK 8–35 V to 5 V 3 A buck converter"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07P663XJV">DROK 8–35 V to 5 V 3 A buck converter</a><div class="note">Replaces the power bank (−310 g). Feeds the Pi on GPIO 5 V. Set 5.10 V before connecting.</div></td>
 <td align="right">1</td>
@@ -151,55 +145,6 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">owned</td>
 <td class="where">(-44, +110, 113)</td>
 <td class="where">2× M3×8 into deck</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="CHG" data-owned="0" aria-label="I have all required quantities of SKYRC B6AC Neo balance charger, 60 W AC"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0CV64ZB2L">SKYRC B6AC Neo balance charger, 60 W AC</a><div class="note">Start at 2.6 A = 0.5 C. Follow the pack&#x27;s instructions.</div></td>
-<td align="right">1</td>
-<td align="right">$53.00</td>
-<td align="right">$53.00</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="XT60EXT" data-owned="0" aria-label="I have all required quantities of LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B09CT5VGPW">LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions</a><div class="note">Charger lead.</div></td>
-<td align="right">1</td>
-<td align="right">$7.99</td>
-<td align="right">$7.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="XT60PIG" data-owned="0" aria-label="I have all required quantities of Padarsey 2 pairs XT60 14 AWG pigtails"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07BF8154S">Padarsey 2 pairs XT60 14 AWG pigtails</a><div class="note">The rover-side pigtail splits into the three 18 AWG branches.</div></td>
-<td align="right">1</td>
-<td align="right">$6.99</td>
-<td align="right">$6.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="ALARM" data-owned="0" aria-label="I have all required quantities of AOICRIE 2× 1S–8S cell voltage alarms"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07VR4SV8C">AOICRIE 2× 1S–8S cell voltage alarms</a><div class="note">On the balance lead, velcroed to the cradle side.</div></td>
-<td align="right">1</td>
-<td align="right">$6.59</td>
-<td align="right">$6.59</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="BAG" data-owned="0" aria-label="I have all required quantities of Tenergy LiPo charging bag"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B08QCMMGJT">Tenergy LiPo charging bag</a></td>
-<td align="right">1</td>
-<td align="right">$8.99</td>
-<td align="right">$8.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="WIRE18" data-owned="0" aria-label="I have all required quantities of XINWANG 18 AWG silicone wire, 6 colours × 5 m"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0B15CH937">XINWANG 18 AWG silicone wire, 6 colours × 5 m</a><div class="note">Power branches. 22 AWG would carry it; 18 AWG is comfortable.</div></td>
-<td align="right">1</td>
-<td align="right">$17.89</td>
-<td align="right">$17.89</td>
-<td class="where">power (-60, +40, 96)</td>
-<td class="where">cable ties every 60 mm to the deck; heat-shrink every joint</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="CORD" data-owned="0" aria-label="I have all required quantities of Bicmice US IEC C7 mains cord 6 ft"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B08N42RQF6">Bicmice US IEC C7 mains cord 6 ft</a><div class="note">Omit if the charger ships with the right cord.</div></td>
-<td align="right">1</td>
-<td align="right">$6.99</td>
-<td align="right">$6.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="SW" data-owned="1" aria-label="I have all required quantities of Three-pin switch"></td><td>Three-pin switch<div class="note">Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch.</div></td>
 <td align="right">1</td>
@@ -213,21 +158,14 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">owned</td>
 <td align="right">owned</td>
 <td class="where">(-108, -88, 116)</td>
-<td class="where">4× M2.5×10 nylon standoff + M2.5 screw + nut, 58×49 hole pattern</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="SD" data-owned="0" aria-label="I have all required quantities of Kingston Canvas Select Plus 64 GB microSD, A1"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07YGZQ4H8">Kingston Canvas Select Plus 64 GB microSD, A1</a></td>
+<td class="where">printed 10 mm bosses on the deck tile (58×49 pattern) + 2× M2 + nut from the M2 kit (Pi holes are 2.7 mm)</td>
+</tr><tr class=owned>
+<td class="have-cell"><input type="checkbox" data-item="CAM" data-owned="1" aria-label="I have all required quantities of Your USB webcam (C920-class, ~162 g) on the Ceres tilt bracket"></td><td>Your USB webcam (C920-class, ~162 g) on the Ceres tilt bracket<div class="note">The turret was built for it. Person detection with MobileNet-SSD on the Pi at ~25 fps. If it turns out heavier than 170 g, the ELP board camera (B00KA80N9U, 50 g, $22.49) is the fallback.</div></td>
 <td align="right">1</td>
-<td align="right">$17.99</td>
-<td align="right">$17.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="CAM" data-owned="0" aria-label="I have all required quantities of ELP USBFHD01M-L28 USB camera, 2.8 mm lens"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B00KA80N9U">ELP USBFHD01M-L28 USB camera, 2.8 mm lens</a><div class="note">Rides on the Ceres tilt bracket. 38 × 38 board, ~50 g — lighter than the C920 the turret carried before.</div></td>
-<td align="right">1</td>
-<td align="right">$22.49</td>
-<td align="right">$22.49</td>
+<td align="right">owned</td>
+<td align="right">owned</td>
 <td class="where">on tilt bracket (+110, +0, 212)</td>
-<td class="where">4× M2×6 (or VHB if hole pattern differs)</td>
+<td class="where">Ceres camera clamp; 2 cable ties as backup</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="LD2410C" data-owned="1" aria-label="I have all required quantities of HLK-LD2410C 24 GHz radar"></td><td>HLK-LD2410C 24 GHz radar<div class="note">Primary presence sensor; sees a motionless person. One on the post, one spare.</div></td>
 <td align="right">2</td>
@@ -248,7 +186,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">owned</td>
 <td align="right">owned</td>
 <td class="where">#1 radar bridge (-100, -17, 112)</td>
-<td class="where">4× M2.5 nylon standoff + screw (holes ≈3 mm)</td>
+<td class="where">printed bosses + 2 cable ties through printed slots</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="CP2102" data-owned="1" aria-label="I have all required quantities of CP2102 USB-UART"></td><td>CP2102 USB-UART<div class="note">Bench setup only. Check it is 3.3 V logic before touching a radar.</div></td>
 <td align="right">1</td>
@@ -257,19 +195,19 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="TOF" data-owned="0" aria-label="I have all required quantities of DWEII 2× VL53L1X time-of-flight distance modules"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B09V4DS888">DWEII 2× VL53L1X time-of-flight distance modules</a><div class="note">Four total: front, rear, left, right, each in a printed clip on the rail&#x27;s outer slot.</div></td>
-<td align="right">2</td>
-<td align="right">$14.99</td>
-<td align="right">$29.98</td>
-<td class="where">front (+179, +0, 81); rear (-179, +0, 81); left (+0, +199, 81); right (+0, -199, 81)</td>
-<td class="where">1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="USBC" data-owned="0" aria-label="I have all required quantities of etguuds 2× USB-A to USB-C 6 ft cables"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07Z1TQYDN">etguuds 2× USB-A to USB-C 6 ft cables</a><div class="note">Pi to ESP32. Trim to length or coil and tie.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="THERM" data-owned="0" aria-label="I have all required quantities of MLX90640-D55 thermal camera, 32×24, 55° FoV"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0FQHVSX91">MLX90640-D55 thermal camera, 32×24, 55° FoV</a><div class="note">The biggest gap in the design. A body is ~10 °C above a room and unmistakable in 768 pixels, in darkness or smoke. Rides beside the camera on the tilt bracket so the turret sweeps thermal and visible together. Cannot see through walls — that stays the radar&#x27;s job.</div></td>
 <td align="right">1</td>
-<td align="right">$7.99</td>
-<td align="right">$7.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
+<td align="right">$66.30</td>
+<td align="right">$66.30</td>
+<td class="where">above the camera (+114, +0, 230)</td>
+<td class="where">2× M2 + nut through the saddle</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="TOF" data-owned="0" aria-label="I have all required quantities of DWEII 2× VL53L1X time-of-flight distance modules"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B09V4DS888">DWEII 2× VL53L1X time-of-flight distance modules</a><div class="note">Two sensors: front and rear, each in a printed clip on the rail&#x27;s outer slot. Side sensors were cut for cost — strafe only after the camera has seen that side clear.</div></td>
+<td align="right">1</td>
+<td align="right">$14.99</td>
+<td align="right">$14.99</td>
+<td class="where">front (+179, +0, 81); rear (-179, +0, 81)</td>
+<td class="where">1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td>
 </tr><tr class="group"><th colspan="7">Turret (Ceres)</th></tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="PT" data-owned="1" aria-label="I have all required quantities of Ceres pan/tilt turret: 2× MG996R-class servos + bracket + 100 × 60 base"></td><td>Ceres pan/tilt turret: 2× MG996R-class servos + bracket + 100 × 60 base<div class="note">From the farm rover. Bolts to the front deck tile at X +110. Camera on the tilt bracket.</div></td>
 <td align="right">1</td>
@@ -283,16 +221,9 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">owned</td>
 <td align="right">owned</td>
 <td class="where">(-29, -98, 112)</td>
-<td class="where">4× M2.5×10 nylon standoff + screw</td>
+<td class="where">printed bosses + 2× M2 + nut</td>
 </tr><tr class="group"><th colspan="7">Fasteners and assembly</th></tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="M3KIT" data-owned="0" aria-label="I have all required quantities of Fgruh 750-piece M3 screw, nut and washer assortment"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0FGV5FCBN">Fgruh 750-piece M3 screw, nut and washer assortment</a><div class="note">16× M3×6 motor screws, turret base bolts, buck and fan-bridge screws.</div></td>
-<td align="right">1</td>
-<td align="right">$9.99</td>
-<td align="right">$9.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="STANDOFF" data-owned="0" aria-label="I have all required quantities of COMRUN M2.5 nylon standoff kit"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0CKBWQSNY">COMRUN M2.5 nylon standoff kit</a><div class="note">Uno, Pi, PCA9685, ESP32 — 16 standoffs.</div></td>
 <td align="right">1</td>
 <td align="right">$9.99</td>
 <td align="right">$9.99</td>
@@ -306,33 +237,103 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="STRAP" data-owned="0" aria-label="I have all required quantities of MEIVIFPV 5× 20 × 250 mm battery straps"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0GH8CGW2T">MEIVIFPV 5× 20 × 250 mm battery straps</a><div class="note">One through the cradle; spares.</div></td>
-<td align="right">1</td>
-<td align="right">$9.99</td>
-<td align="right">$9.99</td>
-<td class="where">battery (+0, +0, 76)</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="SHRINK" data-owned="0" aria-label="I have all required quantities of Ginsco 580-piece heat-shrink assortment"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B01MFA3OFA">Ginsco 580-piece heat-shrink assortment</a><div class="note">Every power joint.</div></td>
-<td align="right">1</td>
-<td align="right">$7.99</td>
-<td align="right">$7.99</td>
-<td class="where">—</td>
-<td class="where">—</td>
-</tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="TIES" data-owned="0" aria-label="I have all required quantities of ALLWIN 100 cable mounts + 100 cable ties"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0F9T5G2J5">ALLWIN 100 cable mounts + 100 cable ties</a><div class="note">Motor leads under the deck; power branches on top.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="TIES" data-owned="0" aria-label="I have all required quantities of ALLWIN 100 cable mounts + 100 cable ties"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0F9T5G2J5">ALLWIN 100 cable mounts + 100 cable ties</a><div class="note">Board retention through printed slots (no standoffs), motor leads under the deck, power branches on top, and two ties hold the battery in its printed cradle bar.</div></td>
 <td align="right">1</td>
 <td align="right">$6.99</td>
 <td align="right">$6.99</td>
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr class=owned>
-<td class="have-cell"><input type="checkbox" data-item="WIRE22" data-owned="1" aria-label="I have all required quantities of Dupont leads, 22 AWG wire"></td><td>Dupont leads, 22 AWG wire<div class="note">I2C, UART, XSHUT lines, motor lead extensions if the 300 mm stock leads fall short.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="WIRE22" data-owned="1" aria-label="I have all required quantities of Dupont leads, 22 AWG wire"></td><td>Dupont leads, 22 AWG wire<div class="note">Everything, including the power branches: the wire calc puts 22 AWG at a 7 A limit against a 4 A burst — 18 AWG was comfort, not need. I2C, UART, XSHUT, motor lead extensions.</div></td>
 <td align="right">stock</td>
 <td align="right">owned</td>
 <td align="right">owned</td>
-<td class="where">signals (-80, +0, 96)</td>
-<td class="where">cable mounts on deck underside for motor leads</td>
+<td class="where">power (-60, +40, 96); signals (-80, +0, 96)</td>
+<td class="where">cable ties every 60 mm to the deck; tape or heat-shrink every joint; cable mounts on deck underside for motor leads</td>
+</tr><tr class="group"><th colspan="7">Only if the gel-blaster pack falls short</th></tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="LIPO" data-owned="0" aria-label="I have all required quantities of Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0972RKJDS">Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60</a> <span class="tag">optional</span><div class="note">343 g, 132 × 43 × 25 mm, 50 C. Your 11.1 V gel-blaster pack runs the first tests: at ~2 A motor draw a 1200 mAh pack gives about 30 minutes, which is enough to find out whether anything else is wrong. Buy this when runtime, not torque, is the limit. Check its connector — the pigtails here are XT60.</div></td>
+<td align="right">1</td>
+<td align="right">$34.99</td>
+<td align="right">$34.99</td>
+<td class="where">(+0, +0, 76)</td>
+<td class="where">printed retaining bar + 2 cable ties</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="CHG" data-owned="0" aria-label="I have all required quantities of SKYRC B6AC Neo balance charger, 60 W AC"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0CV64ZB2L">SKYRC B6AC Neo balance charger, 60 W AC</a> <span class="tag">optional</span><div class="note">Start at 2.6 A = 0.5 C. Follow the pack&#x27;s instructions.</div></td>
+<td align="right">1</td>
+<td align="right">$53.00</td>
+<td align="right">$53.00</td>
+<td class="where">—</td>
+<td class="where">—</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="XT60EXT" data-owned="0" aria-label="I have all required quantities of LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B09CT5VGPW">LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions</a> <span class="tag">optional</span><div class="note">Charger lead.</div></td>
+<td align="right">1</td>
+<td align="right">$7.99</td>
+<td align="right">$7.99</td>
+<td class="where">—</td>
+<td class="where">—</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="XT60PIG" data-owned="0" aria-label="I have all required quantities of Padarsey 2 pairs XT60 14 AWG pigtails"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07BF8154S">Padarsey 2 pairs XT60 14 AWG pigtails</a> <span class="tag">optional</span><div class="note">The rover-side pigtail splits into the three 18 AWG branches.</div></td>
+<td align="right">1</td>
+<td align="right">$6.99</td>
+<td align="right">$6.99</td>
+<td class="where">—</td>
+<td class="where">—</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="ALARM" data-owned="0" aria-label="I have all required quantities of AOICRIE 2× 1S–8S cell voltage alarms"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07VR4SV8C">AOICRIE 2× 1S–8S cell voltage alarms</a> <span class="tag">optional</span><div class="note">On the balance lead, velcroed to the cradle side.</div></td>
+<td align="right">1</td>
+<td align="right">$6.59</td>
+<td align="right">$6.59</td>
+<td class="where">—</td>
+<td class="where">—</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="BAG" data-owned="0" aria-label="I have all required quantities of Tenergy LiPo charging bag"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B08QCMMGJT">Tenergy LiPo charging bag</a> <span class="tag">optional</span></td>
+<td align="right">1</td>
+<td align="right">$8.99</td>
+<td align="right">$8.99</td>
+<td class="where">—</td>
+<td class="where">—</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="CORD" data-owned="0" aria-label="I have all required quantities of Bicmice US IEC C7 mains cord 6 ft"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B08N42RQF6">Bicmice US IEC C7 mains cord 6 ft</a> <span class="tag">optional</span><div class="note">Omit if the charger ships with the right cord.</div></td>
+<td align="right">1</td>
+<td align="right">$6.99</td>
+<td align="right">$6.99</td>
+<td class="where">—</td>
+<td class="where">—</td>
+</tr><tr class="group"><th colspan="7">Only if you lack it</th></tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="PETG" data-owned="0" aria-label="I have all required quantities of OVERTURE black PETG 1 kg 1.75 mm"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07PGYHYV8">OVERTURE black PETG 1 kg 1.75 mm</a> <span class="tag">optional</span><div class="note">PLA you already have is fine for the deck, cradle, post and clips; PETG only if you have nothing loaded.</div></td>
+<td align="right">1</td>
+<td align="right">$14.69</td>
+<td align="right">$14.69</td>
+<td class="where">front tile (+85, +0, 94); rear tile (-85, +0, 94); battery cradle (+0, +0, 76); cradle retaining bar (+0, +0, 63) +2 more</td>
+<td class="where">6× M5×10 hex + 6× M5 T-nut (top slots: 3 per side-rail edge); 4× M4×16 through deck + 4× M4 nyloc, at X ±60, Y ±18</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="SD" data-owned="0" aria-label="I have all required quantities of Kingston Canvas Select Plus 64 GB microSD, A1"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B07YGZQ4H8">Kingston Canvas Select Plus 64 GB microSD, A1</a> <span class="tag">optional</span><div class="note">Only if your Pi has no card.</div></td>
+<td align="right">1</td>
+<td align="right">$17.99</td>
+<td align="right">$17.99</td>
+<td class="where">—</td>
+<td class="where">—</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="SHRINK" data-owned="0" aria-label="I have all required quantities of Ginsco 580-piece heat-shrink assortment"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B01MFA3OFA">Ginsco 580-piece heat-shrink assortment</a> <span class="tag">optional</span><div class="note">Electrical tape works for a hackathon; this is nicer.</div></td>
+<td align="right">1</td>
+<td align="right">$7.99</td>
+<td align="right">$7.99</td>
+<td class="where">—</td>
+<td class="where">—</td>
+</tr><tr class="group"><th colspan="7">Extra senses, if budget allows</th></tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="CO2" data-owned="0" aria-label="I have all required quantities of SCD41 CO2 + temperature + humidity module, I2C"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0F6MRMNLH">SCD41 CO2 + temperature + humidity module, I2C</a> <span class="tag">optional</span><div class="note">The SAR literature&#x27;s area-narrowing sensor: a person in a closed room raises CO2 hundreds of ppm above 400 baseline. Slow (minutes) and only meaningful in enclosed spaces. On the rear of the radar post in free air.</div></td>
+<td align="right">1</td>
+<td align="right">$26.99</td>
+<td align="right">$26.99</td>
+<td class="where">(-189, +0, 246)</td>
+<td class="where">printed saddle + 2× M2 + nut</td>
+</tr><tr>
+<td class="have-cell"><input type="checkbox" data-item="MIC" data-owned="0" aria-label="I have all required quantities of 3× INMP441 I2S microphone modules with Dupont cables"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0GSZJFJVM">3× INMP441 I2S microphone modules with Dupont cables</a> <span class="tag">optional</span><div class="note">Voice and knocking, the way rescue listening devices work. One mic gives energy only, no bearing; the other two in the pack could later give a left/right bearing. Stop-and-listen protocol: motors off, three-second capture.</div></td>
+<td align="right">1</td>
+<td align="right">$8.49</td>
+<td align="right">$8.49</td>
+<td class="where">(-159, +0, 300)</td>
+<td class="where">1× M2 + nut (or VHB)</td>
 </tr><tr class="group"><th colspan="7">Tools</th></tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="SCALE" data-owned="0" aria-label="I have all required quantities of MEIYA hanging scale"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0GGHDNZWJ">MEIYA hanging scale</a> <span class="tag">optional</span><div class="note">The torque measurement: lever on the shaft, scale on the lever, T = F × arm.</div></td>
 <td align="right">1</td>
@@ -376,10 +377,10 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr>
-<tr><th colspan="4">Buy</th><th align="right">$430.02</th><th colspan="2">Optional tools $97.43 · 12 items already owned</th></tr>
+<tr><th colspan="4">Buy</th><th align="right">$229.78</th><th colspan="2">Optional $299.12 · 15 items already owned</th></tr>
 </tbody></table></div>
 <h2>Where every part goes</h2>
-<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 440 mm, wheelbase 250 mm. Centre of gravity at x -6.1, y +3.4, z 75.9 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 59° pitch, 71° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
+<p>Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. Envelope 350 × 390 × 304 mm, track 440 mm, wheelbase 250 mm. Centre of gravity at x -3.4, y +3.3, z 79.7 mm — the battery under the deck is what keeps it that low. Ground clearance 18.9 mm (motor bodies). Static tip angles 57° pitch, 70° roll. No bounding-box collisions between rigid parts. Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -469,22 +470,22 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>PETG</code></td><td>battery cradle</td><td>PETG cradle 140×49×31</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">75.5</td><td>hangs from deck underside, open at both ends for the strap</td><td>deck underside</td><td>4× M4×16 through deck + 4× M4 nyloc, at X ±60, Y ±18</td><td>2.0 N·m</td><td>—</td>
 </tr>
 <tr>
-<td><code>LIPO</code></td><td>—</td><td>Zeee 3S 5200 mAh 132×43×25</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">75.5</td><td>long axis X, XT60 lead exits −X (rear)</td><td>battery cradle</td><td>1× 20×250 mm strap through cradle slots</td><td>hand-tight</td><td>—</td>
+<td><code>LIPO</code></td><td>—</td><td>Zeee 3S 5200 mAh 132×43×25</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">75.5</td><td>long axis X, XT60 lead exits −X (rear)</td><td>battery cradle</td><td>printed retaining bar + 2 cable ties</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>STRAP</code></td><td>battery</td><td>20×250 mm hook-and-loop strap</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">75.5</td><td>wraps cradle + battery</td><td>—</td><td>—</td><td>—</td><td>—</td>
+<td><code>PETG</code></td><td>cradle retaining bar</td><td>printed bar 140×12×6 across the cradle mouth</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">63.0</td><td>spans the open bottom of the cradle</td><td>cradle side walls, two printed hooks</td><td>2× cable ties through printed slots</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>UNO</code></td><td>—</td><td>Uno R3 + DRV8825 CNC Shield stack</td><td align="right">-115.7</td><td align="right">+86.7</td><td align="right">128.5</td><td>flat on 10 mm standoffs</td><td>deck top, rear-left</td><td>4× M2.5×10 nylon standoff + M2.5 screw + M2.5 nut under deck (Uno holes 3.2 mm)</td><td>hand-tight</td><td>stack height with heatsinks</td>
+<td><code>UNO</code></td><td>—</td><td>UNO R4 WiFi + DRV8825 CNC Shield stack</td><td align="right">-115.7</td><td align="right">+86.7</td><td align="right">128.5</td><td>flat on 10 mm standoffs</td><td>deck top, rear-left</td><td>printed 10 mm bosses on the deck tile + 2 cable ties through printed slots</td><td>hand-tight</td><td>stack height with heatsinks</td>
 </tr>
 <tr>
 <td><code>FAN</code></td><td>—</td><td>40×40×10 5 V fan over the drivers</td><td align="right">-115.7</td><td align="right">+86.7</td><td align="right">111.0</td><td>flat on 10 mm standoffs</td><td>printed PETG bridge over the shield</td><td>2× M3×8 into deck + 4× M3×30 through fan into bridge</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>PI</code></td><td>—</td><td>Raspberry Pi</td><td align="right">-107.5</td><td align="right">-88.0</td><td align="right">116.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right</td><td>4× M2.5×10 nylon standoff + M2.5 screw + nut, 58×49 hole pattern</td><td>hand-tight</td><td>—</td>
+<td><code>PI</code></td><td>—</td><td>Raspberry Pi</td><td align="right">-107.5</td><td align="right">-88.0</td><td align="right">116.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right</td><td>printed 10 mm bosses on the deck tile (58×49 pattern) + 2× M2 + nut from the M2 kit (Pi holes are 2.7 mm)</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>PCA</code></td><td>—</td><td>PCA9685 servo driver (Ceres)</td><td align="right">-29.0</td><td align="right">-97.5</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, beside the Pi</td><td>4× M2.5×10 nylon standoff + screw</td><td>hand-tight</td><td>—</td>
+<td><code>PCA</code></td><td>—</td><td>PCA9685 servo driver (Ceres)</td><td align="right">-29.0</td><td align="right">-97.5</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, beside the Pi</td><td>printed bosses + 2× M2 + nut</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
 <td><code>BUCK5</code></td><td>—</td><td>5 V 3 A buck → Pi</td><td align="right">-44.5</td><td align="right">+80.5</td><td align="right">113.0</td><td>flat on 10 mm standoffs</td><td>deck top, front of the Uno</td><td>2× M3×8 into deck (or VHB + zip tie)</td><td>hand-tight</td><td>module footprint</td>
@@ -493,13 +494,16 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>BUCK6</code></td><td>—</td><td>6 V buck → servos (Ceres)</td><td align="right">-44.5</td><td align="right">+110.5</td><td align="right">113.0</td><td>flat on 10 mm standoffs</td><td>deck top, beside the 5 V buck</td><td>2× M3×8 into deck</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>ESP32</code></td><td>#1 radar bridge</td><td>ESP32-S3 DevKitC</td><td align="right">-100.0</td><td align="right">-17.3</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-centre, just ahead of the radar post</td><td>4× M2.5 nylon standoff + screw (holes ≈3 mm)</td><td>hand-tight</td><td>devkit hole positions</td>
+<td><code>ESP32</code></td><td>#1 radar bridge</td><td>ESP32-S3 DevKitC</td><td align="right">-100.0</td><td align="right">-17.3</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-centre, just ahead of the radar post</td><td>printed bosses + 2 cable ties through printed slots</td><td>hand-tight</td><td>devkit hole positions</td>
 </tr>
 <tr>
 <td><code>PT</code></td><td>base</td><td>Ceres pan/tilt turret base plate 100×60×6</td><td align="right">+110.0</td><td align="right">+0.0</td><td align="right">99.0</td><td>flat on deck, pan axis vertical, servo collar toward +X</td><td>front deck tile</td><td>4× M3×12 through base + deck + 4× M3 nyloc</td><td>1.0 N·m</td><td>hole positions on the actual Ceres base</td>
 </tr>
 <tr>
-<td><code>CAM</code></td><td>on tilt bracket</td><td>ELP USB camera 38×38</td><td align="right">+110.0</td><td align="right">+0.0</td><td align="right">212.0</td><td>lens forward (+X) at tilt = 0</td><td>turret tilt bracket</td><td>4× M2×6 (or VHB if hole pattern differs)</td><td>hand-tight</td><td>ELP hole pattern</td>
+<td><code>CAM</code></td><td>on tilt bracket</td><td>Owned USB webcam (C920-class)</td><td align="right">+110.0</td><td align="right">+0.0</td><td align="right">212.0</td><td>lens forward (+X) at tilt = 0</td><td>turret tilt bracket — the Ceres clamp it was built for</td><td>Ceres camera clamp; 2 cable ties as backup</td><td>hand-tight</td><td>camera mass ≤ 170 g and clamp fit</td>
+</tr>
+<tr>
+<td><code>THERM</code></td><td>above the camera</td><td>MLX90640-D55 thermal array, 55° FoV</td><td align="right">+114.0</td><td align="right">+0.0</td><td align="right">230.0</td><td>boresight parallel to the camera, +X at tilt = 0</td><td>printed PETG/PLA saddle on top of the camera clamp</td><td>2× M2 + nut through the saddle</td><td>hand-tight</td><td>breakout hole spacing</td>
 </tr>
 <tr>
 <td><code>PETG</code></td><td>radar post</td><td>PETG post 40×40×200 with 60×60×6 flange</td><td align="right">-165.0</td><td align="right">+0.0</td><td align="right">196.0</td><td>vertical, on the rear cross rail through the deck</td><td>rear tile → rear cross rail top slot</td><td>2× M5×20 hex through flange + deck + 2× M5 T-nut, at Y ±20</td><td>3.0 N·m</td><td>—</td>
@@ -517,19 +521,19 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>LD2410C</code></td><td>#2 (spare)</td><td>HLK-LD2410C radar — not mounted</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">0.0</td><td>—</td><td>in the parts box</td><td>—</td><td>—</td><td>—</td>
 </tr>
 <tr>
+<td><code>MIC</code></td><td>—</td><td>INMP441 I2S microphone</td><td align="right">-159.0</td><td align="right">+0.0</td><td align="right">300.0</td><td>port facing +X, centred between the radars</td><td>radar bar, Y 0</td><td>1× M2 + nut (or VHB)</td><td>hand-tight</td><td>board hole</td>
+</tr>
+<tr>
+<td><code>CO2</code></td><td>—</td><td>SCD41 CO2 sensor</td><td align="right">-189.0</td><td align="right">+0.0</td><td align="right">246.0</td><td>sensing face −X (rear), in free air</td><td>radar post, rear face, 150 mm up</td><td>printed saddle + 2× M2 + nut</td><td>hand-tight</td><td>breakout hole spacing</td>
+</tr>
+<tr>
 <td><code>TOF</code></td><td>front</td><td>VL53L1X ToF module</td><td align="right">+179.0</td><td align="right">+0.0</td><td align="right">81.0</td><td>on edge, emitter facing +X</td><td>printed clip in the front rail outer slot</td><td>1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td><td>hand-tight</td><td>module hole spacing</td>
 </tr>
 <tr>
 <td><code>TOF</code></td><td>rear</td><td>VL53L1X ToF module</td><td align="right">-179.0</td><td align="right">+0.0</td><td align="right">81.0</td><td>on edge, emitter facing −X</td><td>printed clip in the rear rail outer slot</td><td>1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td><td>hand-tight</td><td>module hole spacing</td>
 </tr>
 <tr>
-<td><code>TOF</code></td><td>left</td><td>VL53L1X ToF module</td><td align="right">+0.0</td><td align="right">+199.0</td><td align="right">81.0</td><td>on edge, emitter facing +Y</td><td>printed clip in the left rail outer slot</td><td>1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td><td>hand-tight</td><td>module hole spacing</td>
-</tr>
-<tr>
-<td><code>TOF</code></td><td>right</td><td>VL53L1X ToF module</td><td align="right">+0.0</td><td align="right">-199.0</td><td align="right">81.0</td><td>on edge, emitter facing −Y</td><td>printed clip in the right rail outer slot</td><td>1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td><td>hand-tight</td><td>module hole spacing</td>
-</tr>
-<tr>
-<td><code>WIRE18</code></td><td>power</td><td>18 AWG silicone: LiPo → shield VMOT, → 5 V buck IN, → 6 V buck IN</td><td align="right">-60.0</td><td align="right">+40.0</td><td align="right">96.0</td><td>—</td><td>XT60 pigtail at the battery (rear)</td><td>cable ties every 60 mm to the deck; heat-shrink every joint</td><td>—</td><td>—</td>
+<td><code>WIRE22</code></td><td>power</td><td>22 AWG (owned): pack → shield VMOT, → 5 V buck IN, → 6 V buck IN</td><td align="right">-60.0</td><td align="right">+40.0</td><td align="right">96.0</td><td>—</td><td>pack connector at the battery (rear)</td><td>cable ties every 60 mm to the deck; tape or heat-shrink every joint</td><td>—</td><td>—</td>
 </tr>
 <tr>
 <td><code>WIRE22</code></td><td>signals</td><td>22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 4× ToF + PCA9685; UART radar → ESP32</td><td align="right">-80.0</td><td align="right">+0.0</td><td align="right">96.0</td><td>—</td><td>—</td><td>cable mounts on deck underside for motor leads</td><td>—</td><td>motor lead length reaches the shield (~300 mm stock)</td>
@@ -537,23 +541,23 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 </tbody></table></div>
 <h2>Power and connections</h2>
 <ul>
-<li>LiPo XT60 -&gt; XT60 pigtail -&gt; three 18 AWG branches: shield VMOT (four DRV8825 -&gt; four motors), 5 V buck IN, 6 V buck IN. No fuse, by your call — the XT60 is the disconnect, so keep the pack leads short and sleeved.</li>
-<li>5 V buck OUT -&gt; Pi GPIO pins 2/4 (5 V) and 6 (GND). Set it to 5.10 V unloaded with the multimeter before the Pi is connected. Pi USB-A -&gt; Uno USB-B for logic power and serial.</li>
+<li>Pack -&gt; XT60 (or the pack&#x27;s own connector) -&gt; three 22 AWG branches: shield VMOT (four DRV8825 -&gt; four motors), 5 V buck IN, 6 V buck IN. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the connector is the disconnect, so keep the pack leads short and sleeved.</li>
+<li>5 V buck OUT -&gt; Pi GPIO pins 2/4 (5 V) and 6 (GND). Set it to 5.10 V unloaded with a multimeter before the Pi is connected. Pi USB-A -&gt; UNO R4 USB-C for logic power and serial.</li>
 <li>6 V buck OUT -&gt; PCA9685 V+ terminal (Ceres). Set to 6.0 V before connecting. Servo current returns through the PCA9685 terminal, never through a USB ground.</li>
 <li>Pi -&gt; camera by USB. Pi -&gt; ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.</li>
 <li>Four VL53L1X share I2C only after XSHUT (GPIO 5, 6, 13, 19) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.</li>
 <li>Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail.</li>
 </ul>
-<p>Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion. The 5200 mAh pack runs motors for roughly two hours. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.</p>
+<p>Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion. A 1200 mAh gel-blaster pack gives about 30 minutes of driving; the optional 5200 mAh pack about two hours. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.</p>
 <p>The owned three-pin switch is not in the load path until its DC rating is read off the body and is at least 10 A.</p>
 <h2>Motor and frame fit</h2>
 <p>Frame: two side rails along X with outer faces at Y = ±195; two cross rails along Y butted between them with outer faces at X = ±175. Rails sit at Z 71–91. Eight corner brackets, one top and one bottom at each joint, M5 T-nuts, 3.0 N·m maximum or the slot deforms.</p>
 <p>Drive: each steel L-bracket goes inverted under a side rail near its end, foot against the rail underside on two M4 T-nuts, leg hanging down flush with the rail&#x27;s outer face. The motor bolts to the inboard side of the leg with four M3×6 at 0.8 N·m (aluminium threads — the full 1.1 N·m an M3 can take will strip the flange). Shaft through the leg, coupler on the flat with blue threadlocker, wheel on the coupler. Axle at X = ±125, Z = 40. Motor body bottom at Z = 18.9 mm: that is your ground clearance.</p>
 <p>Mecanum handedness: front-left and rear-right take the left-hand wheels, front-right and rear-left the right-hand. Check from above — the rollers on top of each wheel should point toward the chassis centre, forming an X.</p>
-<p>Deck: two PETG tiles 170 × 350 × 5 on the rail tops, six M5 T-nuts each. Battery cradle hangs under the deck centre on four M4×16 bolts — battery bottom at Z 64, well above the motors. Uno/shield stack rear-left, Pi rear-right, both bucks ahead of the Uno, PCA9685 beside the Pi, ESP32 rear-centre under the post. Turret base at X = +110 on the front tile. Radar post on the rear cross rail through the deck, radars at Z = 300 facing forward, 100 mm apart.</p>
+<p>Deck: two printed tiles 170 × 350 × 5 on the rail tops, six M5 T-nuts each, with 10 mm bosses printed in for every board — no bought standoffs. Boards sit on the bosses and are held by cable ties through printed slots (the Pi and PCA9685 take M2 screws from the M2 kit, since their holes are 2.7 mm). Battery cradle hangs under the deck centre on four M4×16 bolts with a printed retaining bar and two cable ties instead of a strap — battery bottom at Z 64, well above the motors. R4/shield stack rear-left, Pi rear-right, both bucks ahead of the R4, PCA9685 beside the Pi, ESP32 rear-centre ahead of the post. Turret base at X = +110 on the front tile with the thermal array in a printed saddle on top of the camera. Radar post on the rear cross rail through the deck, radars at Z = 300 facing forward, 100 mm apart, microphone between them, CO2 sensor on the post&#x27;s rear face.</p>
 <h2>Compute before claiming it works</h2>
 <p>Load cases at the design mass, 80 mm wheels, mecanum roller factor √2, mechanical efficiency 0.85, carpet rolling coefficient 0.12: level cruise, level at 0.3 m/s², strafing, and a 5° carpet ramp at 0.3 m/s². The ramp governs. Available torque is holding torque × (I / 1.7 A) × 0.70, where 0.70 is a conservative low-speed pull-out factor that has not been measured. Full arithmetic, every input tagged measured / allocated / assumed, is in drivetrain.txt; every placement is in assembly.csv.</p>
-<p>At 1/8 microstepping, 0.1 m/s is about 637 pulses/s per wheel and 0.3 m/s about 1,910 — inside a 5,000/axis timer-interrupt budget on the Uno. Custom four-axis firmware with acceleration limits, shared enable and a communication timeout; GRBL is unsuitable. Motor order at the shield: X = FL, Y = FR, Z = RL, A = RR with the D12/D13 jumpers fitted.</p>
+<p>At 1/8 microstepping, 0.1 m/s is about 637 pulses/s per wheel and 0.3 m/s about 1,910. Custom four-axis firmware on the UNO R4 with a timer interrupt, acceleration limits, shared enable and a communication timeout; GRBL is unsuitable and would not run on the R4 anyway. Motor order at the shield: X = FL, Y = FR, Z = RL, A = RR with the D12/D13 jumpers fitted.</p>
 <p>Set DRV8825 current with Vref = 5 × Rsense × I. With 0.100 Ω sense resistors, 1.5 A is 0.75 V; read the actual resistor first. Start at 1.5 A with heatsinks and the fan; 1.7 A is the reserve, not the default.</p>
 <p>Before calling it working: caliper every part marked VERIFY before drilling the deck; measure pull-out torque at 24 rpm and 1.5 A on the real battery with a lever arm and the hanging scale; then all four wheel directions raised; loaded forward, reverse, strafe, turn; watchdog stop; temperature after 10 minutes; radar trials one at a time then together; turret tracking with the camera fitted; marked-route obstacle stops. None of these tests has been performed.</p>
 <h2>What I did NOT analyze</h2>

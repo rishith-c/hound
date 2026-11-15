@@ -44,7 +44,7 @@ BUCK = (61.0, 21.0, 14.0)   # DROK-style                                     VER
 ESP32 = (63.0, 25.4, 12.0)
 LIPO = (132.0, 43.0, 25.0)  # MEASURED (listing)
 CRADLE_T = 3.0
-CAM = (38.0, 38.0, 20.0)    # ELP board camera                               VERIFY
+CAM = (29.0, 94.0, 24.0)    # owned C920-class webcam: depth, width, height  VERIFY
 TURRET_BASE = (100.0, 60.0, 6.0)      # Ceres pan base plate (rover_parts.py make_turret_pan_base)
 TURRET_H = 110.0            # base top to camera centre                       VERIFY on the actual Ceres turret
 LD2410C = (35.0, 7.0, 3.0)  # VERIFY
@@ -57,7 +57,7 @@ RADAR_Z = DECK_TOP + POST[2] + 4.0    # 300: antenna faces horizontal, forward
 # ── Masses, kg, for CG (same figures as drivetrain.py) ─────────────────────
 M = dict(motor=0.240, rail=0.350 * 0.50, wheel=0.150, bracket=0.113, corner=0.012,
          uno_stack=0.117, pi=0.070, lipo=0.343, buck=0.040, radar=0.010, esp32=0.015,
-         cam=0.050, tof=0.005, deck=0.300, cradle=0.060, post=0.100, turret=0.250,
+         cam=0.162, tof=0.005, deck=0.300, cradle=0.060, post=0.100, turret=0.250,
          pca=0.010, fan=0.030, strapwire=0.150)
 
 parts = []
@@ -127,33 +127,35 @@ add("PETG", "battery cradle", f"PETG cradle {LIPO[0]+8:.0f}×{LIPO[1]+6:.0f}×{L
     "deck underside", "4× M4×16 through deck + 4× M4 nyloc, at X ±60, Y ±18", "2.0 N·m", M["cradle"],
     note=f"Cradle bottom at Z = {cradle_z - (LIPO[2]+2*CRADLE_T)/2:.0f}: 61 mm ground clearance, above the 18.9 mm motor bottoms.")
 add("LIPO", "—", "Zeee 3S 5200 mAh 132×43×25", 0, 0, cradle_z, *LIPO, "long axis X, XT60 lead exits −X (rear)",
-    "battery cradle", "1× 20×250 mm strap through cradle slots", "hand-tight", M["lipo"],
+    "battery cradle", "printed retaining bar + 2 cable ties", "hand-tight", M["lipo"],
     note="Lowest heavy part → h_CG. Balance lead to the cell alarm, velcro alarm to cradle side.")
-add("STRAP", "battery", "20×250 mm hook-and-loop strap", 0, 0, cradle_z, 250, 20, 2, "wraps cradle + battery", "—", "—", "—", 0.01)
+add("PETG", "cradle retaining bar", "printed bar 140×12×6 across the cradle mouth", 0, 0, cradle_z - (LIPO[2] + 2 * CRADLE_T) / 2 + 3, 140, 12, 6,
+    "spans the open bottom of the cradle", "cradle side walls, two printed hooks", "2× cable ties through printed slots", "hand-tight", 0.01,
+    note="Replaces a bought strap. Print two.")
 
 # ── Electronics on deck top (Z = 96) ────────────────────────────────────────
 def on_deck(pid, inst, name, dims, x, y, mounts, fast, torque, mass, verify="", note=""):
     add(pid, inst, name, x, y, DECK_TOP + dims[2] / 2 + 10.0, *dims, "flat on 10 mm standoffs", mounts, fast, torque, mass, verify, note)
 
-on_deck("UNO", "—", "Uno R3 + DRV8825 CNC Shield stack", (UNO[0], UNO[1], SHIELD_STACK_H), -115.7, 86.7,
-        "deck top, rear-left", "4× M2.5×10 nylon standoff + M2.5 screw + M2.5 nut under deck (Uno holes 3.2 mm)", "hand-tight",
+on_deck("UNO", "—", "UNO R4 WiFi + DRV8825 CNC Shield stack", (UNO[0], UNO[1], SHIELD_STACK_H), -115.7, 86.7,
+        "deck top, rear-left", "printed 10 mm bosses on the deck tile + 2 cable ties through printed slots", "hand-tight",
         M["uno_stack"], verify="stack height with heatsinks",
         note="Board spans X −150..−81.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-B faces −X.")
 on_deck("FAN", "—", "40×40×10 5 V fan over the drivers", FAN, -115.7, 86.7, "printed PETG bridge over the shield",
         "2× M3×8 into deck + 4× M3×30 through fan into bridge", "hand-tight", M["fan"],
         note=f"Blows down onto the four DRV8825 heatsinks. Fan face at Z ≈ {DECK_TOP + 10 + SHIELD_STACK_H + 8:.0f}.")
 on_deck("PI", "—", "Raspberry Pi", PI, -107.5, -88.0, "deck top, rear-right",
-        "4× M2.5×10 nylon standoff + M2.5 screw + nut, 58×49 hole pattern", "hand-tight", M["pi"],
+        "printed 10 mm bosses on the deck tile (58×49 pattern) + 2× M2 + nut from the M2 kit (Pi holes are 2.7 mm)", "hand-tight", M["pi"],
         note="Spans X −150..−65, Y −116..−60. USB ports face −X (rear). Powered from the 5 V buck on GPIO 2/4 (+) and 6 (−).")
 on_deck("PCA", "—", "PCA9685 servo driver (Ceres)", PCA9685, -29.0, -97.5, "deck top, beside the Pi",
-        "4× M2.5×10 nylon standoff + screw", "hand-tight", M["pca"], note="V+ terminal from the 6 V buck. I2C from Pi. Servo cables run forward to the turret.")
+        "printed bosses + 2× M2 + nut", "hand-tight", M["pca"], note="V+ terminal from the 6 V buck. I2C from Pi. Servo cables run forward to the turret.")
 on_deck("BUCK5", "—", "5 V 3 A buck → Pi", BUCK, -44.5, 80.5, "deck top, front of the Uno",
         "2× M3×8 into deck (or VHB + zip tie)", "hand-tight", M["buck"], verify="module footprint",
         note="IN from the XT60 pigtail. Set to 5.10 V unloaded with the multimeter BEFORE connecting the Pi.")
 on_deck("BUCK6", "—", "6 V buck → servos (Ceres)", BUCK, -44.5, 110.5, "deck top, beside the 5 V buck",
         "2× M3×8 into deck", "hand-tight", M["buck"], note="Set to 6.0 V before connecting the PCA9685. Own return to the shield GND.")
 on_deck("ESP32", "#1 radar bridge", "ESP32-S3 DevKitC", ESP32, -100.0, -17.3, "deck top, rear-centre, just ahead of the radar post",
-        "4× M2.5 nylon standoff + screw (holes ≈3 mm)", "hand-tight", M["esp32"], verify="devkit hole positions",
+        "printed bosses + 2 cable ties through printed slots", "hand-tight", M["esp32"], verify="devkit hole positions",
         note="UART1 → LD2410C, UART2 → LD2450. USB-C to the Pi.")
 
 # ── Turret (Ceres pan/tilt) at the front centre ─────────────────────────────
@@ -162,9 +164,13 @@ add("PT", "base", "Ceres pan/tilt turret base plate 100×60×6", TX, 0, DECK_TOP
     "flat on deck, pan axis vertical, servo collar toward +X", "front deck tile",
     "4× M3×12 through base + deck + 4× M3 nyloc", "1.0 N·m", M["turret"],
     verify="hole positions on the actual Ceres base", note="Spans X +60..+160, Y −30..+30. Pan servo cable and tilt servo cable to PCA9685 ch 2 / ch 0.")
-add("CAM", "on tilt bracket", "ELP USB camera 38×38", TX, 0, DECK_TOP + TURRET_BASE[2] + TURRET_H, *CAM,
-    "lens forward (+X) at tilt = 0", "turret tilt bracket", "4× M2×6 (or VHB if hole pattern differs)", "hand-tight",
-    M["cam"], verify="ELP hole pattern", note=f"Lens centre Z ≈ {DECK_TOP + TURRET_BASE[2] + TURRET_H:.0f}. USB to Pi. Clear of the radar line of sight at Z 300.")
+CAM_Z = DECK_TOP + TURRET_BASE[2] + TURRET_H
+add("CAM", "on tilt bracket", "Owned USB webcam (C920-class)", TX, 0, CAM_Z, *CAM,
+    "lens forward (+X) at tilt = 0", "turret tilt bracket — the Ceres clamp it was built for", "Ceres camera clamp; 2 cable ties as backup", "hand-tight",
+    M["cam"], verify="camera mass ≤ 170 g and clamp fit", note=f"Lens centre Z ≈ {CAM_Z:.0f}. USB to Pi. Clear of the radar line of sight at Z 300.")
+add("THERM", "above the camera", "MLX90640-D55 thermal array, 55° FoV", TX + 4, 0, CAM_Z + CAM[2] / 2 + 4 + 2, 26, 18, 8,
+    "boresight parallel to the camera, +X at tilt = 0", "printed PETG/PLA saddle on top of the camera clamp", "2× M2 + nut through the saddle", "hand-tight",
+    0.005, verify="breakout hole spacing", note="I2C 0x33 on the Pi's SECOND I2C bus (dtoverlay i2c-gpio) so the 1 MHz thermal reads never stall the ToF/servo bus. 55° FoV: a person at 4 m fills ~6 pixels tall, a warm blob ~10 °C above the room. Ribbon runs with the camera USB through the tilt axis.")
 
 # ── Radar post, rear centre, looking forward over the turret ────────────────
 PX = -CROSS_X
@@ -182,22 +188,28 @@ add("LD2450", "—", "HLK-LD2450 radar", PX + 6, -50, RADAR_Z, *LD2450, "antenna
     note="100 mm from the LD2410C. Power one at a time first; then test both for mutual interference.")
 add("LD2410C", "#2 (spare)", "HLK-LD2410C radar — not mounted", 0, 0, 0, *LD2410C, "—", "in the parts box", "—", "—", 0,
     note="Spare. Swap in if #1 fails.")
+add("MIC", "—", "INMP441 I2S microphone", PX + 6, 0, RADAR_Z, 14, 12, 3, "port facing +X, centred between the radars",
+    "radar bar, Y 0", "1× M2 + nut (or VHB)", "hand-tight", 0.002, verify="board hole",
+    note="I2S to Pi GPIO 18/19/20. Stop-and-listen: motors and fan off, ENABLE low, then 3 s capture. Voice/knock energy only — one mic gives no bearing.")
+add("CO2", "—", "SCD41 CO2 sensor", PX - POST[0] / 2 - 4, 0, DECK_TOP + 150, 8, 24, 20, "sensing face −X (rear), in free air",
+    "radar post, rear face, 150 mm up", "printed saddle + 2× M2 + nut", "hand-tight", 0.005, verify="breakout hole spacing",
+    note="I2C 0x62 on the main bus. Rear face keeps it out of the driver-fan exhaust. Reads a room in minutes, not seconds: park at a closed door and wait.")
 
 # ── VL53L1X obstacle sensors on the four rail outer faces ───────────────────
 # Module stands on edge: its 4 mm thickness lies along the facing axis, the 25 mm
 # length runs along the rail. Sits 2 mm proud of the rail face inside a printed clip.
+# Front and rear only: one 2-pack. Sideways moves are made only after the camera has
+# seen that side clear — the two side sensors were the first thing cut for cost.
 for inst, x, y, face, dims in (("front", 175 + 2 + TOF[2] / 2, 0, "+X", (TOF[2], TOF[0], TOF[1])),
-                               ("rear", -(175 + 2 + TOF[2] / 2), 0, "−X", (TOF[2], TOF[0], TOF[1])),
-                               ("left", 0, 195 + 2 + TOF[2] / 2, "+Y", (TOF[0], TOF[2], TOF[1])),
-                               ("right", 0, -(195 + 2 + TOF[2] / 2), "−Y", (TOF[0], TOF[2], TOF[1]))):
+                               ("rear", -(175 + 2 + TOF[2] / 2), 0, "−X", (TOF[2], TOF[0], TOF[1]))):
     add("TOF", inst, "VL53L1X ToF module", x, y, RAIL_ZC, *dims, f"on edge, emitter facing {face}",
         f"printed clip in the {inst} rail outer slot", "1× M5×8 + M5 T-nut (clip) + 2× M2 (module)", "hand-tight", M["tof"],
-        verify="module hole spacing", note=f"XSHUT → Pi GPIO {dict(front=5, rear=6, left=13, right=19)[inst]}. All four share I2C 0x29 until re-addressed at boot.")
+        verify="module hole spacing", note=f"XSHUT → Pi GPIO {dict(front=5, rear=6)[inst]}. Both share I2C 0x29 until re-addressed at boot.")
 
 # ── Wiring ──────────────────────────────────────────────────────────────────
-add("WIRE18", "power", "18 AWG silicone: LiPo → shield VMOT, → 5 V buck IN, → 6 V buck IN", -60, 40, DECK_TOP, 0, 0, 0,
-    "—", "XT60 pigtail at the battery (rear)", "cable ties every 60 mm to the deck; heat-shrink every joint", "—", M["strapwire"] / 3,
-    note="~250 mm each run. Single common ground at the shield GND terminal. No fuse — by your call; the XT60 is the disconnect, so keep the pack leads short, sleeved and never resting on a rail edge.")
+add("WIRE22", "power", "22 AWG (owned): pack → shield VMOT, → 5 V buck IN, → 6 V buck IN", -60, 40, DECK_TOP, 0, 0, 0,
+    "—", "pack connector at the battery (rear)", "cable ties every 60 mm to the deck; tape or heat-shrink every joint", "—", M["strapwire"] / 3,
+    note="~250 mm each run; 22 AWG is rated 7 A against a 4 A burst. Single common ground at the shield GND terminal. No fuse — by your call; the connector is the disconnect, so keep the pack leads short, sleeved and never resting on a rail edge.")
 add("WIRE22", "signals", "22 AWG / Dupont: 4× motor 4-wire → shield sockets; I2C to 4× ToF + PCA9685; UART radar → ESP32", -80, 0, DECK_TOP, 0, 0, 0,
     "—", "—", "cable mounts on deck underside for motor leads", "—", M["strapwire"] / 3,
     verify="motor lead length reaches the shield (~300 mm stock)", note="Motor order at the shield: X=FL, Y=FR, Z=RL, A=RR (D12/D13 jumpers fitted). Shared ENABLE on D8.")
@@ -212,7 +224,8 @@ def overlap(a, b):
 
 rigid = [p for p in parts if p["l"] > 0 and p["id"] not in ("STRAP", "CNR") and "spare" not in p["instance"]]
 skip_pairs = {("LIPO", "PETG"), ("PETG", "LIPO"), ("FAN", "UNO"), ("UNO", "FAN"), ("CAM", "PT"), ("PT", "CAM"),
-              ("LD2410C", "PETG"), ("LD2450", "PETG"), ("PETG", "LD2410C"), ("PETG", "LD2450")}  # by design nested
+              ("LD2410C", "PETG"), ("LD2450", "PETG"), ("PETG", "LD2410C"), ("PETG", "LD2450"),
+              ("MIC", "PETG"), ("PETG", "MIC"), ("THERM", "CAM"), ("CAM", "THERM")}  # by design mounted on / nested in
 collisions = []
 for i, a in enumerate(rigid):
     for b in rigid[i + 1:]:
@@ -228,8 +241,8 @@ L, B = 2 * AXLE_X, 2 * abs(next(p["y"] for p in parts if p["id"] == "WHL"))
 tip_pitch = math.degrees(math.atan((L / 2) / cg[2]))
 tip_roll = math.degrees(math.atan((B / 2) / cg[2]))
 
-fast = {"M5 T-nut": 16 + 12 + 2 + 4, "M5 screw": 16 + 12 + 2 + 4, "M4 T-nut": 8, "M4×10": 8, "M4×16 + nyloc": 4,
-        "M3×6 (motor)": 16, "M3 misc": 4 + 2 + 4 + 2 + 2 + 4 + 2, "M2.5 standoff sets": 4 + 4 + 4 + 4, "M2 small": 8 + 4 + 4}
+fast = {"M5 T-nut": 16 + 12 + 2 + 2, "M5 screw": 16 + 12 + 2 + 2, "M4 T-nut": 8, "M4×10": 8, "M4×16 + nyloc": 4,
+        "M3×6 (motor, supplied with brackets)": 16, "M3 misc": 4 + 2 + 4 + 2 + 2, "M2 + nut": 4 + 4 + 2 + 2 + 4 + 1 + 2, "cable ties": 2 + 2 + 2 + 2 + 2 + 20}
 kits = {"M5 T-nut": "corner kit 40 + T-nut kit", "M4 T-nut": "T-nut kit 40", "M4×10": "T-nut kit 20", "M3": "750-pc M3 kit", "M2.5": "COMRUN standoff kit"}
 
 # ── Output ──────────────────────────────────────────────────────────────────
@@ -246,7 +259,7 @@ print(f"  track / wheelbase            {B:.0f} / {L:.0f} mm")
 print(f"  CG                           x {cg[0]:+.1f}  y {cg[1]:+.1f}  z {cg[2]:.1f} mm   (placed mass {mass:.2f} kg)")
 print(f"  static tip angles            pitch {tip_pitch:.0f}°   roll {tip_roll:.0f}°   PASS")
 print(f"  fasteners                    " + ", ".join(f"{k} {v}" for k, v in fast.items()))
-print(f"  kit coverage                 M5 {fast['M5 T-nut']} of 40+; M4 {fast['M4 T-nut']} of 40; M3 {fast['M3×6 (motor)']+fast['M3 misc']} of 750; M2.5 sets {fast['M2.5 standoff sets']}  PASS")
+print(f"  kit coverage                 M5 {fast['M5 T-nut']} of 40+; M4 {fast['M4 T-nut']} of 40; M3 misc {fast['M3 misc']} of 750; M2 {fast['M2 + nut']} of 645; ties {fast['cable ties']} of 100  PASS")
 print(f"\nVERIFY ON RECEIPT (caliper, before drilling): " + "; ".join(sorted({p['verify'] for p in parts if p['verify']})))
 print(f"\nNOT CHECKED: fastener pull-out in PETG, deck deflection under the turret, cable strain relief, servo torque with the ELP camera,")
 print(f"  radar detection at Z = {RADAR_Z:.0f} mm (Walleye measured floor-level radar as blind — test before trusting), wheel roller clearance to the bracket foot.\n")
