@@ -15,7 +15,7 @@
    "LD2410C is the primary presence sensor for anyone the camera cannot see: stationary or micro-moving people behind a door or a stud wall, plus breathing. LD2450 adds positions and speeds of moving targets and loses motionless bodies beyond about 2 m; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements — and the 60 GHz breathing/heartbeat modules on the market were skipped: their heart-rate figure benchmarks at a 0.33 correlation against a chest strap, and the owned LD2410C already covers breathing. Start with one radar powered; test the two radar types separately, then together for interference. These sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present."
   ],
   "power": [
-   "Pack -> XT60 (or the pack's own connector) -> two 22 AWG branches: shield VMOT (four DRV8825 -> four motors) and LM2596 IN for the servo rail. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the connector is the disconnect, so keep the pack leads short and sleeved.",
+   "Pack -> Deans T-plug pigtail -> two 22 AWG branches: shield VMOT (four DRV8825 -> four motors) and LM2596 IN for the servo rail. 22 AWG is rated 7 A against a 4 A burst here. No fuse, by your call — the T-plug is the disconnect, so keep the pack leads short and sleeved.",
    "Power bank -> Pi USB-C. The bank must hold 5 V at 3 A: a 2.4 A bank browns out the moment the camera, thermal array and ESP32 are all drawing. Pi USB-A -> UNO R4 USB-C for logic power and serial. Fallback if the bank misbehaves: an LM2596 trimmed to 5.10 V on GPIO 2/4 and 6.",
    "LM2596 OUT -> PCA9685 V+ terminal. Set to 6.0 V with a multimeter before connecting. Servo current returns through the PCA9685 terminal, never through a USB ground.",
    "Pi -> camera by USB. Pi -> ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.",
@@ -140,7 +140,7 @@
    "group": "Power",
    "item": "11.1 V gel-blaster LiPo + its charger",
    "qty": 1,
-   "note": "Read the label: mAh, C rating, connector. Needs ≥ 4 A continuous (any C ≥ 4 on 1000 mAh does it). Charge only with a balance charger; if yours is a two-wire wall brick, that is the first thing to replace, not the pack."
+   "note": "Read the label: mAh, C rating, connector (the pigtails here are Deans T-plug). Needs ≥ 4 A continuous — any C ≥ 4 on 1000 mAh does it. Charge only with a balance charger; if yours is a two-wire wall brick, that is the first thing to replace, not the pack."
   },
   {
    "id": "BANK",
@@ -164,7 +164,7 @@
    "group": "Power",
    "item": "Three-pin switch",
    "qty": 1,
-   "note": "Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch."
+   "note": "Not wired in until its DC rating is read and is ≥ 10 A. Until then the T-plug is the switch."
   },
   {
    "id": "PI",
@@ -292,11 +292,11 @@
    "id": "LIPO",
    "status": "optional",
    "group": "Only if the gel-blaster pack falls short",
-   "asin": "B0972RKJDS",
-   "item": "Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60",
+   "asin": "B08CZF373Y",
+   "item": "OVONIC 3S 11.1 V 2200 mAh 50 C LiPo, Deans T-plug",
    "qty": 1,
-   "price": 34.99,
-   "note": "343 g, 132 × 43 × 25 mm, 50 C. Your 11.1 V gel-blaster pack runs the first tests: at ~2 A motor draw a 1200 mAh pack gives about 30 minutes, which is enough to find out whether anything else is wrong. Buy this when runtime, not torque, is the limit. Check its connector — the pigtails here are XT60."
+   "price": 16.99,
+   "note": "179 g, 105 × 33 × 20 mm, 50 C (110 A — far beyond the ~2.5 A this rover draws). About 40–55 minutes of driving per charge at 1.5–1.7 A per phase. Half the mass of the 5200 mAh pack: the 164 g saved is what puts the ramp margin back above 1.25 with the power bank aboard. DEANS T-PLUG, not XT60 — the leads in this group are T-plug to match. Balance lead JST-XH 3S. Your gel-blaster pack still runs the first tests."
   },
   {
    "id": "CHG",
@@ -309,24 +309,24 @@
    "note": "Start at 2.6 A = 0.5 C. Follow the pack's instructions."
   },
   {
-   "id": "XT60EXT",
+   "id": "TCHG",
    "status": "optional",
    "group": "Only if the gel-blaster pack falls short",
-   "asin": "B09CT5VGPW",
-   "item": "LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions",
+   "asin": "B072KKHR73",
+   "item": "2× T-plug to 4 mm banana charge leads, 14 AWG, 30 cm",
    "qty": 1,
-   "price": 7.99,
-   "note": "Charger lead."
+   "price": 8.98,
+   "note": "Plugs the OVONIC pack into the SKYRC B6AC Neo's banana outputs. The pack's JST-XH balance lead goes straight into the charger's 3S balance port."
   },
   {
-   "id": "XT60PIG",
+   "id": "TPIG",
    "status": "optional",
    "group": "Only if the gel-blaster pack falls short",
-   "asin": "B07BF8154S",
-   "item": "Padarsey 2 pairs XT60 14 AWG pigtails",
+   "asin": "B0D9NSWLJS",
+   "item": "Deans T-plug connectors, 5 pairs with 14 AWG silicone pigtails",
    "qty": 1,
-   "price": 6.99,
-   "note": "The rover-side pigtail splits into the three 18 AWG branches."
+   "price": 7.99,
+   "note": "Mates the OVONIC pack. One pigtail on the rover splits into the shield VMOT branch and the LM2596 branch; spares for the gel-blaster pack if it also turns out to be T-plug."
   },
   {
    "id": "ALARM",
