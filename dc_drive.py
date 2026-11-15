@@ -88,6 +88,12 @@ DC_PRIME = [("4× JGA25-371 12 V 200 rpm encoder gearmotor + bracket (Emoshayoga
             ("3× TB6612FNG dual driver (two used)", "B0BLRSWTLM", 7.82),
             ("97 mm mecanum × 4 + 4 mm couplings", "B0F9TK5FSW", 40.99)]
 PRIME_N0 = 200
+# UNDER $100, keeping the 80 mm mecanum wheels Hound already has (their couplings are 5 mm, for the NEMA 17 shafts; a
+# JGA25's shaft is 4 mm): swap in 4 mm rigid flange couplings, the same generic part with a smaller bore — compare the
+# flange holes with the old coupling before fitting. On 80 mm wheels the 200 rpm motor needs ≥ 3.4 kg·cm (min_stall_for).
+DC_UNDER_100 = [("4× JGA25-371 12 V 200 rpm encoder gearmotor + bracket (Emoshayoga 'Speed 200')", "B0H2JP84J7", 4 * 20.39),
+                ("3× TB6612FNG dual driver (two used)", "B0BLRSWTLM", 7.82),
+                ("4× 4 mm rigid flange coupling (for the owned 80 mm wheels)", "B0FKMPNVR5", 3.99)]
 
 
 def min_stall_for(n0, wheel_d, m_motor=0.100):
@@ -121,6 +127,8 @@ def main():
     print(f"  DC + encoders, cheapest listings   ${tot(DC_NEW):7.2f}   " + " + ".join(f"{n.split(' (')[0]} ${p:.2f}" for n, _, p in DC_NEW))
     print(f"  DC + encoders, all on Prime        ${tot(DC_PRIME):7.2f}   " + " + ".join(f"{n.split(' (')[0]} ${p:.2f}" for n, _, p in DC_PRIME))
     print(f"  the Prime {PRIME_N0} rpm motor on 97 mm wheels passes only if its 12 V stall torque is ≥ {min_stall_for(PRIME_N0, 0.097):.1f} kg·cm")
+    print(f"  UNDER $100, owned 80 mm wheels  ${tot(DC_UNDER_100):7.2f}   " + " + ".join(f"{n.split(' (')[0]} ${p:.2f}" for n, _, p in DC_UNDER_100))
+    print(f"  ... where the {PRIME_N0} rpm motor needs ≥ {min_stall_for(PRIME_N0, 0.080):.1f} kg·cm stall at 12 V; all on Prime")
     for wd in (0.080, 0.097):
         need = min_stall_for(LISTING_N0, wd)
         print(f"  the listing's {LISTING_N0} rpm motor on {wd * 1000:.0f} mm wheels passes only if its 12 V stall torque is "
