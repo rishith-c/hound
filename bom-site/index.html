@@ -102,7 +102,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">owned</td>
 <td align="right">owned</td>
 <td class="where">(-116, +87, 128)</td>
-<td class="where">printed 10 mm bosses on the deck tile + 2 cable ties through printed slots</td>
+<td class="where">printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4&#x27;s 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties</td>
 </tr><tr>
 <td class="have-cell"><input type="checkbox" data-item="SHIELD" data-owned="0" aria-label="I have all required quantities of CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0B24YS695">CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks</a><div class="grp">Motion control</div><div class="note">Required, not optional: A4988 fails the ramp case. SIX JUMPERS: D12 and D13 on the A-axis header (gives the fourth wheel its own STEP/DIR — bridging X/Y/Z there clones another wheel instead); MS3 only under each of the four drivers for 1/16 microstepping on DRV8825 (an A4988 needs all three — most tutorials show that, and it is wrong for these). Leave EN/GND OFF so D8 controls enable. Insert each driver with its EN pin on the shield&#x27;s EN mark — backwards destroys it; the trimpot sits on the opposite side from an A4988. Vref = 5 × Rsense × I — READ THE SENSE RESISTOR CODE on each carrier first: R100 → 0.75 V for 1.5 A; R200/R220 → 1.5/1.65 V. Setting 0.75 V on an R220 board gives 0.68 A and a rover that stalls. Check the kit includes jumper caps.</div></td>
 <td align="right">1</td>
@@ -200,7 +200,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td align="right">owned</td>
 <td align="right">owned</td>
 <td class="where">(-108, -88, 116)</td>
-<td class="where">printed 10 mm bosses on the deck tile (58×49 pattern) + 2× M2 + nut from the M2 kit (Pi holes are 2.7 mm)</td>
+<td class="where">printed 10 mm bosses on the deck tile (58×49 pattern) + 4× M2×16 + nut (bosses 10 + tile 5)</td>
 </tr><tr class=owned>
 <td class="have-cell"><input type="checkbox" data-item="CAM" data-owned="1" aria-label="I have all required quantities of Your USB webcam (C920-class, ~162 g) on the Ceres tilt bracket"></td><td>Your USB webcam (C920-class, ~162 g) on the Ceres tilt bracket<div class="grp">Sensing and compute</div><div class="note">The turret was built for it. Person detection with MobileNet-SSD on the Pi at ~25 fps. If it turns out heavier than 170 g, the ELP board camera (B00KA80N9U, 50 g, $22.49) is the fallback.</div></td>
 <td align="right">1</td>
@@ -377,14 +377,14 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="IRON" data-owned="0" aria-label="I have all required quantities of Q-MING soldering iron kit"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B087767KNW">Q-MING soldering iron kit</a> <span class="tag">optional</span><div class="grp">Tools</div></td>
+<td class="have-cell"><input type="checkbox" data-item="IRON" data-owned="0" aria-label="I have all required quantities of Q-MING soldering iron kit"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B087767KNW">Q-MING soldering iron kit</a> <span class="tag">optional</span><div class="grp">Tools</div><div class="note">Optional only if every sensor breakout arrives with headers soldered. The MLX90640, VL53L1X and INMP441 boards usually do not.</div></td>
 <td align="right">1</td>
 <td align="right">$12.59</td>
 <td align="right">$12.59</td>
 <td class="where">—</td>
 <td class="where">—</td>
 </tr><tr>
-<td class="have-cell"><input type="checkbox" data-item="HEX" data-owned="0" aria-label="I have all required quantities of AMTOVL metric hex key set"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0CJBRYQF3">AMTOVL metric hex key set</a> <span class="tag">optional</span><div class="grp">Tools</div><div class="note">2.5 / 3 / 4 mm for M3 / M4 / M5.</div></td>
+<td class="have-cell"><input type="checkbox" data-item="HEX" data-owned="0" aria-label="I have all required quantities of AMTOVL metric hex key set"></td><td><a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/B0CJBRYQF3">AMTOVL metric hex key set</a> <span class="tag">optional</span><div class="grp">Tools</div><div class="note">2.5 / 3 / 4 mm for M3 / M4 / M5, and 1.5–2 mm for the coupler grub screws. Buy unless you already own a metric set that goes down to 1.5 mm — the corner kit&#x27;s single wrench is 4 mm only.</div></td>
 <td align="right">1</td>
 <td align="right">$9.99</td>
 <td align="right">$9.99</td>
@@ -440,7 +440,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>MOT</code></td><td>FL (motor 1)</td><td>JK42HS40-1704-13A NEMA 17</td><td align="right">+125.0</td><td align="right">+172.2</td><td align="right">40.0</td><td>shaft along Y pointing +Y (outboard)</td><td>bracket FL leg, inboard side</td><td>4× M3×6 socket head through leg into flange</td><td>0.8 N·m (aluminium threads)</td><td>—</td>
 </tr>
 <tr>
-<td><code>WHL</code></td><td>FL (left-hand)</td><td>80 mm mecanum wheel, left-hand</td><td align="right">+125.0</td><td align="right">+215.5</td><td align="right">40.0</td><td>axis Y; rollers on the TOP of the wheel point toward chassis centre (X seen from above)</td><td>5 mm coupler on motor FL shaft</td><td>coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware</td><td>1.5 N·m grub</td><td>wheel width and coupler length</td>
+<td><code>WHL</code></td><td>FL (left-hand)</td><td>80 mm mecanum wheel, left-hand</td><td align="right">+125.0</td><td align="right">+215.5</td><td align="right">40.0</td><td>axis Y; handedness by TEST, not by diagram: drive all four forward on the bench — straight means right; if it crabs or spins, swap the two wheels on one axle</td><td>5 mm coupler on motor FL shaft</td><td>coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware</td><td>1.5 N·m grub</td><td>wheel width and coupler length</td>
 </tr>
 <tr>
 <td><code>BRK</code></td><td>FR</td><td>Steel NEMA 17 L-bracket, inverted under rail</td><td align="right">+125.0</td><td align="right">-177.5</td><td align="right">69.5</td><td>foot flat against rail underside, leg hanging down flush with rail outer face</td><td>side rail right underside</td><td>2× M4×10 hex + 2× M4 T-nut (bottom slot)</td><td>2.0 N·m</td><td>foot 42×35 and slot spacing</td>
@@ -449,7 +449,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>MOT</code></td><td>FR (motor 2)</td><td>JK42HS40-1704-13A NEMA 17</td><td align="right">+125.0</td><td align="right">-172.2</td><td align="right">40.0</td><td>shaft along Y pointing −Y (outboard)</td><td>bracket FR leg, inboard side</td><td>4× M3×6 socket head through leg into flange</td><td>0.8 N·m (aluminium threads)</td><td>—</td>
 </tr>
 <tr>
-<td><code>WHL</code></td><td>FR (right-hand)</td><td>80 mm mecanum wheel, right-hand</td><td align="right">+125.0</td><td align="right">-215.5</td><td align="right">40.0</td><td>axis Y; rollers on the TOP of the wheel point toward chassis centre (X seen from above)</td><td>5 mm coupler on motor FR shaft</td><td>coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware</td><td>1.5 N·m grub</td><td>wheel width and coupler length</td>
+<td><code>WHL</code></td><td>FR (right-hand)</td><td>80 mm mecanum wheel, right-hand</td><td align="right">+125.0</td><td align="right">-215.5</td><td align="right">40.0</td><td>axis Y; handedness by TEST, not by diagram: drive all four forward on the bench — straight means right; if it crabs or spins, swap the two wheels on one axle</td><td>5 mm coupler on motor FR shaft</td><td>coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware</td><td>1.5 N·m grub</td><td>wheel width and coupler length</td>
 </tr>
 <tr>
 <td><code>BRK</code></td><td>RL</td><td>Steel NEMA 17 L-bracket, inverted under rail</td><td align="right">-125.0</td><td align="right">+177.5</td><td align="right">69.5</td><td>foot flat against rail underside, leg hanging down flush with rail outer face</td><td>side rail left underside</td><td>2× M4×10 hex + 2× M4 T-nut (bottom slot)</td><td>2.0 N·m</td><td>foot 42×35 and slot spacing</td>
@@ -458,7 +458,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>MOT</code></td><td>RL (motor 3)</td><td>JK42HS40-1704-13A NEMA 17</td><td align="right">-125.0</td><td align="right">+172.2</td><td align="right">40.0</td><td>shaft along Y pointing +Y (outboard)</td><td>bracket RL leg, inboard side</td><td>4× M3×6 socket head through leg into flange</td><td>0.8 N·m (aluminium threads)</td><td>—</td>
 </tr>
 <tr>
-<td><code>WHL</code></td><td>RL (right-hand)</td><td>80 mm mecanum wheel, right-hand</td><td align="right">-125.0</td><td align="right">+215.5</td><td align="right">40.0</td><td>axis Y; rollers on the TOP of the wheel point toward chassis centre (X seen from above)</td><td>5 mm coupler on motor RL shaft</td><td>coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware</td><td>1.5 N·m grub</td><td>wheel width and coupler length</td>
+<td><code>WHL</code></td><td>RL (right-hand)</td><td>80 mm mecanum wheel, right-hand</td><td align="right">-125.0</td><td align="right">+215.5</td><td align="right">40.0</td><td>axis Y; handedness by TEST, not by diagram: drive all four forward on the bench — straight means right; if it crabs or spins, swap the two wheels on one axle</td><td>5 mm coupler on motor RL shaft</td><td>coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware</td><td>1.5 N·m grub</td><td>wheel width and coupler length</td>
 </tr>
 <tr>
 <td><code>BRK</code></td><td>RR</td><td>Steel NEMA 17 L-bracket, inverted under rail</td><td align="right">-125.0</td><td align="right">-177.5</td><td align="right">69.5</td><td>foot flat against rail underside, leg hanging down flush with rail outer face</td><td>side rail right underside</td><td>2× M4×10 hex + 2× M4 T-nut (bottom slot)</td><td>2.0 N·m</td><td>foot 42×35 and slot spacing</td>
@@ -467,7 +467,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>MOT</code></td><td>RR (motor 4)</td><td>JK42HS40-1704-13A NEMA 17</td><td align="right">-125.0</td><td align="right">-172.2</td><td align="right">40.0</td><td>shaft along Y pointing −Y (outboard)</td><td>bracket RR leg, inboard side</td><td>4× M3×6 socket head through leg into flange</td><td>0.8 N·m (aluminium threads)</td><td>—</td>
 </tr>
 <tr>
-<td><code>WHL</code></td><td>RR (left-hand)</td><td>80 mm mecanum wheel, left-hand</td><td align="right">-125.0</td><td align="right">-215.5</td><td align="right">40.0</td><td>axis Y; rollers on the TOP of the wheel point toward chassis centre (X seen from above)</td><td>5 mm coupler on motor RR shaft</td><td>coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware</td><td>1.5 N·m grub</td><td>wheel width and coupler length</td>
+<td><code>WHL</code></td><td>RR (left-hand)</td><td>80 mm mecanum wheel, left-hand</td><td align="right">-125.0</td><td align="right">-215.5</td><td align="right">40.0</td><td>axis Y; handedness by TEST, not by diagram: drive all four forward on the bench — straight means right; if it crabs or spins, swap the two wheels on one axle</td><td>5 mm coupler on motor RR shaft</td><td>coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware</td><td>1.5 N·m grub</td><td>wheel width and coupler length</td>
 </tr>
 <tr>
 <td><code>PETG</code></td><td>front-left tile</td><td>Printed deck tile 175×195×5, half-thickness lap (15 mm tongue / rebate) on the centreline edges</td><td align="right">+87.5</td><td align="right">+97.5</td><td align="right">93.5</td><td>flat on rail tops</td><td>one side rail + one cross rail</td><td>3× M5×8 + M5 T-nut into the side-rail top slot, 2× into the cross-rail top slot (corner kit) at 1.5 N·m — 3 mm of PLA under the head crushes at the 3.0 the corners take; 3× M3×8 + nut per lap seam</td><td>3.0 N·m</td><td>—</td>
@@ -491,13 +491,13 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>PETG</code></td><td>cradle retaining bar</td><td>printed bar 140×12×6 across the cradle mouth</td><td align="right">+0.0</td><td align="right">+0.0</td><td align="right">64.0</td><td>spans the open bottom of the cradle</td><td>cradle side walls, two printed hooks</td><td>2× cable ties through printed slots</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>UNO</code></td><td>—</td><td>UNO R4 WiFi + DRV8825 CNC Shield stack</td><td align="right">-115.7</td><td align="right">+86.7</td><td align="right">128.5</td><td>flat on 10 mm standoffs</td><td>deck top, rear-left</td><td>printed 10 mm bosses on the deck tile + 2 cable ties through printed slots</td><td>hand-tight</td><td>stack height with heatsinks</td>
+<td><code>UNO</code></td><td>—</td><td>UNO R4 WiFi + DRV8825 CNC Shield stack</td><td align="right">-115.7</td><td align="right">+86.7</td><td align="right">128.5</td><td>flat on 10 mm standoffs</td><td>deck top, rear-left</td><td>printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4&#x27;s 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties</td><td>hand-tight</td><td>stack height with heatsinks</td>
 </tr>
 <tr>
 <td><code>FAN</code></td><td>—</td><td>40×40×10 5 V fan over the drivers</td><td align="right">-115.7</td><td align="right">+86.7</td><td align="right">111.0</td><td>flat on 10 mm standoffs</td><td>printed PETG bridge over the shield</td><td>printed bridge on 2× M3×8 into deck bosses; fan held to the bridge by 2 cable ties</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
-<td><code>PI</code></td><td>—</td><td>Raspberry Pi</td><td align="right">-107.5</td><td align="right">-88.0</td><td align="right">116.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right</td><td>printed 10 mm bosses on the deck tile (58×49 pattern) + 2× M2 + nut from the M2 kit (Pi holes are 2.7 mm)</td><td>hand-tight</td><td>—</td>
+<td><code>PI</code></td><td>—</td><td>Raspberry Pi</td><td align="right">-107.5</td><td align="right">-88.0</td><td align="right">116.0</td><td>flat on 10 mm standoffs</td><td>deck top, rear-right</td><td>printed 10 mm bosses on the deck tile (58×49 pattern) + 4× M2×16 + nut (bosses 10 + tile 5)</td><td>hand-tight</td><td>—</td>
 </tr>
 <tr>
 <td><code>PCA</code></td><td>—</td><td>PCA9685 servo driver (Ceres)</td><td align="right">-29.0</td><td align="right">-97.5</td><td align="right">112.0</td><td>flat on 10 mm standoffs</td><td>deck top, beside the Pi</td><td>printed bosses + 2× M2 + nut</td><td>hand-tight</td><td>—</td>
@@ -542,10 +542,10 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <td><code>CO2</code></td><td>—</td><td>SCD41 CO2 sensor</td><td align="right">-189.0</td><td align="right">+0.0</td><td align="right">246.0</td><td>sensing face −X (rear), in free air</td><td>radar post, LEFT face, 150 mm up (the rear face is the open side of the U-channel)</td><td>printed saddle + 2× M2 + nut</td><td>hand-tight</td><td>breakout hole spacing</td>
 </tr>
 <tr>
-<td><code>TOF</code></td><td>front</td><td>VL53L1X ToF module</td><td align="right">+179.0</td><td align="right">+0.0</td><td align="right">81.0</td><td>on edge, emitter facing +X</td><td>printed clip in the front rail outer slot</td><td>1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td><td>hand-tight</td><td>module hole spacing</td>
+<td><code>TOF</code></td><td>front</td><td>VL53L1X ToF module</td><td align="right">+179.0</td><td align="right">+0.0</td><td align="right">81.0</td><td>on edge, emitter facing +X, recessed 2 mm inside a printed bumper lip — it is the first thing to touch a wall</td><td>printed clip in the front rail outer slot</td><td>1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td><td>hand-tight</td><td>module hole spacing</td>
 </tr>
 <tr>
-<td><code>TOF</code></td><td>rear</td><td>VL53L1X ToF module</td><td align="right">-179.0</td><td align="right">+0.0</td><td align="right">81.0</td><td>on edge, emitter facing −X</td><td>printed clip in the rear rail outer slot</td><td>1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td><td>hand-tight</td><td>module hole spacing</td>
+<td><code>TOF</code></td><td>rear</td><td>VL53L1X ToF module</td><td align="right">-179.0</td><td align="right">+0.0</td><td align="right">81.0</td><td>on edge, emitter facing −X, recessed 2 mm inside a printed bumper lip — it is the first thing to touch a wall</td><td>printed clip in the rear rail outer slot</td><td>1× M5×8 + M5 T-nut (clip) + 2× M2 (module)</td><td>hand-tight</td><td>module hole spacing</td>
 </tr>
 <tr>
 <td><code>WIRE22</code></td><td>power</td><td>22 AWG (owned): pack → shield VMOT, → XL4015 IN (6 V servo rail)</td><td align="right">-60.0</td><td align="right">+40.0</td><td align="right">96.0</td><td>—</td><td>pack connector at the battery (rear)</td><td>cable ties every 60 mm to the deck; tape or heat-shrink every joint</td><td>—</td><td>—</td>
@@ -597,7 +597,7 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <h2>Pin map</h2>
 <ul>
 <li>R4 / CNC Shield — X (FL): STEP D2, DIR D5 · Y (FR): STEP D3, DIR D6 · Z (RL): STEP D4, DIR D7 · A (RR): STEP D12, DIR D13 · ENABLE all four: D8 (LOW = on) · fan: shield 5 V / GND header.</li>
-<li>Pi I2C-1 (GPIO 2/3, 400 kHz): PCA9685 0x40, VL53L1X front and rear (0x29 until re-addressed; XSHUT on GPIO 5 and 6), SCD41 0x62 (which caps the bus at 100 kHz if fitted). VL53L1X modules powered from 3.3 V so their pull-ups never put 5 V on a Pi pin. MLX90640 0x33 on a HARDWARE second bus — Pi 4: dtoverlay=i2c3,pins_4_5 (GPIO 4/5) at 400 kHz, about 8 fps. Not i2c-gpio: bit-banged I2C tops out around 100–200 kHz and the thermal array would crawl at ~3 fps. On a Pi 3, share I2C-1 at 400 kHz instead.</li>
+<li>Pi I2C-1 (GPIO 2/3, 400 kHz): PCA9685 0x40, VL53L1X front and rear (0x29 until re-addressed; XSHUT on GPIO 5 and 6), SCD41 0x62 (which caps the bus at 100 kHz if fitted). VL53L1X modules powered from 3.3 V so their pull-ups never put 5 V on a Pi pin. MLX90640 0x33 on a HARDWARE second bus — Pi 4: dtoverlay=i2c3,pins_4_5 (GPIO 4/5); Pi 5: dtoverlay=i2c3-pi5,pins_4_5 at 400 kHz, about 8 fps. Not i2c-gpio: bit-banged I2C tops out around 100–200 kHz and the thermal array would crawl at ~3 fps. On a Pi 3, share I2C-1 at 400 kHz instead.</li>
 <li>Pi I2S (GPIO 18 BCLK, 19 LRCLK, 20 DIN): INMP441 (dtoverlay=googlevoicehat-soundcard or an i2s-mic overlay). Pi USB: R4 (serial + power), ESP32-S3 (serial + power), webcam. Pi power: bank on USB-C.</li>
 <li>ESP32-S3: UART1 (GPIO 17/18) ↔ LD2410C TX/RX crossed at 256000 baud; UART2 (GPIO 15/16) ↔ LD2450 crossed at 256000. Both radars 5 V from the devkit&#x27;s 5 V pin, 3.3 V signalling, nothing metal within 10 mm of the antenna faces.</li>
 <li>PCA9685: tilt on ch 0, pan on ch 2, as in the Ceres turret_duet firmware. V+ from the XL4015 at 6.0 V, VCC from the Pi 3.3 V, GND to both.</li>
@@ -605,9 +605,9 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <h2>Build order</h2>
 <ol>
 <li>Caliper every part marked VERIFY: bracket foot and slots, wheel width, coupler length, webcam mass, board hole patterns, Ceres base holes. Adjust the tile files before printing anything.</li>
-<li>Print: four deck quadrants (220 mm bed), battery cradle and retaining bar, radar post FLAT as a U-channel plus its bar, fan bridge in PETG (the heatsinks below it reach 60 °C and PLA softens there), two ToF clips, thermal saddle (or skip it and VHB the array to the tilt bracket beside the clamp), pan lock. PLA for everything else. Counterbores as drawn. Start printing the day the order goes in: four tiles plus cradle, post, bridge and clips is roughly 20 hours of printer time.</li>
+<li>Print: four deck quadrants (220 mm bed), battery cradle and retaining bar, radar post FLAT as a U-channel plus its bar, fan bridge in PETG (the heatsinks below it reach 60 °C and PLA softens there), two ToF clips, thermal saddle (or skip it and VHB the array to the tilt bracket beside the clamp), pan lock. PLA for everything else. Counterbores as drawn. Start printing the day the order goes in: four tiles plus cradle, post, bridge and clips is roughly 20 hours of printer time. Before anything else, open every sensor box: MLX90640, VL53L1X, INMP441 and SCD41 breakouts routinely ship with header strips loose in the bag — if yours do, the soldering iron stops being optional.</li>
 <li>Frame. FIRST slide every T-nut into its slot — the kits&#x27; nuts are sliding, not drop-in, and a butt-jointed frame closes every slot end: per side rail 4 in the bottom slot (two motor brackets) and 6 in the top slot (deck); per cross rail 3 in the top slot (deck), 2 more in the rear one (post), and 1 in each outer face (ToF clips). Then butt the cross rails between the side rails, outer faces at X ±175 and Y ±195, one corner bracket per joint on the inner faces, 3.0 N·m. Check square with a tape across both diagonals — equal within 1 mm.</li>
-<li>Drive: four steel brackets inverted under the side rails, feet on two M4 T-nuts each at 2.0 N·m, legs flush with the outer faces, axle holes at X ±125. Motors to the legs with the four M3×6 that ship with the brackets, 0.8 N·m, leads inboard. Couplers on the flats with blue threadlocker. Wheels: left-hand at FL and RR, right-hand at FR and RL — from above the top rollers point at the chassis centre.</li>
+<li>Drive: four steel brackets inverted under the side rails, feet on two M4 T-nuts each at 2.0 N·m, legs flush with the outer faces, axle holes at X ±125. Motors to the legs with the four M3×6 that ship with the brackets, 0.8 N·m, leads inboard. Couplers on the flats with blue threadlocker. Wheels: diagonal pairs match (FL = RR, FR = RL); confirm by the drive-forward test, not by the diagram.</li>
 <li>Shield: MS3 cap under each of the four sockets with the drivers OUT. Drivers in, EN to EN. Jumpers on D12 and D13 of the A header. EN/GND open. Trim each Vref to 0.75 V (1.5 A at 0.100 Ω — read your sense resistor first). Coupler: if its bore is a D, the flat depth must match the shaft&#x27;s; if it is round with a grub screw, threadlocker is not optional.</li>
 <li>Shield: MS3 cap under each of the four sockets with the drivers OUT. Drivers in, EN to EN. Jumpers on D12 and D13 of the A header. EN/GND open. Then, WITH VMOT CONNECTED and no motors plugged in, trim each Vref to 0.75 V (1.5 A at 0.100 Ω — read your sense resistor first) using a plastic trimmer tool: a metal screwdriver slipping off the pot onto VMOT kills the driver, and Vref reads nonsense with only USB power. Never plug or unplug a motor while VMOT is live.</li>
 <li>Turret base on the front tile, M3×16. Camera into the Ceres clamp, thermal saddle on top. Radar post through the rear tile into the rail, bar on, LD2410C at Y +50, LD2450 at Y −50, mic between, SCD41 on the rear face.</li>
@@ -654,6 +654,12 @@ input[type="checkbox"]{width:20px;height:20px;accent-color:#165bc4;cursor:pointe
 <li>Every under-deck wire needs a way through a full-coverage deck. Pass-through slots added.</li>
 <li>The SCD41 sat on the post&#x27;s rear face, which became the open side of the flat-printed U-channel. Moved to a side face.</li>
 <li>Fastener counts were stale after the tile change (30 M5, not 22; 24 M3). Corrected; still inside both kits.</li>
+<li>Two USB serial devices with the same /dev/ttyACM naming swap order between boots. Now addressed by serial-by-id; otherwise the first boot on stage sends step commands to the radar bridge.</li>
+<li>The mecanum X/O rule is stated both ways by different vendors. Replaced with a drive-forward test that cannot be misread.</li>
+<li>A top-heavy R4 + shield + four heatsinks was hanging on two cable ties. Now four M3×20 through the R4&#x27;s mounting holes.</li>
+<li>Sensor breakouts commonly ship with unsoldered headers while the iron was optional. Flagged at unboxing.</li>
+<li>The front ToF module protruded 4 mm past the rail face as the rover&#x27;s leading point. Now recessed in a printed bumper lip.</li>
+<li>The Pi 5 uses a different i2c3 overlay name than the Pi 4. Both stated, since the Pi model is still unknown.</li>
 </ul>
 <h2>Total cost</h2>
 <div class="table-wrap"><table class="totals">

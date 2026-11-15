@@ -56,8 +56,8 @@ Buy total: $252.77
 - 3× INMP441 I2S microphone modules with Dupont cables — https://www.amazon.com/dp/B0GSZJFJVM — Voice and knocking, the way rescue listening devices work. One mic gives energy only, no bearing; the other two in the pack could later give a left/right bearing. Stop-and-listen protocol: motors off, three-second capture.
 - MEIYA hanging scale — https://www.amazon.com/dp/B0GGHDNZWJ — The torque measurement: lever on the shaft, scale on the lever, T = F × arm.
 - Jiavarry 150 mm digital caliper — https://www.amazon.com/dp/B08Y8M54M9 — Needed for every VERIFY dimension before drilling the deck. Skip only if you own one.
-- Q-MING soldering iron kit — https://www.amazon.com/dp/B087767KNW — 
-- AMTOVL metric hex key set — https://www.amazon.com/dp/B0CJBRYQF3 — 2.5 / 3 / 4 mm for M3 / M4 / M5.
+- Q-MING soldering iron kit — https://www.amazon.com/dp/B087767KNW — Optional only if every sensor breakout arrives with headers soldered. The MLX90640, VL53L1X and INMP441 boards usually do not.
+- AMTOVL metric hex key set — https://www.amazon.com/dp/B0CJBRYQF3 — 2.5 / 3 / 4 mm for M3 / M4 / M5, and 1.5–2 mm for the coupler grub screws. Buy unless you already own a metric set that goes down to 1.5 mm — the corner kit's single wrench is 4 mm only.
 - DOWELL wire strippers — https://www.amazon.com/dp/B08Y6GDS61 — 
 
 ## The design, in numbers
@@ -79,8 +79,8 @@ Key placements (part centre x, y, z mm; fastener):
 - MOT RR (motor 4): (-125, -172, 40) — 4× M3×6 socket head through leg into flange
 - WHL RR (left-hand): (-125, -216, 40) — coupler grub screw on the shaft flat + blue threadlocker; wheel to coupler per kit hardware
 - LIPO —: (+0, +0, 76) — printed retaining bar + 2 cable ties
-- UNO —: (-116, +87, 128) — printed 10 mm bosses on the deck tile + 2 cable ties through printed slots
-- PI —: (-108, -88, 116) — printed 10 mm bosses on the deck tile (58×49 pattern) + 2× M2 + nut from the M2 kit (Pi holes are 2.7 mm)
+- UNO —: (-116, +87, 128) — printed 10 mm bosses on the deck tile + 4× M3×20 + nut through the R4's 3.2 mm holes (bosses 10 + tile 5 + nut) — a top-heavy driver stack should not hang on cable ties
+- PI —: (-108, -88, 116) — printed 10 mm bosses on the deck tile (58×49 pattern) + 4× M2×16 + nut (bosses 10 + tile 5)
 - PCA —: (-29, -98, 112) — printed bosses + 2× M2 + nut
 - BANK → Pi: (+0, +0, 114) — printed lip on the deck tile + 2 cable ties through printed slots
 - XL4015 → servos 6.0 V: (-44, +110, 115) — printed bosses + 2 cable ties
@@ -119,7 +119,7 @@ Drivetrain sizing at 5.13 kg design mass, 80 mm mecanum wheels, direct drive, JK
 
 ## Pin map
 - R4 / CNC Shield — X (FL): STEP D2, DIR D5 · Y (FR): STEP D3, DIR D6 · Z (RL): STEP D4, DIR D7 · A (RR): STEP D12, DIR D13 · ENABLE all four: D8 (LOW = on) · fan: shield 5 V / GND header.
-- Pi I2C-1 (GPIO 2/3, 400 kHz): PCA9685 0x40, VL53L1X front and rear (0x29 until re-addressed; XSHUT on GPIO 5 and 6), SCD41 0x62 (which caps the bus at 100 kHz if fitted). VL53L1X modules powered from 3.3 V so their pull-ups never put 5 V on a Pi pin. MLX90640 0x33 on a HARDWARE second bus — Pi 4: dtoverlay=i2c3,pins_4_5 (GPIO 4/5) at 400 kHz, about 8 fps. Not i2c-gpio: bit-banged I2C tops out around 100–200 kHz and the thermal array would crawl at ~3 fps. On a Pi 3, share I2C-1 at 400 kHz instead.
+- Pi I2C-1 (GPIO 2/3, 400 kHz): PCA9685 0x40, VL53L1X front and rear (0x29 until re-addressed; XSHUT on GPIO 5 and 6), SCD41 0x62 (which caps the bus at 100 kHz if fitted). VL53L1X modules powered from 3.3 V so their pull-ups never put 5 V on a Pi pin. MLX90640 0x33 on a HARDWARE second bus — Pi 4: dtoverlay=i2c3,pins_4_5 (GPIO 4/5); Pi 5: dtoverlay=i2c3-pi5,pins_4_5 at 400 kHz, about 8 fps. Not i2c-gpio: bit-banged I2C tops out around 100–200 kHz and the thermal array would crawl at ~3 fps. On a Pi 3, share I2C-1 at 400 kHz instead.
 - Pi I2S (GPIO 18 BCLK, 19 LRCLK, 20 DIN): INMP441 (dtoverlay=googlevoicehat-soundcard or an i2s-mic overlay). Pi USB: R4 (serial + power), ESP32-S3 (serial + power), webcam. Pi power: bank on USB-C.
 - ESP32-S3: UART1 (GPIO 17/18) ↔ LD2410C TX/RX crossed at 256000 baud; UART2 (GPIO 15/16) ↔ LD2450 crossed at 256000. Both radars 5 V from the devkit's 5 V pin, 3.3 V signalling, nothing metal within 10 mm of the antenna faces.
 - PCA9685: tilt on ch 0, pan on ch 2, as in the Ceres turret_duet firmware. V+ from the XL4015 at 6.0 V, VCC from the Pi 3.3 V, GND to both.
