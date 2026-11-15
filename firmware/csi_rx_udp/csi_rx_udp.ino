@@ -7,7 +7,9 @@
 
   Packet (little-endian, one per probe frame):
       'H' 'C' | node u8 | seq u16 | rssi i8 | n u8 | n × (imag i8, real i8)
-  n is the raw CSI length; the Pi keeps amplitudes only (ESP32 CSI phase is unusable across packets).
+  n = 128: the LLTF block only (64 subcarriers, always first in the buffer). An HT packet brings 256+ bytes
+  (LLTF + HT-LTF), which a u8 length cannot carry — it used to wrap to 0 and send an empty packet. The Pi keeps
+  the 52 used subcarriers' amplitudes (ESP32 CSI phase is unusable across packets).
 
   Provision: fill SSID/PASS/SINK below, set NODE_ID (1 = on the rover, 2/3 = dropped in the room), flash with
       arduino-cli compile --fqbn esp32:esp32:esp32s3 firmware/csi_rx_udp && arduino-cli upload -p <port> ...
@@ -33,7 +35,7 @@ static volatile uint32_t rxCount = 0, txCount = 0;
 static uint16_t seq = 0;
 
 // Ring of captured CSI so the WiFi-task callback never blocks on the network stack
-struct Slot { uint8_t used; int8_t rssi; uint8_t len; int8_t csi[256]; };
+struct Slot { uint8_t used; int8_t rssi; uint8_t len; int8_t csi[128]; };
 static Slot ring[8]; static volatile uint8_t wr = 0, rd = 0;
 
 static void IRAM_ATTR csi_cb(void*, wifi_csi_info_t* info) {
@@ -42,7 +44,7 @@ static void IRAM_ATTR csi_cb(void*, wifi_csi_info_t* info) {
   if (next == rd) return;                     // full: drop, never stall the radio task
   Slot& s = ring[wr];
   s.rssi = info->rx_ctrl.rssi;
-  s.len = info->len > 256 ? 256 : info->len;
+  s.len = info->len > 128 ? 128 : info->len;      // the LLTF block; 256 would wrap the u8 length to 0
   memcpy(s.csi, info->buf, s.len);
   s.used = 1; wr = next; rxCount++;
 }

@@ -34,6 +34,25 @@ def amplitudes(raw: bytes) -> np.ndarray:
     return np.hypot(real, imag)
 
 
+# ── Hound's UDP packets (firmware/csi_rx_udp) ───────────────────────────────────────────────────────────────
+UDP_MAGIC = b"HC"
+LLTF_BYTES = 128                                   # the LLTF block: 64 subcarriers × (imag, real), always first
+LLTF_USED = list(range(1, 27)) + list(range(38, 64))   # ESP32 LLTF order is 0..31 then −32..−1; ±1..±26 carry signal
+
+
+def parse_udp(data: bytes) -> dict | None:
+    """One csi_rx_udp packet: 'H' 'C' | node u8 | seq u16 | rssi i8 | n u8 | n bytes of (imag, real) int8.
+    Returns node, seq, rssi and the 52 used LLTF subcarrier amplitudes; None if it is not such a packet."""
+    if len(data) < 7 or data[:2] != UDP_MAGIC:
+        return None
+    n = data[6]
+    if n < LLTF_BYTES or len(data) < 7 + n:
+        return None
+    amp = amplitudes(data[7:7 + LLTF_BYTES])
+    return {"node": data[2], "seq": int.from_bytes(data[3:5], "little"),
+            "rssi": int.from_bytes(data[5:6], "little", signed=True), "amp": amp[LLTF_USED]}
+
+
 class FrameReader:
     """Feed it bytes, get back CSI records. Resyncs on garbage."""
 

@@ -238,3 +238,38 @@ def test_bringup_checks(monkeypatch):
     monkeypatch.setattr(bu, "check_thermal", lambda: (_ for _ in ()).throw(ModuleNotFoundError("No module named 'adafruit_mlx90640'")))
     res = bu.run(skip={"i2c", "tof", "camera", "csi", "radars"}, report=lambda s: None)
     assert res == [("thermal", "FAIL", "thermal", "ModuleNotFoundError: No module named 'adafruit_mlx90640'")]
+
+
+def _csi_packet(n=128, node=3, seq=513, rssi=-42, used_amp=(3, 4)):
+    """A csi_rx_udp packet built the way the firmware builds it: used LLTF subcarriers carry (imag, real) = used_amp."""
+    import struct
+    import csi
+    body = bytearray(n)
+    for k in csi.LLTF_USED:
+        if 2 * k + 1 < n:
+            body[2 * k], body[2 * k + 1] = used_amp[0] & 0xFF, used_amp[1] & 0xFF
+    return b"HC" + struct.pack("<BHbB", node, seq, rssi, n % 256) + bytes(body)
+
+
+def test_csi_udp_parsing_matches_the_firmware():
+    pytest.importorskip("numpy")
+    import csi
+    r = csi.parse_udp(_csi_packet())
+    assert (r["node"], r["seq"], r["rssi"]) == (3, 513, -42)
+    assert len(r["amp"]) == 52 and all(abs(a - 5.0) < 1e-9 for a in r["amp"])      # the 52 used, none of the nulls
+    assert csi.parse_udp(b"junk" * 40) is None
+    assert csi.parse_udp(_csi_packet(n=0)) is None                                   # what the old firmware sent for 256
+    assert len(csi.parse_udp(_csi_packet(n=200))["amp"]) == 52                       # a longer buffer: LLTF block only
+
+
+def test_station_csi_sink_reads_real_packets(monkeypatch):
+    station = pytest.importorskip("station")
+    import socket as so
+    pkts = [_csi_packet(seq=i) for i in range(5)] + [b"noise"]
+    class Sock:
+        def recvfrom(self, n):
+            if pkts: return pkts.pop(0), ("10.42.0.7", 5005)
+            raise so.timeout
+    sink = object.__new__(station.CsiSink); sink.sock = Sock()
+    t, A = sink.collect(0.05)
+    assert A.shape == (5, 52)

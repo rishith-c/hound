@@ -96,8 +96,8 @@ def radar_ports(by_id="/dev/serial/by-id", serial0="/dev/serial0", cfg="~/rover/
 
 
 class CsiSink:
-    """RuView nodes stream CSI as UDP to SINK_IP:5005. Wire format per node is verified with listen.py --hexdump;
-    until then this collects raw packet payloads and takes int8 pairs as (imag, real) like Walleye csi_rx."""
+    """ESP32 #3 (firmware/csi_rx_udp) streams one UDP packet per probe to port 5005; csi.parse_udp checks the header
+    and keeps the 52 used subcarriers of the LLTF block."""
 
     def __init__(self, port=5005):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -105,7 +105,7 @@ class CsiSink:
         self.sock.bind(("0.0.0.0", port)); self.sock.settimeout(0.2)
 
     def collect(self, seconds: float):
-        from csi import amplitudes  # Walleye bench/csi.py
+        from csi import parse_udp
         t, A = [], []
         t0 = time.time()
         while time.time() - t0 < seconds:
@@ -113,9 +113,9 @@ class CsiSink:
                 data, addr = self.sock.recvfrom(4096)
             except socket.timeout:
                 continue
-            a = amplitudes(data[-104:])           # last 52 subcarriers × 2 bytes; adjust once the format is confirmed
-            if len(a) >= 52:
-                t.append(time.time()); A.append(a[:52])
+            rec = parse_udp(data)
+            if rec is not None:
+                t.append(time.time()); A.append(rec["amp"])
         return np.array(t), np.array(A, float)
 
 
