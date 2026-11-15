@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Build the BOM site from bom.json: writes index.html and bom.csv.
+"""Build the BOM site: one list of everything on the rover, each part tied to
+its computed position, plus the full placement table.
 
-Visual style is the ChatGPT-authored page this project shipped first (Vercel
-deployment dpl_7Uxg94gpHed7fCG2Yc6mctUCd4LA): a document, not a dashboard.
-System font, #202124 text, #165bc4 links, bordered tables with a grey header
-row, an "I have this" checkbox column whose state persists in the browser and
-tints the row green. Kept verbatim; only the content underneath changed.
+Reads bom.json (items + prose), ../assembly.json (positions and fasteners from
+assembly.py) and ../drivetrain.json (margins from drivetrain.py). Writes
+index.html, bom.csv, and copies assembly.csv alongside. Style is the original
+ChatGPT-authored page (dpl_7Uxg94gpHed7fCG2Yc6mctUCd4LA), kept verbatim.
 
     python3 build.py
 """
@@ -13,63 +13,117 @@ tints the row green. Kept verbatim; only the content underneath changed.
 import csv
 import html
 import json
+import shutil
+from collections import OrderedDict
 
 BOM = json.load(open("bom.json"))
-sections = BOM["sections"]
-owned = BOM["owned"]
-meta = BOM["meta"]
-prose = BOM["prose"]
+ASM = json.load(open("../assembly.json"))
+DT = json.load(open("../drivetrain.json"))
+meta, prose, items = BOM["meta"], BOM["prose"], BOM["items"]
+shutil.copy("../assembly.csv", "assembly.csv")
+
+placed = {}
+for p in ASM["parts"]:
+    placed.setdefault(p["id"], []).append(p)
+
+def esc(x):
+    return html.escape(str(x))
+
+def money(x):
+    return f"${x:.2f}"
+
+def line_total(it):
+    return it["qty"] * it["price"] if it["status"] != "owned" else 0.0
+
+def where(it):
+    ps = [p for p in placed.get(it["id"], []) if p["l"] or p["id"] in ("WIRE18", "WIRE22")]
+    if not ps:
+        return "—"
+    cells = [f'{p["instance"]} ({p["x"]:+.0f}, {p["y"]:+.0f}, {p["z"]:.0f})' if p["instance"] != "—"
+             else f'({p["x"]:+.0f}, {p["y"]:+.0f}, {p["z"]:.0f})' for p in ps[:4]]
+    more = f" +{len(ps)-4} more" if len(ps) > 4 else ""
+    return "; ".join(cells) + more
+
+def fastening(it):
+    ps = placed.get(it["id"], [])
+    fs = OrderedDict((p["fasteners"], None) for p in ps if p["fasteners"] not in ("—", ""))
+    return "; ".join(list(fs)[:2]) if fs else "—"
+
+buy_total = sum(line_total(i) for i in items if i["status"] == "buy")
+opt_total = sum(line_total(i) for i in items if i["status"] == "optional")
+owned_n = sum(1 for i in items if i["status"] == "owned")
 
 # ── CSV ─────────────────────────────────────────────────────────────────────
 with open("bom.csv", "w", newline="") as f:
     w = csv.writer(f)
-    w.writerow(["section", "status", "item", "qty", "unit_usd", "line_usd", "asin", "url", "note"])
-    for o in owned:
-        w.writerow(["Owned", "owned", o["item"], o["qty"], "", "", "", "", o["note"]])
-    for s in sections:
-        for it in s["items"]:
-            w.writerow([s["name"], "optional" if s.get("optional") else "buy",
-                        it["item"], it["packs"], f'{it["price"]:.2f}',
-                        f'{it["packs"] * it["price"]:.2f}', it["asin"],
-                        f'https://www.amazon.com/dp/{it["asin"]}', it.get("note", "")])
-
-# ── totals ──────────────────────────────────────────────────────────────────
-def total(sec):
-    return sum(i["packs"] * i["price"] for i in sec["items"])
-
-buy_total = sum(total(s) for s in sections if not s.get("optional"))
-opt_total = sum(total(s) for s in sections if s.get("optional"))
-
-# ── HTML helpers ────────────────────────────────────────────────────────────
-def esc(x):
-    return html.escape(str(x))
-
-def link(asin, text):
-    return (f'<a target="_blank" rel="noopener noreferrer" '
-            f'href="https://www.amazon.com/dp/{esc(asin)}">{esc(text)}</a>')
-
-def buy_table(items):
-    rows = []
+    w.writerow(["group", "status", "id", "item", "qty", "each_usd", "line_usd", "asin", "url", "where_xyz_mm", "fastening", "note"])
     for it in items:
-        note = f'<div class="note">{esc(it["note"])}</div>' if it.get("note") else ""
-        rows.append(
-            f'<tr>\n<td class="have-cell"><input type="checkbox" data-item="{esc(it["asin"])}" '
-            f'aria-label="I have all required quantities of {esc(it["item"])}"></td>'
-            f'<td>{link(it["asin"], it["item"])}{note}</td>\n'
-            f'<td align="right">{it["packs"]}</td>\n'
-            f'<td align="right">${it["price"]:.2f}</td>\n'
-            f'<td align="right">${it["packs"] * it["price"]:.2f}</td>\n</tr>')
-    return f"""<div class="table-wrap"><table>
+        w.writerow([it["group"], it["status"], it["id"], it["item"], it["qty"],
+                    f'{it.get("price", 0):.2f}' if it["status"] != "owned" else "",
+                    f'{line_total(it):.2f}' if it["status"] != "owned" else "",
+                    it.get("asin", ""), f'https://www.amazon.com/dp/{it["asin"]}' if it.get("asin") else "",
+                    where(it), fastening(it), it.get("note", "")])
+
+# ── The one big list ────────────────────────────────────────────────────────
+rows, last_group = [], None
+for it in items:
+    if it["group"] != last_group:
+        rows.append(f'<tr class="group"><th colspan="7">{esc(it["group"])}</th></tr>')
+        last_group = it["group"]
+    owned = it["status"] == "owned"
+    name = (f'<a target="_blank" rel="noopener noreferrer" href="https://www.amazon.com/dp/{esc(it["asin"])}">{esc(it["item"])}</a>'
+            if it.get("asin") and it["asin"] != "TBD" else esc(it["item"]))
+    if it.get("asin") == "TBD":
+        name += ' <em>(listing to confirm)</em>'
+    note = f'<div class="note">{esc(it["note"])}</div>' if it.get("note") else ""
+    each = "owned" if owned else money(it["price"])
+    line = "owned" if owned else money(line_total(it))
+    tag = ' <span class="tag">optional</span>' if it["status"] == "optional" else ""
+    rows.append(
+        f'<tr{" class=owned" if owned else ""}>\n'
+        f'<td class="have-cell"><input type="checkbox" data-item="{esc(it["id"])}" data-owned="{int(owned)}" '
+        f'aria-label="I have all required quantities of {esc(it["item"])}"></td>'
+        f'<td>{name}{tag}{note}</td>\n'
+        f'<td align="right">{esc(it["qty"])}</td>\n<td align="right">{each}</td>\n<td align="right">{line}</td>\n'
+        f'<td class="where">{esc(where(it))}</td>\n<td class="where">{esc(fastening(it))}</td>\n</tr>')
+
+big_table = f"""<div class="table-wrap"><table>
 <thead>
 <tr>
 <th class="have-cell" scope="col">I have this</th><th>Item / exact Amazon listing</th>
-<th align="right">Buy packs</th>
-<th align="right">Per pack</th>
-<th align="right">Line total</th>
+<th align="right">Qty</th>
+<th align="right">Each</th>
+<th align="right">Line</th>
+<th>Where it goes (x, y, z mm)</th>
+<th>Fastening</th>
 </tr>
 </thead>
-<tbody>{"".join(rows)}
+<tbody>
+{"".join(rows)}
+<tr><th colspan="4">Buy</th><th align="right">{money(buy_total)}</th><th colspan="2">Optional tools {money(opt_total)} · {owned_n} items already owned</th></tr>
 </tbody></table></div>"""
+
+# ── Placement table ─────────────────────────────────────────────────────────
+asm_rows = "".join(
+    f'<tr>\n<td><code>{esc(p["id"])}</code></td><td>{esc(p["instance"])}</td><td>{esc(p["part"])}</td>'
+    f'<td align="right">{p["x"]:+.1f}</td><td align="right">{p["y"]:+.1f}</td><td align="right">{p["z"]:.1f}</td>'
+    f'<td>{esc(p["orientation"])}</td><td>{esc(p["mounts_to"])}</td><td>{esc(p["fasteners"])}</td>'
+    f'<td>{esc(p["torque"])}</td><td>{esc(p["verify"]) or "—"}</td>\n</tr>\n'
+    for p in ASM["parts"])
+fr = ASM["frame"]
+asm_summary = (f'Origin at the chassis centre on the floor; +X forward, +Y rover left, +Z up; all positions are part centres. '
+               f'Envelope {fr["envelope"][0]} × {fr["envelope"][1]} × {fr["envelope"][2]} mm, track {fr["track"]:.0f} mm, wheelbase {fr["wheelbase"]:.0f} mm. '
+               f'Centre of gravity at x {fr["cg"][0]:+.1f}, y {fr["cg"][1]:+.1f}, z {fr["cg"][2]:.1f} mm — the battery under the deck is what keeps it that low. '
+               f'Ground clearance {fr["ground_clearance"]:.1f} mm (motor bodies). Static tip angles {fr["tip_pitch_deg"]}° pitch, {fr["tip_roll_deg"]}° roll. '
+               f'{"No" if not fr["collisions"] else len(fr["collisions"])} bounding-box collisions between rigid parts. '
+               f'Every dimension marked VERIFY is nominal for its class of part and must be measured with a caliper before a hole is drilled.')
+
+# ── Torque table ────────────────────────────────────────────────────────────
+m_rows = "".join(
+    f'<tr>\n<td>{esc(k)}</td><td align="right">{v["t_avail_Nm"]:.3f} N·m</td>'
+    f'<td align="right">{v["margins_design"][1]:.2f}</td><td align="right">{v["margins_design"][3]:.2f}</td>'
+    f'<td align="right">{v["margins_design"][2]:.2f}</td><td>{"PASS" if v["pass"] else "FAIL ramp"}</td>\n</tr>\n'
+    for k, v in DT["drivers"].items())
 
 def paras(lines):
     return "\n".join(f"<p>{esc(p)}</p>" for p in lines)
@@ -77,39 +131,17 @@ def paras(lines):
 def bullets(lines):
     return "<ul>\n" + "\n".join(f"<li>{esc(p)}</li>" for p in lines) + "\n</ul>"
 
-# ── sections ────────────────────────────────────────────────────────────────
-buy_sections = []
-for s in sections:
-    if s.get("optional"):
-        continue
-    why = f"<p>{esc(s['why'])}</p>" if s.get("why") else ""
-    buy_sections.append(f"<h3>{esc(s['name'])} <span class=\"sub\">${total(s):.2f}</span></h3>\n{why}\n{buy_table(s['items'])}")
-
-optional = [s for s in sections if s.get("optional")]
-optional_html = "".join(
-    (f"<p>{esc(s['why'])}</p>\n" if s.get("why") else "") + buy_table(s["items"]) for s in optional)
-
-owned_rows = "".join(
-    f'<tr>\n<td>{esc(o["item"])}</td>\n<td align="right">{esc(o["qty"])}</td>\n<td>{esc(o["note"])}</td>\n</tr>\n'
-    for o in owned)
-
-margin_rows = "".join(
-    f'<tr>\n<td>{esc(r["name"])}</td>\n<td align="right">{r["t"]:.3f} N·m</td>\n'
-    f'<td align="right">{r["b"]:.2f}</td>\n<td align="right">{r["d"]:.2f}</td>\n'
-    f'<td align="right">{r["c"]:.2f}</td>\n<td>{esc(r["v"])}</td>\n</tr>\n'
-    for r in meta["margins"])
-
 page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rover Amazon BOM</title><style>
-*{{box-sizing:border-box}}body{{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}main{{max-width:1040px;margin:48px auto;padding:0 24px 60px}}h1{{font-size:30px;line-height:1.25}}h2{{font-size:22px;margin-top:36px}}h3{{font-size:18px;margin:28px 0 4px}}h3 .sub{{font-weight:400;color:#555;font-size:15px;margin-left:8px}}a{{color:#165bc4;text-underline-offset:3px}}table{{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}}th,td{{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}}th{{background:#f5f6f7}}code{{background:#f3f4f5;padding:2px 4px;border-radius:3px}}.table-wrap{{overflow-x:auto}}p{{margin:16px 0}}.note{{font-size:13px;color:#555;margin-top:4px}}@media(max-width:600px){{main{{margin:28px auto;padding:0 16px 36px}}h1{{font-size:26px}}table{{min-width:620px}}}}@media print{{main{{max-width:none;margin:0;padding:0}}a{{color:inherit}}}}
+*{{box-sizing:border-box}}body{{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}main{{max-width:1180px;margin:48px auto;padding:0 24px 60px}}h1{{font-size:30px;line-height:1.25}}h2{{font-size:22px;margin-top:36px}}a{{color:#165bc4;text-underline-offset:3px}}table{{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0}}th,td{{padding:10px 12px;border:1px solid #ddd;text-align:left;vertical-align:top}}th{{background:#f5f6f7}}code{{background:#f3f4f5;padding:2px 4px;border-radius:3px}}.table-wrap{{overflow-x:auto}}p{{margin:16px 0}}.note{{font-size:13px;color:#555;margin-top:4px}}.where{{font-size:13px;white-space:nowrap}}td.where{{white-space:normal;min-width:180px}}tr.group th{{background:#e9ecef;font-weight:600}}.tag{{font-size:12px;color:#555;border:1px solid #ccc;border-radius:3px;padding:0 5px;margin-left:6px}}em{{color:#8a4b00;font-style:normal;font-size:13px}}@media(max-width:600px){{main{{margin:28px auto;padding:0 16px 36px}}h1{{font-size:26px}}table{{min-width:620px}}}}@media print{{main{{max-width:none;margin:0;padding:0}}a{{color:inherit}}}}
 input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:pointer}}.have-cell{{text-align:center;white-space:nowrap}}tr.owned td{{background:#eff8f0}}#checklist-note{{font-size:14px;color:#555}}
 </style></head><body><main><h1>{esc(meta["title"])}</h1>
-<p><strong>Recommended purchases: ${buy_total:.2f} USD before tax/shipping. Optional workshop tools: ${opt_total:.2f}.</strong> {esc(meta["intro"])}</p>
-<p><a href="bom.csv" download>Download the BOM as CSV</a> · <a href="drivetrain.txt">Read the full drivetrain calculation</a></p>
+<p><strong>Buy: {money(buy_total)} USD before tax/shipping. Optional tools: {money(opt_total)}. Already owned: {owned_n} items.</strong> {esc(meta["intro"])}</p>
+<p><a href="bom.csv" download>Download the BOM as CSV</a> · <a href="assembly.csv" download>Download every placement as CSV</a> · <a href="drivetrain.txt">Read the full drivetrain calculation</a></p>
 <h2>The design I would build</h2>
 {paras(prose["design"])}
 <h2>Can four motors carry it?</h2>
-<p>{esc(meta["verdict"])}</p>
+<p>Design mass {DT["design_mass_kg"]:.2f} kg. Four load cases; the 5° carpet ramp at 0.3 m/s² governs. Lowest passing setting: <strong>{esc(DT["governing_setting"])}</strong>.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -121,21 +153,23 @@ input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:point
 <th>Verdict</th>
 </tr>
 </thead>
-<tbody>{margin_rows}</tbody></table></div>
+<tbody>
+{m_rows}</tbody></table></div>
 <p>{esc(meta["margin_note"])}</p>
-<h2>Already owned — no purchase required</h2>
+<h2>Everything on the rover — one list</h2>
+<p id="checklist-note" role="status">Selections are saved in this browser only.</p>
+<p>Owned items start ticked. Tick a bought item when you have the full listed quantity. Positions are part centres in millimetres from the chassis centre on the floor (+X forward, +Y left, +Z up); the full table with orientation and torque is below.</p>
+{big_table}
+<h2>Where every part goes</h2>
+<p>{asm_summary}</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
-<th>Item</th>
-<th align="right">Quantity</th>
-<th>Use</th>
+<th>ID</th><th>Instance</th><th>Part</th><th align="right">x</th><th align="right">y</th><th align="right">z</th><th>Orientation</th><th>Mounts to</th><th>Fasteners</th><th>Torque</th><th>Verify on receipt</th>
 </tr>
 </thead>
-<tbody>{owned_rows}</tbody></table></div>
-<h2>Buy list</h2><p id="checklist-note" role="status">Selections are saved in this browser only.</p>
-<p>Check items when you have the full listed quantity. The website saves selections in your browser. Parts are grouped by what they do on the rover.</p>
-{"".join(buy_sections)}
+<tbody>
+{asm_rows}</tbody></table></div>
 <h2>Power and connections</h2>
 {bullets(prose["power"])}
 {paras(prose["power_after"])}
@@ -143,19 +177,17 @@ input[type="checkbox"]{{width:20px;height:20px;accent-color:#165bc4;cursor:point
 {paras(prose["fit"])}
 <h2>Compute before claiming it works</h2>
 {paras(prose["compute"])}
-<h2>Optional workshop tools — only if unavailable</h2>
-{optional_html}
 <h2>What I did NOT analyze</h2>
 <p>{esc(meta["not_analysed"])}</p>
-<p>Sources: <a target="_blank" rel="noopener noreferrer" href="https://static.jkongmotor.com/JK42HS40-1704-13A-aidlnBprKrkloSRilikkrllkn.pdf">motor drawing</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/2133">DRV8825 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/1182">A4988 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.hlktech.com/en/Goods-239.html">LD2410C manufacturer</a>, <a target="_blank" rel="noopener noreferrer" href="https://docs.espressif.com/projects/esp-techpedia/en/latest/esp-friends/solution-introduction/esp-csi/esp-csi-solution.html">Espressif CSI</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.skyrc.com/download/100200%20B6ACneo%20Instruction%20Manual%20V1.3.pdf">SKYRC B6AC Neo manual</a>, <a href="drivetrain.txt">drivetrain.txt</a> (all arithmetic).</p>
+<p>Sources: <a target="_blank" rel="noopener noreferrer" href="https://static.jkongmotor.com/JK42HS40-1704-13A-aidlnBprKrkloSRilikkrllkn.pdf">motor drawing</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/2133">DRV8825 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.pololu.com/product/1182">A4988 current/cooling</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.hlktech.com/en/Goods-239.html">LD2410C manufacturer</a>, <a target="_blank" rel="noopener noreferrer" href="https://www.skyrc.com/download/100200%20B6ACneo%20Instruction%20Manual%20V1.3.pdf">SKYRC B6AC Neo manual</a>, <a href="drivetrain.txt">drivetrain.txt</a> and <a href="assembly.csv">assembly.csv</a> (all arithmetic and positions).</p>
 </main><script>
 const note = document.getElementById('checklist-note');
-const prefix = 'rover-bom-owned-v2:';
+const prefix = 'rover-bom-owned-v3:';
 for (const checkbox of document.querySelectorAll('input[data-item]')) {{
   const key = prefix + checkbox.dataset.item;
   const paint = () => checkbox.closest('tr').classList.toggle('owned', checkbox.checked);
-  try {{ checkbox.checked = localStorage.getItem(key) === 'true'; }}
-  catch {{ note.textContent = 'Browser storage is unavailable; selections will last only until this page closes. Check items when you have the full quantity listed.'; }}
+  try {{ const s = localStorage.getItem(key); checkbox.checked = s === null ? checkbox.dataset.owned === '1' : s === 'true'; }}
+  catch {{ checkbox.checked = checkbox.dataset.owned === '1'; note.textContent = 'Browser storage is unavailable; selections will last only until this page closes.'; }}
   paint();
   checkbox.addEventListener('change', () => {{
     paint();
@@ -166,4 +198,4 @@ for (const checkbox of document.querySelectorAll('input[data-item]')) {{
 </script></body></html>
 """
 open("index.html", "w").write(page)
-print(f"index.html and bom.csv written — buy ${buy_total:.2f}, optional ${opt_total:.2f}")
+print(f"index.html, bom.csv, assembly.csv written — buy {money(buy_total)}, optional {money(opt_total)}, {owned_n} owned, {len(ASM['parts'])} placements")

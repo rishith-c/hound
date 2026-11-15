@@ -1,35 +1,26 @@
 [
  {
-  "category": "Control",
-  "asin": "B01EWOE0UU",
-  "item": "ELEGOO Uno R3 with USB cable",
-  "packs": 1,
-  "pack_price": "16.99",
-  "total": "16.99",
-  "url": "https://www.amazon.com/dp/B01EWOE0UU"
- },
- {
-  "category": "Control",
-  "asin": "B0B24YS695",
-  "item": "CNC Shield V3 kit with four DRV8825 drivers and heatsinks",
-  "packs": 1,
-  "pack_price": "15.99",
-  "total": "15.99",
-  "url": "https://www.amazon.com/dp/B0B24YS695"
- },
- {
-  "category": "Drive",
+  "category": "Drivetrain",
   "asin": "B0DWSWQV4T",
-  "item": "SmaringRobot four 80 mm mecanum wheels with 5 mm couplings",
+  "item": "SmaringRobot 4\u00d7 80 mm mecanum wheels with 5 mm couplings",
   "packs": 1,
   "pack_price": "29.99",
   "total": "29.99",
   "url": "https://www.amazon.com/dp/B0DWSWQV4T"
  },
  {
+  "category": "Drivetrain",
+  "asin": "B073QW9RPZ",
+  "item": "Anndason 6\u00d7 steel NEMA 17 L-brackets with screws",
+  "packs": 1,
+  "pack_price": "16.99",
+  "total": "16.99",
+  "url": "https://www.amazon.com/dp/B073QW9RPZ"
+ },
+ {
   "category": "Frame",
   "asin": "B099M9DMSL",
-  "item": "VICHSAMWY four 350 mm 2020 V-slot rails",
+  "item": "VICHSAMWY 4\u00d7 350 mm 2020 V-slot aluminium extrusion",
   "packs": 1,
   "pack_price": "16.59",
   "total": "16.59",
@@ -38,50 +29,23 @@
  {
   "category": "Frame",
   "asin": "B0F1B85397",
-  "item": "TOCLUX 20 corner brackets with M5 screws and T-nuts",
+  "item": "TOCLUX 20\u00d7 2020 corner brackets with M5 screws and T-nuts",
   "packs": 1,
   "pack_price": "14.99",
   "total": "14.99",
   "url": "https://www.amazon.com/dp/B0F1B85397"
  },
  {
-  "category": "Drive",
-  "asin": "B073QW9RPZ",
-  "item": "Anndason six steel NEMA17 brackets with screws",
-  "packs": 1,
-  "pack_price": "16.99",
-  "total": "16.99",
-  "url": "https://www.amazon.com/dp/B073QW9RPZ"
- },
- {
-  "category": "Hardware",
+  "category": "Frame",
   "asin": "B0FQ55VFDK",
-  "item": "Bemaka 2020 M3 M4 M5 T-nut kit with M4 x10 and x12 screws",
+  "item": "Bemaka 2020 T-nut kit, M3/M4/M5, with M4\u00d710 and M4\u00d712 screws",
   "packs": 1,
   "pack_price": "13.99",
   "total": "13.99",
   "url": "https://www.amazon.com/dp/B0FQ55VFDK"
  },
  {
-  "category": "Hardware",
-  "asin": "B0FGV5FCBN",
-  "item": "Fgruh 750-piece M3 screw nut washer assortment",
-  "packs": 1,
-  "pack_price": "9.99",
-  "total": "9.99",
-  "url": "https://www.amazon.com/dp/B0FGV5FCBN"
- },
- {
-  "category": "Hardware",
-  "asin": "B0CKBWQSNY",
-  "item": "COMRUN M2.5 nylon standoff kit",
-  "packs": 1,
-  "pack_price": "9.99",
-  "total": "9.99",
-  "url": "https://www.amazon.com/dp/B0CKBWQSNY"
- },
- {
-  "category": "Fabrication",
+  "category": "Deck and body",
   "asin": "B07PGYHYV8",
   "item": "OVERTURE black PETG 1 kg 1.75 mm",
   "packs": 1,
@@ -90,72 +54,90 @@
   "url": "https://www.amazon.com/dp/B07PGYHYV8"
  },
  {
-  "category": "Hardware",
-  "asin": "B0GH8CGW2T",
-  "item": "MEIVIFPV five 20 x 250 mm battery straps",
+  "category": "Motion control",
+  "asin": "B01EWOE0UU",
+  "item": "ELEGOO Uno R3 with USB cable",
   "packs": 1,
-  "pack_price": "9.99",
-  "total": "9.99",
-  "url": "https://www.amazon.com/dp/B0GH8CGW2T"
+  "pack_price": "16.99",
+  "total": "16.99",
+  "url": "https://www.amazon.com/dp/B01EWOE0UU"
  },
  {
-  "category": "Sensing",
-  "asin": "B09V4DS888",
-  "item": "DWEII two VL53L1X distance modules",
-  "packs": 2,
-  "pack_price": "14.99",
-  "total": "29.98",
-  "url": "https://www.amazon.com/dp/B09V4DS888"
+  "category": "Motion control",
+  "asin": "B0B24YS695",
+  "item": "CNC Shield V3 kit with 4\u00d7 DRV8825 drivers and heatsinks",
+  "packs": 1,
+  "pack_price": "15.99",
+  "total": "15.99",
+  "url": "https://www.amazon.com/dp/B0B24YS695"
  },
  {
-  "category": "Sensing",
-  "asin": "B00KA80N9U",
-  "item": "ELP USBFHD01M-L28 USB UVC camera 2.8 mm",
+  "category": "Motion control",
+  "asin": "B0DY6GQMJX",
+  "item": "SIXQJZML 2\u00d7 40 \u00d7 40 \u00d7 10 mm 5 V fans",
   "packs": 1,
-  "pack_price": "22.49",
-  "total": "22.49",
-  "url": "https://www.amazon.com/dp/B00KA80N9U"
- },
- {
-  "category": "Storage",
-  "asin": "B07YGZQ4H8",
-  "item": "Kingston Canvas Select Plus 64 GB microSD SDCS2/64GB A1",
-  "packs": 1,
-  "pack_price": "17.99",
-  "total": "17.99",
-  "url": "https://www.amazon.com/dp/B07YGZQ4H8"
+  "pack_price": "5.99",
+  "total": "5.99",
+  "url": "https://www.amazon.com/dp/B0DY6GQMJX"
  },
  {
   "category": "Power",
   "asin": "B0972RKJDS",
-  "item": "Zeee 3S 11.1 V 5200 mAh XT60 soft battery",
+  "item": "Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60",
   "packs": 1,
   "pack_price": "34.99",
   "total": "34.99",
   "url": "https://www.amazon.com/dp/B0972RKJDS"
  },
  {
-  "category": "Charging",
+  "category": "Power",
+  "asin": "B07P663XJV",
+  "item": "DROK 8\u201335 V to 5 V 3 A buck converter",
+  "packs": 1,
+  "pack_price": "9.99",
+  "total": "9.99",
+  "url": "https://www.amazon.com/dp/B07P663XJV"
+ },
+ {
+  "category": "Power",
   "asin": "B0CV64ZB2L",
-  "item": "SKYRC B6AC Neo AC/DC balance charger 60 W AC",
+  "item": "SKYRC B6AC Neo balance charger, 60 W AC",
   "packs": 1,
   "pack_price": "53.00",
   "total": "53.00",
   "url": "https://www.amazon.com/dp/B0CV64ZB2L"
  },
  {
-  "category": "Charging",
+  "category": "Power",
   "asin": "B09CT5VGPW",
-  "item": "LINSYRC two XT60 male-to-female 30 cm 14 AWG charging extensions",
+  "item": "LINSYRC 2\u00d7 XT60 M-F 30 cm 14 AWG extensions",
   "packs": 1,
   "pack_price": "7.99",
   "total": "7.99",
   "url": "https://www.amazon.com/dp/B09CT5VGPW"
  },
  {
-  "category": "Charging",
+  "category": "Power",
+  "asin": "B07BF8154S",
+  "item": "Padarsey 2 pairs XT60 14 AWG pigtails",
+  "packs": 1,
+  "pack_price": "6.99",
+  "total": "6.99",
+  "url": "https://www.amazon.com/dp/B07BF8154S"
+ },
+ {
+  "category": "Power",
+  "asin": "B07VR4SV8C",
+  "item": "AOICRIE 2\u00d7 1S\u20138S cell voltage alarms",
+  "packs": 1,
+  "pack_price": "6.59",
+  "total": "6.59",
+  "url": "https://www.amazon.com/dp/B07VR4SV8C"
+ },
+ {
+  "category": "Power",
   "asin": "B08QCMMGJT",
-  "item": "Tenergy 7 x 9 inch LiPo charging bag",
+  "item": "Tenergy LiPo charging bag",
   "packs": 1,
   "pack_price": "8.99",
   "total": "8.99",
@@ -163,57 +145,129 @@
  },
  {
   "category": "Power",
-  "asin": "B07VR4SV8C",
-  "item": "AOICRIE two 1S-8S cell voltage alarms",
-  "packs": 1,
-  "pack_price": "6.59",
-  "total": "6.59",
-  "url": "https://www.amazon.com/dp/B07VR4SV8C"
- },
- {
-  "category": "Wiring",
-  "asin": "B07BF8154S",
-  "item": "Padarsey two pairs XT60 14 AWG pigtails",
-  "packs": 1,
-  "pack_price": "6.99",
-  "total": "6.99",
-  "url": "https://www.amazon.com/dp/B07BF8154S"
- },
- {
-  "category": "Wiring",
   "asin": "B0B15CH937",
-  "item": "XINWANG 18 AWG silicone wire six colors 5 m each",
+  "item": "XINWANG 18 AWG silicone wire, 6 colours \u00d7 5 m",
   "packs": 1,
   "pack_price": "17.89",
   "total": "17.89",
   "url": "https://www.amazon.com/dp/B0B15CH937"
  },
  {
-  "category": "Wiring",
+  "category": "Power",
+  "asin": "B08N42RQF6",
+  "item": "Bicmice US IEC C7 mains cord 6 ft",
+  "packs": 1,
+  "pack_price": "6.99",
+  "total": "6.99",
+  "url": "https://www.amazon.com/dp/B08N42RQF6"
+ },
+ {
+  "category": "Sensing and compute",
+  "asin": "B07YGZQ4H8",
+  "item": "Kingston Canvas Select Plus 64 GB microSD, A1",
+  "packs": 1,
+  "pack_price": "17.99",
+  "total": "17.99",
+  "url": "https://www.amazon.com/dp/B07YGZQ4H8"
+ },
+ {
+  "category": "Sensing and compute",
+  "asin": "B00KA80N9U",
+  "item": "ELP USBFHD01M-L28 USB camera, 2.8 mm lens",
+  "packs": 1,
+  "pack_price": "22.49",
+  "total": "22.49",
+  "url": "https://www.amazon.com/dp/B00KA80N9U"
+ },
+ {
+  "category": "Sensing and compute",
+  "asin": "B09V4DS888",
+  "item": "DWEII 2\u00d7 VL53L1X time-of-flight distance modules",
+  "packs": 2,
+  "pack_price": "14.99",
+  "total": "29.98",
+  "url": "https://www.amazon.com/dp/B09V4DS888"
+ },
+ {
+  "category": "Sensing and compute",
   "asin": "B07Z1TQYDN",
-  "item": "etguuds two USB-A to USB-C 6 ft cables",
+  "item": "etguuds 2\u00d7 USB-A to USB-C 6 ft cables",
   "packs": 1,
   "pack_price": "7.99",
   "total": "7.99",
   "url": "https://www.amazon.com/dp/B07Z1TQYDN"
  },
  {
-  "category": "Wiring",
+  "category": "Fasteners and assembly",
+  "asin": "B0FGV5FCBN",
+  "item": "Fgruh 750-piece M3 screw, nut and washer assortment",
+  "packs": 1,
+  "pack_price": "9.99",
+  "total": "9.99",
+  "url": "https://www.amazon.com/dp/B0FGV5FCBN"
+ },
+ {
+  "category": "Fasteners and assembly",
+  "asin": "B0CKBWQSNY",
+  "item": "COMRUN M2.5 nylon standoff kit",
+  "packs": 1,
+  "pack_price": "9.99",
+  "total": "9.99",
+  "url": "https://www.amazon.com/dp/B0CKBWQSNY"
+ },
+ {
+  "category": "Fasteners and assembly",
+  "asin": "B0DFWWFY4Q",
+  "item": "645-piece M2 stainless screw, nut and washer set, button head",
+  "packs": 1,
+  "pack_price": "6.99",
+  "total": "6.99",
+  "url": "https://www.amazon.com/dp/B0DFWWFY4Q"
+ },
+ {
+  "category": "Fasteners and assembly",
+  "asin": "B0GH8CGW2T",
+  "item": "MEIVIFPV 5\u00d7 20 \u00d7 250 mm battery straps",
+  "packs": 1,
+  "pack_price": "9.99",
+  "total": "9.99",
+  "url": "https://www.amazon.com/dp/B0GH8CGW2T"
+ },
+ {
+  "category": "Fasteners and assembly",
   "asin": "B01MFA3OFA",
-  "item": "Ginsco 580 heat-shrink assortment",
+  "item": "Ginsco 580-piece heat-shrink assortment",
   "packs": 1,
   "pack_price": "7.99",
   "total": "7.99",
   "url": "https://www.amazon.com/dp/B01MFA3OFA"
  },
  {
-  "category": "Wiring",
+  "category": "Fasteners and assembly",
   "asin": "B0F9T5G2J5",
-  "item": "ALLWIN 100 cable mounts and 100 cable ties",
+  "item": "ALLWIN 100 cable mounts + 100 cable ties",
   "packs": 1,
   "pack_price": "6.99",
   "total": "6.99",
   "url": "https://www.amazon.com/dp/B0F9T5G2J5"
+ },
+ {
+  "category": "Tool",
+  "asin": "B0GGHDNZWJ",
+  "item": "MEIYA hanging scale",
+  "packs": 1,
+  "pack_price": "7.99",
+  "total": "7.99",
+  "url": "https://www.amazon.com/dp/B0GGHDNZWJ"
+ },
+ {
+  "category": "Tool",
+  "asin": "B08Y8M54M9",
+  "item": "Jiavarry 150 mm digital caliper",
+  "packs": 1,
+  "pack_price": "21.98",
+  "total": "21.98",
+  "url": "https://www.amazon.com/dp/B08Y8M54M9"
  },
  {
   "category": "Tool",
@@ -226,15 +280,6 @@
  },
  {
   "category": "Tool",
-  "asin": "B08Y8M54M9",
-  "item": "Jiavarry 150 mm caliper",
-  "packs": 1,
-  "pack_price": "21.98",
-  "total": "21.98",
-  "url": "https://www.amazon.com/dp/B08Y8M54M9"
- },
- {
-  "category": "Tool",
   "asin": "B087767KNW",
   "item": "Q-MING soldering iron kit",
   "packs": 1,
@@ -244,17 +289,8 @@
  },
  {
   "category": "Tool",
-  "asin": "B09WYHPHTC",
-  "item": "WORKPRO 12 inch hacksaw",
-  "packs": 1,
-  "pack_price": "18.73",
-  "total": "18.73",
-  "url": "https://www.amazon.com/dp/B09WYHPHTC"
- },
- {
-  "category": "Tool",
   "asin": "B0CJBRYQF3",
-  "item": "AMTOVL metric hex keys",
+  "item": "AMTOVL metric hex key set",
   "packs": 1,
   "pack_price": "9.99",
   "total": "9.99",
@@ -268,32 +304,5 @@
   "pack_price": "9.99",
   "total": "9.99",
   "url": "https://www.amazon.com/dp/B08Y6GDS61"
- },
- {
-  "category": "Tool",
-  "asin": "B0GGHDNZWJ",
-  "item": "MEIYA hanging scale",
-  "packs": 1,
-  "pack_price": "7.99",
-  "total": "7.99",
-  "url": "https://www.amazon.com/dp/B0GGHDNZWJ"
- },
- {
-  "category": "Cooling",
-  "asin": "B0DY6GQMJX",
-  "item": "SIXQJZML two 40 x40 x10 mm 5 V 0.15 A fans",
-  "packs": 1,
-  "pack_price": "5.99",
-  "total": "5.99",
-  "url": "https://www.amazon.com/dp/B0DY6GQMJX"
- },
- {
-  "category": "Charging",
-  "asin": "B08N42RQF6",
-  "item": "Bicmice US non-polarized IEC C7 mains cord 6 ft; omit if correct cord included",
-  "packs": 1,
-  "pack_price": "6.99",
-  "total": "6.99",
-  "url": "https://www.amazon.com/dp/B08N42RQF6"
  }
 ]

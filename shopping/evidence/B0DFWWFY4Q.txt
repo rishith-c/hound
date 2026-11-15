@@ -1,0 +1,9 @@
+ASIN B0DFWWFY4Q
+645 Pcs M2 Screws Kit, M2 Machine Screws and Nuts and Washers Set, Assorted Stainless Steel Button Head
+Observed 2026-09-05 on Amazon US search results, page 1, query "M2 screw nut assortment kit stainless"
+Price: $6.99
+Delivery: FREE delivery tomorrow 7-11 AM
+Rating: 4.5 out of 5 stars
+Why selected: cheapest M2 set that includes nuts and washers (B0FG2CC91J $9.99 is socket screws only; B0CQWYFTXC $17.99 is a mixed M2-M5 set duplicating the owned M3 kit).
+Needed for: VL53L1X modules (4x2), LD2410C + LD2450 (2x2), ELP camera (4) - approx. 16 screws. No other kit in the BOM covers M2.
+Not verified from this capture: exact lengths included, head style fit under the ELP board.

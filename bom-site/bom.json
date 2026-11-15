@@ -1,159 +1,89 @@
 {
-  "prose": {
-    "design": [
-      "Four independently driven 80 mm mecanum wheels, a low 2020 frame, fixed forward-facing radar mounts, a camera and four short-range obstacle sensors. Use your LiPo for motor power and your power bank for logic. The fifth motor and TB6600 stay spare. No linear rail, belt, sweep switches, tall gantry, or additional radar/ESP32 purchase.",
-      "The first working milestone is a camera-guided rover that moves slowly, stops, lets vibration settle, and reports radar evidence. Then add a bounded indoor route using known visual markers and obstacle-stop logic. Four range sensors are useful for guarding forward/reverse/sideways motion, but do not provide complete obstacle or stair coverage. The BOM does not include ready-to-run navigation or detection software.",
-      "LD2410C is the primary presence sensor, including stationary/micro-moving presence. LD2450 adds positions and speeds of moving targets; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements. The second LD2410C is spare. Start with one radar powered; test the two radar types separately, then test simultaneous operation for interference before enabling both. Keep antenna faces unobstructed by metal.",
-      "A linear slide is not required for presence sensing. Rotate the rover between stationary scans if another view is useful. Different readings alone do not establish accurate triangulation. This is an indoor search demonstration; these sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present."
-    ],
-    "power": [
-      "LiPo -> suitable battery overcurrent protection -> verified DC-rated switch -> shield VMOT -> four DRV8825 drivers -> four motors.",
-      "Power bank -> Pi power input. Pi USB-A -> included USB-A-to-B cable -> selected Uno USB-B for logic power and serial.",
-      "Pi -> camera by USB. One ESP32-S3 can bridge radar UART data to the Pi; the CP2102 is useful for bench setup or a single direct UART link.",
-      "Radars require their specified 5 V supply and 3.3 V UART signaling. Check the CP2102 board's actual I/O voltage; a selectable power-output pin does not necessarily change UART levels. Do not power radars from a weak 3.3 V adapter regulator.",
-      "Four VL53L1X modules share I2C only after individual XSHUT control assigns unique addresses at boot. Keep Pi-side signaling at 3.3 V.",
-      "Keep signal grounds correctly referenced, including the Uno/shield motor-supply reference. Never put LiPo voltage on a logic rail or connect two independent 5 V outputs together."
-    ],
-    "power_after": [
-      "Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion. The 5200 mAh pack runs them for roughly two hours. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.",
-      "The Pi model and bank rating are still needed to finish the power design. The active-radar supply requirement alone exceeds 200 mA for LD2450; each fan adds 150 mA at 5 V. Use only a verified bank output with enough simultaneous current for the Pi and peripherals. Suitable battery overcurrent protection is still unresolved and unpriced; the owned switch must have an adequate DC rating."
-    ],
-    "fit": [
-      "The steel bracket drawing has 4.3 mm base slots: use M4, not M5, to attach it to the 2020 rail. Mount wheel brackets inverted on the rail underside, with two M4 T-nuts per bracket (eight total). The kit has twenty M4 x10 screws and forty M4 T-nuts. Check screw protrusion, engagement and bottoming on the real extrusion before tightening.",
-      "The bracket's nominal axle-to-foot offset is 31 mm. With 80 mm wheels: shaft height = 40 mm, rail underside = 71 mm, rail top = 91 mm. The motor bottom is nominally 18.85 mm above the floor. Four 350 mm rails butt-jointed produce a 350 x 390 mm frame. Bracket holes match the 31 mm motor pitch and M3 threads. The four M3 motor screws see under 5 N each at a full-torque jam — margin is not a concern there.",
-      "Use the purchased 5 mm wheel couplings; do not print a substitute load-bearing wheel hub. Mount each wheel as close to the motor face as the coupling allows: the motor's shaft bearing is the thinnest margin in the whole design (1.18 against an assumed 28 N radial rating that has not been confirmed for this motor). The old CAD contains a linear rail, different battery and different brackets and must not be used as fabrication instructions."
-    ],
-    "compute": [
-      "Load cases at the 4.84 kg design mass, 80 mm wheels, mecanum roller factor √2, mechanical efficiency 0.85, carpet rolling coefficient 0.12: level cruise 0.103 N·m per wheel; level at 0.3 m/s² 0.119; strafing 0.143; a 5° carpet ramp at 0.3 m/s² 0.187. The ramp governs. Available torque is holding torque × (I / 1.7 A) × 0.70, where 0.70 is a conservative low-speed pull-out factor that has not been measured. Full arithmetic, every input tagged measured / allocated / assumed, is in drivetrain.txt.",
-      "At 1/8 microstepping, 0.1 m/s is about 637 pulses/s per wheel and 0.3 m/s about 1,910 — inside a 5,000/axis timer-interrupt budget on the Uno. Use a timed four-axis custom controller with acceleration limits, shared enable and communication timeout; ordinary three-axis GRBL is unsuitable. Clamp combined translation/rotation commands to the tested maximum wheel rate.",
-      "Set DRV8825 current with Vref = 5 × Rsense × I. With 0.100 Ω sense resistors, 1.5 A is 0.75 V; identify the actual sense resistor before setting it. Do not use the A4988 formula (8 × I × Rs) on a DRV8825. Start at 1.5 A with heatsinks and the fan, then test temperature and missed steps under load before considering 1.7 A.",
-      "Before calling the rover working: measure pull-out torque at 24 rpm and 1.5 A on the real battery with a lever arm and the hanging scale — this single number retires the 0.70 assumption above. Then test all four wheel directions with wheels raised; loaded forward, reverse, strafe and turning; stop/watchdog behavior; sustained power and temperature; stationary/moving person and empty-room sensor trials; radar mutual interference; and marked-route obstacle stops. None of these tests has been performed."
-    ]
-  },
   "meta": {
     "title": "Indoor search rover — practical BOM",
-    "intro": "This includes four obstacle sensors, camera, a new motor battery, charger and charging leads, and the DRV8825 driver kit the torque check requires. Omit any equivalents you already own. Prices were observed September 4–5, 2026; stock and checkout prices can change. This is the preferred hackathon configuration, with physical validation still outstanding.",
-    "margin_note": "Margin = torque available ÷ torque required; acceptance ≥ 1.25 because the running torque is calculated, not measured. Design mass 4.84 kg. Keep total mass under about 5.2 kg or the ramp margin is gone. The one measurement that matters most: pull-out torque at 24 rpm, 1.5 A, on the real battery.",
+    "intro": "One list, everything on the rover, including what you already own. Owned rows are pre-ticked and cost $0. Every part has a position in millimetres and the fastener that holds it, computed in assembly.py from the frame geometry — not eyeballed. Prices observed September 4–5, 2026; stock and checkout prices can change. Physical validation is still outstanding.",
+    "margin_note": "Margin = torque available ÷ torque required; acceptance ≥ 1.25 because the running torque is calculated, not measured. Keep total mass under about 5.2 kg or the ramp margin is gone — that is why the power bank was dropped for a 5 V buck. The one measurement that matters most: pull-out torque at 24 rpm, 1.5 A, on the real battery.",
     "price_date": "Sept 4–5, 2026",
-    "mass_kg": 4.84,
-    "verdict": "Four JK42HS40-1704-13A motors carry the 4.84 kg design at 1.5 A per phase. That current needs DRV8825 drivers — the A4988s that ship with most CNC Shield kits fail the 5° ramp case at every setting they can run without cooking. Governing load is a 5° carpet ramp at 0.3 m/s²; steppers that lose it stall silently and lose position. Keep total mass under about 5.2 kg or the ramp margin is gone.",
-    "margins": [
-      {"name": "A4988, no cooling — 1.0 A",        "t": 0.170, "b": 1.43, "d": 1.19, "c": 0.91, "v": "FAIL ramp"},
-      {"name": "A4988, heatsink + fan — 1.2 A",    "t": 0.204, "b": 1.71, "d": 1.43, "c": 1.09, "v": "FAIL ramp"},
-      {"name": "DRV8825, no cooling — 1.5 A",      "t": 0.254, "b": 2.14, "d": 1.78, "c": 1.36, "v": "PASS"},
-      {"name": "DRV8825, heatsink + fan — 1.7 A",  "t": 0.288, "b": 2.43, "d": 2.02, "c": 1.54, "v": "PASS"}
-    ],
-    "not_analysed": "Fatigue, buckling, impact, vibration, roller wear, uneven floors and wheel unloading, combined-slip mecanum behaviour, motor and driver thermal equilibrium, battery sag under stall, firmware timing, motor-bearing radial rating (assumed 28 N — thinnest margin at 1.18), detection performance of any sensor. No physical test has been run."
+    "not_analysed": "Fatigue, buckling, impact, vibration, roller wear, uneven floors and wheel unloading, combined-slip mecanum behaviour, motor and driver thermal equilibrium, battery sag under stall, firmware timing, fastener pull-out in PETG, deck deflection under the turret, servo torque with the camera fitted, motor-bearing radial rating (assumed 28 N — thinnest margin in the design), and radar detection at 300 mm height (Walleye measured floor-level radar as blind; this is a compromise to test). No physical test has been run."
   },
-  "owned": [
-    {"item": "JK42HS40-1704-13A NEMA 17 stepper", "qty": "5", "note": "Four drive wheels; fifth spare. 0.41 N·m holding, 1.7 A, 0.24 kg each"},
-    {"item": "Raspberry Pi", "qty": "1", "note": "Camera, interface, sensor processing. Model still unknown"},
-    {"item": "USB power bank", "qty": "1", "note": "Logic power for the Pi. Verify combined output current"},
-    {"item": "HLK-LD2410C 24 GHz radar", "qty": "2", "note": "Primary presence sensor, sees a motionless person; one spare"},
-    {"item": "HLK-LD2450 24 GHz radar", "qty": "1", "note": "x/y of moving targets only. Not a heartbeat sensor — neither is"},
-    {"item": "ESP32-S3 (N16R8)", "qty": "3", "note": "One as radar UART bridge; two free for WiFi CSI experiments"},
-    {"item": "CP2102 USB-UART", "qty": "1", "note": "Bench setup. Check it is 3.3 V logic before touching a radar"},
-    {"item": "TB6600 driver", "qty": "1", "note": "Spare. No fifth axis in this design"},
-    {"item": "Dupont leads, 22 AWG wire", "qty": "stock", "note": "Signal wiring"},
-    {"item": "3-pin switch", "qty": "1", "note": "Motor power switch candidate. DC rating unverified"}
-  ],
-  "sections": [
-    {
-      "name": "Drivetrain",
-      "why": "The four owned motors plus the wheels and the steel brackets that hold them. Use the couplings that come with the wheels; do not print a load-bearing hub.",
-      "items": [
-        {"asin": "B0DWSWQV4T", "item": "SmaringRobot 4× 80 mm mecanum wheels with 5 mm couplings", "packs": 1, "price": 29.99,
-         "note": "Two left-hand, two right-hand. Same handedness on each diagonal."},
-        {"asin": "B073QW9RPZ", "item": "Anndason 6× steel NEMA 17 L-brackets with screws", "packs": 1, "price": 16.99,
-         "note": "Four used, two spare. 31 mm bolt pattern. Base slots are 4.3 mm — use M4 T-nuts, not M5. Mount inverted under the rail."}
-      ]
-    },
-    {
-      "name": "Frame",
-      "why": "Four 350 mm rails butt-jointed into a 350 × 390 mm rectangle. Rail top sits 91 mm off the floor with 80 mm wheels.",
-      "items": [
-        {"asin": "B099M9DMSL", "item": "VICHSAMWY 4× 350 mm 2020 V-slot aluminium extrusion", "packs": 1, "price": 16.59},
-        {"asin": "B0F1B85397", "item": "TOCLUX 20× 2020 corner brackets with M5 screws and T-nuts", "packs": 1, "price": 14.99,
-         "note": "Eight for the frame corners, rest for deck and mount attachment."},
-        {"asin": "B0FQ55VFDK", "item": "Bemaka 2020 T-nut kit, M3/M4/M5, with M4×10 and M4×12 screws", "packs": 1, "price": 13.99,
-         "note": "The M4 T-nuts and screws here are what hold the motor brackets to the rails."}
-      ]
-    },
-    {
-      "name": "Motion control",
-      "why": "Uno generates the step pulses on a timer interrupt; the shield carries four drivers. DRV8825 is required, not optional — see the torque table above. Ordinary GRBL cannot do independent four-wheel drive; this runs custom firmware with a shared ENABLE on D8 and the A axis on D12/D13.",
-      "items": [
-        {"asin": "B01EWOE0UU", "item": "ELEGOO Uno R3 with USB cable", "packs": 1, "price": 16.99},
-        {"asin": "B0B24YS695", "item": "CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks", "packs": 1, "price": 15.99,
-         "note": "Replaces the A4988 kit ($9.99) — +$6 buys the ramp margin. Set Vref = 5 × Rsense × I; with 0.100 Ω sense resistors 1.5 A is 0.75 V. Identify the sense resistor first."},
-        {"asin": "B0DY6GQMJX", "item": "SIXQJZML 2× 40 × 40 × 10 mm 5 V fans", "packs": 1, "price": 5.99,
-         "note": "One over the drivers, one spare. Needed for the 1.7 A setting; good practice at 1.5 A."}
-      ]
-    },
-    {
-      "name": "Power",
-      "why": "LiPo → overcurrent protection → DC-rated switch → shield VMOT. The Pi runs off the power bank, never off the LiPo rail. Motors draw about 2 A at 1.5 A/phase; the 5200 mAh pack runs them for roughly 2 hours.",
-      "items": [
-        {"asin": "B0972RKJDS", "item": "Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60", "packs": 1, "price": 34.99,
-         "note": "343 g, 132 × 43 × 25 mm. Strap it low and centred — it is the heaviest single part."},
-        {"asin": "B0CV64ZB2L", "item": "SKYRC B6AC Neo balance charger, 60 W AC", "packs": 1, "price": 53.00,
-         "note": "Start at 2.6 A = 0.5 C. Follow the pack's instructions."},
-        {"asin": "B09CT5VGPW", "item": "LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions", "packs": 1, "price": 7.99},
-        {"asin": "B07BF8154S", "item": "Padarsey 2 pairs XT60 14 AWG pigtails", "packs": 1, "price": 6.99},
-        {"asin": "B07VR4SV8C", "item": "AOICRIE 2× 1S–8S cell voltage alarms", "packs": 1, "price": 6.59,
-         "note": "Plugs into the balance lead. Screams before the pack is damaged."},
-        {"asin": "B08QCMMGJT", "item": "Tenergy LiPo charging bag", "packs": 1, "price": 8.99},
-        {"asin": "B0B15CH937", "item": "XINWANG 18 AWG silicone wire, 6 colours × 5 m", "packs": 1, "price": 17.89,
-         "note": "Motor and VMOT runs. 22 AWG would carry it; 18 AWG is comfortable."},
-        {"asin": "B08N42RQF6", "item": "Bicmice US IEC C7 mains cord 6 ft", "packs": 1, "price": 6.99,
-         "note": "Omit if the charger ships with the right cord."}
-      ]
-    },
-    {
-      "name": "Sensing and compute",
-      "why": "Fixed forward-facing radar mounts with the antenna face clear of metal. Camera and four short-range ToF sensors for obstacle stops. The two radar types get tested separately before running together.",
-      "items": [
-        {"asin": "B09V4DS888", "item": "DWEII 2× VL53L1X time-of-flight distance modules", "packs": 2, "price": 14.99,
-         "note": "Four total: forward, reverse, both sides. Share I²C only after XSHUT assigns unique addresses at boot."},
-        {"asin": "B00KA80N9U", "item": "ELP USBFHD01M-L28 USB camera, 2.8 mm lens", "packs": 1, "price": 22.49},
-        {"asin": "B07YGZQ4H8", "item": "Kingston Canvas Select Plus 64 GB microSD, A1", "packs": 1, "price": 17.99},
-        {"asin": "B07Z1TQYDN", "item": "etguuds 2× USB-A to USB-C 6 ft cables", "packs": 1, "price": 7.99}
-      ]
-    },
-    {
-      "name": "Fasteners and assembly",
-      "why": "Everything that holds it together. The M3 motor bolts see under 5 N each at a full-torque jam — margin is not a concern there.",
-      "items": [
-        {"asin": "B0FGV5FCBN", "item": "Fgruh 750-piece M3 screw, nut and washer assortment", "packs": 1, "price": 9.99},
-        {"asin": "B0CKBWQSNY", "item": "COMRUN M2.5 nylon standoff kit", "packs": 1, "price": 9.99,
-         "note": "Pi, Uno and ESP32 mounting."},
-        {"asin": "B0GH8CGW2T", "item": "MEIVIFPV 5× 20 × 250 mm battery straps", "packs": 1, "price": 9.99},
-        {"asin": "B01MFA3OFA", "item": "Ginsco 580-piece heat-shrink assortment", "packs": 1, "price": 7.99},
-        {"asin": "B0F9T5G2J5", "item": "ALLWIN 100 cable mounts + 100 cable ties", "packs": 1, "price": 6.99}
-      ]
-    },
-    {
-      "name": "Fabrication",
-      "why": "Printed deck tiles, sensor mounts, electronics tray and battery cradle. PETG over PLA for the battery cradle — it will sit next to warm drivers.",
-      "items": [
-        {"asin": "B07PGYHYV8", "item": "OVERTURE black PETG 1 kg 1.75 mm", "packs": 1, "price": 14.69}
-      ]
-    },
-    {
-      "name": "Tools",
-      "optional": true,
-      "why": "Only if you do not already have them. The hanging scale is the one that matters: it is how you measure the motor torque this whole design rests on.",
-      "items": [
-        {"asin": "B0GGHDNZWJ", "item": "MEIYA hanging scale", "packs": 1, "price": 7.99,
-         "note": "Lever arm on the motor shaft, scale on the lever, read the force. T = F × arm."},
-        {"asin": "B0DYJ465TC", "item": "Westinghouse MM600V15 multimeter", "packs": 1, "price": 34.89,
-         "note": "Vref setting needs this."},
-        {"asin": "B08Y8M54M9", "item": "Jiavarry 150 mm digital caliper", "packs": 1, "price": 21.98},
-        {"asin": "B087767KNW", "item": "Q-MING soldering iron kit", "packs": 1, "price": 12.59},
-        {"asin": "B09WYHPHTC", "item": "WORKPRO 12 inch hacksaw", "packs": 1, "price": 18.73},
-        {"asin": "B0CJBRYQF3", "item": "AMTOVL metric hex key set", "packs": 1, "price": 9.99},
-        {"asin": "B08Y6GDS61", "item": "DOWELL wire strippers", "packs": 1, "price": 9.99}
-      ]
-    }
+  "prose": {
+    "design": [
+      "Four independently driven 80 mm mecanum wheels on the four owned NEMA 17 steppers, a low 350 × 390 mm 2020 frame, the battery slung under the deck for a low centre of gravity, the Ceres pan/tilt turret at the front carrying the USB camera so it can look around and track, and both radars on a 200 mm post at the rear looking forward over the turret. Four short-range ToF sensors guard each side. The fifth motor and TB6600 stay spare.",
+      "No kit does this. Every mecanum chassis kit on Amazon is built for TT or DC gearmotors; none has a NEMA 17 mount. Steel L-brackets under the rails are the cleanest way to put your steppers on mecanum wheels, and the 5 mm couplers in the wheel set match the 5 mm flatted shaft on your motors.",
+      "Power is one LiPo. It feeds the motor drivers directly, a 5 V buck for the Pi, and the Ceres 6 V buck for the servos. The power bank is gone: 350 g of unknown mass was the difference between passing and failing the ramp case.",
+      "LD2410C is the primary presence sensor, including stationary/micro-moving presence. LD2450 adds positions and speeds of moving targets; it is not the primary detector for an immobile person. Neither outputs heartbeat measurements. Start with one radar powered; test the two radar types separately, then together for interference. These sensors are not validated here for finding a motionless person behind concrete, rubble, fire or smoke. No detection must never be interpreted as proof that nobody is present."
+    ],
+    "power": [
+      "LiPo XT60 -> XT60 pigtail -> three 18 AWG branches: shield VMOT (four DRV8825 -> four motors), 5 V buck IN, 6 V buck IN. No fuse, by your call — the XT60 is the disconnect, so keep the pack leads short and sleeved.",
+      "5 V buck OUT -> Pi GPIO pins 2/4 (5 V) and 6 (GND). Set it to 5.10 V unloaded with the multimeter before the Pi is connected. Pi USB-A -> Uno USB-B for logic power and serial.",
+      "6 V buck OUT -> PCA9685 V+ terminal (Ceres). Set to 6.0 V before connecting. Servo current returns through the PCA9685 terminal, never through a USB ground.",
+      "Pi -> camera by USB. Pi -> ESP32-S3 by USB-C; the ESP32 bridges both radar UARTs. Radars take 5 V power and 3.3 V UART signalling.",
+      "Four VL53L1X share I2C only after XSHUT (GPIO 5, 6, 13, 19) assigns unique addresses at boot. PCA9685 is on the same I2C bus at 0x40.",
+      "Single common ground at the shield GND terminal. Never put LiPo voltage on a logic rail."
+    ],
+    "power_after": [
+      "Motors at 1.5 A per phase draw about 2 A from the pack at cruise — copper loss dominates, not motion. The 5200 mAh pack runs motors for roughly two hours. Holding current at rest costs the same as moving, so cut ENABLE (D8) when parked; mecanum wheels on a level floor do not roll away.",
+      "The owned three-pin switch is not in the load path until its DC rating is read off the body and is at least 10 A."
+    ],
+    "fit": [
+      "Frame: two side rails along X with outer faces at Y = ±195; two cross rails along Y butted between them with outer faces at X = ±175. Rails sit at Z 71–91. Eight corner brackets, one top and one bottom at each joint, M5 T-nuts, 3.0 N·m maximum or the slot deforms.",
+      "Drive: each steel L-bracket goes inverted under a side rail near its end, foot against the rail underside on two M4 T-nuts, leg hanging down flush with the rail's outer face. The motor bolts to the inboard side of the leg with four M3×6 at 0.8 N·m (aluminium threads — the full 1.1 N·m an M3 can take will strip the flange). Shaft through the leg, coupler on the flat with blue threadlocker, wheel on the coupler. Axle at X = ±125, Z = 40. Motor body bottom at Z = 18.9 mm: that is your ground clearance.",
+      "Mecanum handedness: front-left and rear-right take the left-hand wheels, front-right and rear-left the right-hand. Check from above — the rollers on top of each wheel should point toward the chassis centre, forming an X.",
+      "Deck: two PETG tiles 170 × 350 × 5 on the rail tops, six M5 T-nuts each. Battery cradle hangs under the deck centre on four M4×16 bolts — battery bottom at Z 64, well above the motors. Uno/shield stack rear-left, Pi rear-right, both bucks ahead of the Uno, PCA9685 beside the Pi, ESP32 rear-centre under the post. Turret base at X = +110 on the front tile. Radar post on the rear cross rail through the deck, radars at Z = 300 facing forward, 100 mm apart."
+    ],
+    "compute": [
+      "Load cases at the design mass, 80 mm wheels, mecanum roller factor √2, mechanical efficiency 0.85, carpet rolling coefficient 0.12: level cruise, level at 0.3 m/s², strafing, and a 5° carpet ramp at 0.3 m/s². The ramp governs. Available torque is holding torque × (I / 1.7 A) × 0.70, where 0.70 is a conservative low-speed pull-out factor that has not been measured. Full arithmetic, every input tagged measured / allocated / assumed, is in drivetrain.txt; every placement is in assembly.csv.",
+      "At 1/8 microstepping, 0.1 m/s is about 637 pulses/s per wheel and 0.3 m/s about 1,910 — inside a 5,000/axis timer-interrupt budget on the Uno. Custom four-axis firmware with acceleration limits, shared enable and a communication timeout; GRBL is unsuitable. Motor order at the shield: X = FL, Y = FR, Z = RL, A = RR with the D12/D13 jumpers fitted.",
+      "Set DRV8825 current with Vref = 5 × Rsense × I. With 0.100 Ω sense resistors, 1.5 A is 0.75 V; read the actual resistor first. Start at 1.5 A with heatsinks and the fan; 1.7 A is the reserve, not the default.",
+      "Before calling it working: caliper every part marked VERIFY before drilling the deck; measure pull-out torque at 24 rpm and 1.5 A on the real battery with a lever arm and the hanging scale; then all four wheel directions raised; loaded forward, reverse, strafe, turn; watchdog stop; temperature after 10 minutes; radar trials one at a time then together; turret tracking with the camera fitted; marked-route obstacle stops. None of these tests has been performed."
+    ]
+  },
+  "items": [
+    {"id": "MOT",    "status": "owned", "group": "Drivetrain", "item": "JK42HS40-1704-13A NEMA 17 stepper", "qty": 5, "note": "Four drive wheels, fifth spare. 0.41 N·m holding, 1.7 A, 240 g each, 5 mm flatted shaft."},
+    {"id": "WHL",    "status": "buy",   "group": "Drivetrain", "asin": "B0DWSWQV4T", "item": "SmaringRobot 4× 80 mm mecanum wheels with 5 mm couplings", "qty": 1, "price": 29.99, "note": "Two left-hand, two right-hand. Coupler fits the motor's 5 mm flatted shaft; do not print a hub."},
+    {"id": "BRK",    "status": "buy",   "group": "Drivetrain", "asin": "B073QW9RPZ", "item": "Anndason 6× steel NEMA 17 L-brackets with screws", "qty": 1, "price": 16.99, "note": "Four used, two spare. 3 mm steel, 113 g each. Base slots are 4.3 mm: M4 T-nuts, not M5."},
+    {"id": "RAIL",   "status": "buy",   "group": "Frame", "asin": "B099M9DMSL", "item": "VICHSAMWY 4× 350 mm 2020 V-slot aluminium extrusion", "qty": 1, "price": 16.59, "note": "All four used at full length. Nothing to cut."},
+    {"id": "CNR",    "status": "buy",   "group": "Frame", "asin": "B0F1B85397", "item": "TOCLUX 20× 2020 corner brackets with M5 screws and T-nuts", "qty": 1, "price": 14.99, "note": "Eight for the frame corners; the rest and the 40 M5 T-nuts cover deck and post attachment."},
+    {"id": "TNUT",   "status": "buy",   "group": "Frame", "asin": "B0FQ55VFDK", "item": "Bemaka 2020 T-nut kit, M3/M4/M5, with M4×10 and M4×12 screws", "qty": 1, "price": 13.99, "note": "The M4 T-nuts and M4×10 screws hold the motor brackets to the rails."},
+    {"id": "PETG",   "status": "buy",   "group": "Deck and body", "asin": "B07PGYHYV8", "item": "OVERTURE black PETG 1 kg 1.75 mm", "qty": 1, "price": 14.69, "note": "Two deck tiles, battery cradle, radar post + bar, fan bridge, four ToF clips. ~0.5 kg of the spool."},
+    {"id": "UNO",    "status": "buy",   "group": "Motion control", "asin": "B01EWOE0UU", "item": "ELEGOO Uno R3 with USB cable", "qty": 1, "price": 16.99, "note": "Generates the step pulses on a timer interrupt. The included USB cable runs to the Pi."},
+    {"id": "SHIELD", "status": "buy",   "group": "Motion control", "asin": "B0B24YS695", "item": "CNC Shield V3 kit with 4× DRV8825 drivers and heatsinks", "qty": 1, "price": 15.99, "note": "Required, not optional: A4988 fails the ramp case. Fit the D12/D13 jumpers for the fourth axis. Vref = 5 × Rsense × I."},
+    {"id": "FAN",    "status": "buy",   "group": "Motion control", "asin": "B0DY6GQMJX", "item": "SIXQJZML 2× 40 × 40 × 10 mm 5 V fans", "qty": 1, "price": 5.99, "note": "One over the drivers on a printed bridge, one spare. Powered from the 5 V buck."},
+    {"id": "TB6600", "status": "owned", "group": "Motion control", "item": "TB6600 stepper driver", "qty": 1, "note": "Spare. No fifth axis in this design."},
+    {"id": "LIPO",   "status": "buy",   "group": "Power", "asin": "B0972RKJDS", "item": "Zeee 3S 11.1 V 5200 mAh 50 C LiPo, XT60", "qty": 1, "price": 34.99, "note": "343 g, 132 × 43 × 25 mm. Slung under the deck centre — the lowest heavy part on the rover."},
+    {"id": "BUCK5",  "status": "buy",   "group": "Power", "asin": "B07P663XJV", "item": "DROK 8–35 V to 5 V 3 A buck converter", "qty": 1, "price": 9.99, "note": "Replaces the power bank (−310 g). Feeds the Pi on GPIO 5 V. Set 5.10 V before connecting."},
+    {"id": "BUCK6",  "status": "owned", "group": "Power", "item": "6 V servo buck converter (Ceres)", "qty": 1, "note": "From the Ceres turret rail. Confirm it is still in the box; feeds PCA9685 V+."},
+    {"id": "CHG",    "status": "buy",   "group": "Power", "asin": "B0CV64ZB2L", "item": "SKYRC B6AC Neo balance charger, 60 W AC", "qty": 1, "price": 53.00, "note": "Start at 2.6 A = 0.5 C. Follow the pack's instructions."},
+    {"id": "XT60EXT","status": "buy",   "group": "Power", "asin": "B09CT5VGPW", "item": "LINSYRC 2× XT60 M-F 30 cm 14 AWG extensions", "qty": 1, "price": 7.99, "note": "Charger lead."},
+    {"id": "XT60PIG","status": "buy",   "group": "Power", "asin": "B07BF8154S", "item": "Padarsey 2 pairs XT60 14 AWG pigtails", "qty": 1, "price": 6.99, "note": "The rover-side pigtail splits into the three 18 AWG branches."},
+    {"id": "ALARM",  "status": "buy",   "group": "Power", "asin": "B07VR4SV8C", "item": "AOICRIE 2× 1S–8S cell voltage alarms", "qty": 1, "price": 6.59, "note": "On the balance lead, velcroed to the cradle side."},
+    {"id": "BAG",    "status": "buy",   "group": "Power", "asin": "B08QCMMGJT", "item": "Tenergy LiPo charging bag", "qty": 1, "price": 8.99},
+    {"id": "WIRE18", "status": "buy",   "group": "Power", "asin": "B0B15CH937", "item": "XINWANG 18 AWG silicone wire, 6 colours × 5 m", "qty": 1, "price": 17.89, "note": "Power branches. 22 AWG would carry it; 18 AWG is comfortable."},
+    {"id": "CORD",   "status": "buy",   "group": "Power", "asin": "B08N42RQF6", "item": "Bicmice US IEC C7 mains cord 6 ft", "qty": 1, "price": 6.99, "note": "Omit if the charger ships with the right cord."},
+    {"id": "SW",     "status": "owned", "group": "Power", "item": "Three-pin switch", "qty": 1, "note": "Not wired in until its DC rating is read and is ≥ 10 A. Until then the XT60 is the switch."},
+    {"id": "PI",     "status": "owned", "group": "Sensing and compute", "item": "Raspberry Pi", "qty": 1, "note": "Camera, radar processing, servo control, interface. Model still unknown — affects the 5 V budget."},
+    {"id": "SD",     "status": "buy",   "group": "Sensing and compute", "asin": "B07YGZQ4H8", "item": "Kingston Canvas Select Plus 64 GB microSD, A1", "qty": 1, "price": 17.99},
+    {"id": "CAM",    "status": "buy",   "group": "Sensing and compute", "asin": "B00KA80N9U", "item": "ELP USBFHD01M-L28 USB camera, 2.8 mm lens", "qty": 1, "price": 22.49, "note": "Rides on the Ceres tilt bracket. 38 × 38 board, ~50 g — lighter than the C920 the turret carried before."},
+    {"id": "LD2410C","status": "owned", "group": "Sensing and compute", "item": "HLK-LD2410C 24 GHz radar", "qty": 2, "note": "Primary presence sensor; sees a motionless person. One on the post, one spare."},
+    {"id": "LD2450", "status": "owned", "group": "Sensing and compute", "item": "HLK-LD2450 24 GHz radar", "qty": 1, "note": "x/y of moving targets only. On the post 100 mm from the LD2410C."},
+    {"id": "ESP32",  "status": "owned", "group": "Sensing and compute", "item": "ESP32-S3 DevKitC (N16R8)", "qty": 3, "note": "One bridges both radar UARTs to the Pi over USB. Two free for WiFi CSI experiments."},
+    {"id": "CP2102", "status": "owned", "group": "Sensing and compute", "item": "CP2102 USB-UART", "qty": 1, "note": "Bench setup only. Check it is 3.3 V logic before touching a radar."},
+    {"id": "TOF",    "status": "buy",   "group": "Sensing and compute", "asin": "B09V4DS888", "item": "DWEII 2× VL53L1X time-of-flight distance modules", "qty": 2, "price": 14.99, "note": "Four total: front, rear, left, right, each in a printed clip on the rail's outer slot."},
+    {"id": "USBC",   "status": "buy",   "group": "Sensing and compute", "asin": "B07Z1TQYDN", "item": "etguuds 2× USB-A to USB-C 6 ft cables", "qty": 1, "price": 7.99, "note": "Pi to ESP32. Trim to length or coil and tie."},
+    {"id": "PT",     "status": "owned", "group": "Turret (Ceres)", "item": "Ceres pan/tilt turret: 2× MG996R-class servos + bracket + 100 × 60 base", "qty": 1, "note": "From the farm rover. Bolts to the front deck tile at X +110. Camera on the tilt bracket."},
+    {"id": "PCA",    "status": "owned", "group": "Turret (Ceres)", "item": "PCA9685 16-channel servo driver (Ceres)", "qty": 1, "note": "I2C 0x40 from the Pi. Tilt ch 0, pan ch 2, as in turret_duet.ino."},
+    {"id": "M3KIT",  "status": "buy",   "group": "Fasteners and assembly", "asin": "B0FGV5FCBN", "item": "Fgruh 750-piece M3 screw, nut and washer assortment", "qty": 1, "price": 9.99, "note": "16× M3×6 motor screws, turret base bolts, buck and fan-bridge screws."},
+    {"id": "STANDOFF","status": "buy",  "group": "Fasteners and assembly", "asin": "B0CKBWQSNY", "item": "COMRUN M2.5 nylon standoff kit", "qty": 1, "price": 9.99, "note": "Uno, Pi, PCA9685, ESP32 — 16 standoffs."},
+    {"id": "M2KIT",  "status": "buy",   "group": "Fasteners and assembly", "asin": "B0DFWWFY4Q", "item": "645-piece M2 stainless screw, nut and washer set, button head", "qty": 1, "price": 6.99, "note": "Radar, ToF and camera boards have ~2 mm holes that no other kit covers. 16 screws used."},
+    {"id": "STRAP",  "status": "buy",   "group": "Fasteners and assembly", "asin": "B0GH8CGW2T", "item": "MEIVIFPV 5× 20 × 250 mm battery straps", "qty": 1, "price": 9.99, "note": "One through the cradle; spares."},
+    {"id": "SHRINK", "status": "buy",   "group": "Fasteners and assembly", "asin": "B01MFA3OFA", "item": "Ginsco 580-piece heat-shrink assortment", "qty": 1, "price": 7.99, "note": "Every power joint."},
+    {"id": "TIES",   "status": "buy",   "group": "Fasteners and assembly", "asin": "B0F9T5G2J5", "item": "ALLWIN 100 cable mounts + 100 cable ties", "qty": 1, "price": 6.99, "note": "Motor leads under the deck; power branches on top."},
+    {"id": "WIRE22", "status": "owned", "group": "Fasteners and assembly", "item": "Dupont leads, 22 AWG wire", "qty": "stock", "note": "I2C, UART, XSHUT lines, motor lead extensions if the 300 mm stock leads fall short."},
+    {"id": "SCALE",  "status": "optional", "group": "Tools", "asin": "B0GGHDNZWJ", "item": "MEIYA hanging scale", "qty": 1, "price": 7.99, "note": "The torque measurement: lever on the shaft, scale on the lever, T = F × arm."},
+    {"id": "CALIPER","status": "optional", "group": "Tools", "asin": "B08Y8M54M9", "item": "Jiavarry 150 mm digital caliper", "qty": 1, "price": 21.98, "note": "Needed for every VERIFY dimension before drilling the deck. Skip only if you own one."},
+    {"id": "DMM",    "status": "optional", "group": "Tools", "asin": "B0DYJ465TC", "item": "Westinghouse MM600V15 multimeter", "qty": 1, "price": 34.89, "note": "Vref and buck voltages."},
+    {"id": "IRON",   "status": "optional", "group": "Tools", "asin": "B087767KNW", "item": "Q-MING soldering iron kit", "qty": 1, "price": 12.59},
+    {"id": "HEX",    "status": "optional", "group": "Tools", "asin": "B0CJBRYQF3", "item": "AMTOVL metric hex key set", "qty": 1, "price": 9.99, "note": "2.5 / 3 / 4 mm for M3 / M4 / M5."},
+    {"id": "STRIP",  "status": "optional", "group": "Tools", "asin": "B08Y6GDS61", "item": "DOWELL wire strippers", "qty": 1, "price": 9.99}
   ]
 }
