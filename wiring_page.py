@@ -50,12 +50,12 @@ COL = {"RD": "red", "BK": "black", "YE": "yellow", "BU": "blue", "GN": "green", 
 
 # ── the GPT prompt, generated from the same data ─────────────────────────────────────────────────────────────
 P = []
-P.append("""You are an electronics documentation engineer. Produce the complete wiring diagram set for "Hound", an indoor search rover (Raspberry Pi 4 + Arduino UNO R4 WiFi + CNC Shield v3 + 4× DRV8825 + 4× NEMA 17 mecanum drive, 3S LiPo, ONE buck converter (XL4015 at 5.0 V) powering the tilt servo and the fan directly from its output pads, the servo signal from the CNC shield's own Z+ end-stop pin (R4 D11), no servo board, an ESP32-S3 on its own small power bank, MLX90640 thermal array, 2× VL53L1X ToF, INMP441 mic, 2–3 HLK radars on CP2102 USB-UART adapters, ESP32-S3 WiFi-CSI node, webcam).
+P.append("""You are an electronics documentation engineer. Produce the complete wiring diagram set for "Hound", an indoor search rover (Raspberry Pi 4 + Arduino UNO R4 WiFi + CNC Shield v3 + 4× DRV8825 + 4× NEMA 17 mecanum drive, 3S LiPo, ONE buck converter (XL4015 at 5.0 V) feeding a PCA9685 servo board that the R4 drives over the CNC shield's I2C pins (tilt servo ch 3, pan servo ch 2, fan on ch 15), an ESP32-S3 WiFi-CSI node on its own small power bank, MLX90640 thermal array, 2× VL53L1X ToF, INMP441 mic, 2× HLK-LD2410C radars on CP2102 USB-UART adapters, an HLK-LD2450 radar on the Pi's own UART, webcam).
 
 HARD RULES — read before drawing anything
 1. Use ONLY the connectors, pins and wires listed below. Every pin name is taken from a datasheet or the board silkscreen. Do not add, rename, merge or "helpfully" reroute anything. If something looks wrong, say so in a note; do not fix it silently.
 2. Every wire is drawn with BOTH ends labelled "CONNECTOR:pin", its colour and its gauge, exactly as listed.
-3. Colour the rails consistently: 11.1 V pack = red, 6.0 V servo rail = orange, 5.0 V rail = yellow, 3.3 V = violet, GND = black, signals = blue/green/white as listed.
+3. Colour the rails consistently: 11.1 V pack = red, 5.0 V servo rail (XL4015) = orange, 5.0 V logic rail = yellow, 3.3 V = violet, GND = black, signals = blue/green/white as listed.
 4. Do NOT produce pin-level diagrams with an image generator: generated images get pin labels wrong. Produce them as code: a WireViz YAML file per diagram (https://github.com/wireviz/WireViz, `pip install wireviz`, needs Graphviz) rendered with Python, or hand-written SVG. An image generator may be used ONLY for a block-level overview picture with no pin text.
 5. Six diagrams, landscape, one per section below, named exactly as the section headings. Each diagram gets a notes box with the section's NOTES.
 6. Before you hand anything over, run the SELF-CHECK at the end and print its results.
@@ -82,18 +82,18 @@ for c in Wj["checks"]:
 
 P.append("""
 === DECISION ALREADY MADE: which bus drives the PCA9685 ===
-The PCA9685 hangs on the CNC shield's SDA/SCL comms header (R4 A4/A5, 5 V I2C, VCC from the shield's 5V pin) and is driven by the R4 (firmware 't <deg>' for tilt; pan is a continuous-rotation servo driven only by 'n dir ms' timed nudges, 1250/1750 µs for 300 ms then pulse off, as in Ceres's turret_duet.ino). XL4015 OUT → its V+ terminal. Tilt servo on channel 0, pan on channel 2, fan on channel 15's V+/GND pins. It must never also touch the Pi's SDA/SCL. Draw sheet 3 exactly so.
+The PCA9685 hangs on the CNC shield's SDA/SCL comms header (R4 A4/A5, 5 V I2C, VCC from the shield's 5V pin) and is driven by the R4 (firmware 't <deg>' for tilt; pan is a continuous-rotation servo driven only by 'n dir ms' eased timed nudges then pulse off, as in Ceres's turret_duet.ino; nothing is driven at boot). XL4015 OUT → its V+ terminal. Tilt servo on channel 3, pan on channel 2, fan on channel 15's V+/GND pins. It must never also touch the Pi's SDA/SCL. Draw sheet 3 exactly so.
 
 === SELF-CHECK (run it, print PASS/FAIL per line) ===
 1. Every CONNECTOR:pin used in CONNECTIONS exists in that connector's pin list.
-2. Each LD2410C and the LD2450 has exactly TWO GND wires: one to WAGO5_N, one to its CP2102 GND. Their VCC/5V comes from WAGO5_P, never from the CP2102's 5V pin.
-3. Nothing on the Pi 40-pin header carries 5 V: all I2C/I2S devices are on 3V3 pins.
+2. Each LD2410C has exactly ONE GND wire, to its own CP2102's GND, and its VCC from that adapter's +5V pin (never its 3V3 pin). The LD2450 has one GND wire, to Pi pin 34, and its 5V from Pi pin 4.
+3. Pi pin 4 is the only header pin that carries 5 V (the LD2450's supply). Every signal pin used on the header — I2C, I2S, XSHUT and the UART pins 8/10 — is 3.3 V.
 4. The MLX90640 and the two VL53L1X share I2C-1 (BCM 2/3). Addresses: 0x33, 0x29, 0x30 — no clash.
-5. Motor bus: WAGO_P → SHIELD_PWR VMOT and WAGO_N → SHIELD_PWR GND, 22 AWG, with the 1000 µF cap noted, stripe to GND.
+5. Motor bus: the Deans plug → SHIELD_PWR VMOT/GND, 14 AWG, with the 1000 µF cap noted, stripe to GND; the XL4015's 22 AWG input shares the same two screws.
 6. XL4015 OUT− goes to the PCA9685's GND terminal; the buck's negative is common with the shield GND, so the R4's I2C and the servo rail share a reference.
-7. The E-STOP sits in the pack + lead between the T-plug and WAGO_P; the Pi is on the USB bank, not on the pack.
-8. The divider is 47 kΩ WAGO_P → A3, 10 kΩ A3 → WAGO_N; A3 is the shield's CoolEn pin.
-9. ESP32-S3 no.3 is fed at its 5V pin from WAGO5_P and its USB port is marked "never while 5V is fed".
+7. The E-STOP is the Deans pull-plug on the deck, between the pack and the shield terminal; the Pi is on the USB bank, not on the pack.
+8. There is no voltage divider: A3 stays free, so the firmware's low-voltage cut stays off (vcut 0).
+9. ESP32-S3 no.3 is powered only through its USB-C, from its own small bank; nothing on the rover is wired to it.
 10. The shield's four motor headers map X=BL, Y=FL, Z=BR, A=FR; each motor's coil pairs are found with a meter, colours are indicative only.
 11. Power-up order is printed: bank → Pi → R4 (USB) → then the pack.
 """)
@@ -185,31 +185,31 @@ page = f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=vie
 <ul>
 <li>DRV8825 1/32 step = MODE0 high, MODE1 low, MODE2 high → caps on MS1 + MS3, as built. Current limit = 2 × Vref on Pololu-pattern carriers → 0.75 V = 1.5 A. Motor supply 8.2–45 V. <a href="https://www.pololu.com/product/2133">Pololu</a></li>
 <li>Raspberry Pi 4: 1.2 A shared across the four USB ports; the docs allot 0.6 A to header loads out of a 3 A supply. <a href="https://support.thepihut.com/hc/en-us/articles/360015272218-How-much-current-can-I-draw-from-a-Raspberry-Pi-USB-port">Pi Hut</a>, <a href="https://github.com/raspberrypi/documentation/blob/master/documentation/asciidoc/computers/raspberry-pi/usb-bus-on-raspberry-pi.adoc">Pi docs</a></li>
-<li>CP2102 adapters pass USB 5 V through their 5V pin (≤ 500 mA) and drive TX/RX at 3.3 V; 300 bps–1.5 Mbps covers 256000 baud. <a href="https://www.kiwi-electronics.com/en/usb-to-ttl-serial-cable-cp2102-381">Kiwi Electronics</a></li>
+<li>CP2102 adapters pass USB 5 V through their 5V pin (≤ 500 mA) and drive TX/RX at 3.3 V; 300 bps–1.5 Mbps covers 256000 baud. Their 3V3 pin is a small regulator output: it stays empty. <a href="https://www.kiwi-electronics.com/en/usb-to-ttl-serial-cable-cp2102-381">Kiwi Electronics</a></li>
 <li>MG996R-class servos accept a 3.3 V PWM signal from a PCA9685 on a Pi; the signal line carries no power. <a href="https://forums.adafruit.com/viewtopic.php?t=202397">Adafruit forum</a>, <a href="https://componentindex.net/components/mg996r/">ComponentIndex</a></li>
 <li>UNO R4 WiFi: A4/A5 are the primary I2C (Wire), 5 V logic; the Qwiic socket is Wire1 at 3.3 V. <a href="https://www.hackster.io/sensirion-software/two-separate-i2c-buses-on-arduino-uno-r4-ae55fc">Hackster</a>, <a href="https://docs.arduino.cc/tutorials/uno-r4-wifi/cheat-sheet">Arduino docs</a></li>
-<li>HLK-LD2410C pins 1–5 = TX, RX, OUT, GND, VCC (5–12 V, 5 V advised), IO 3.3 V, 256000 baud. <a href="https://naylampmechatronics.com/img/cms/001080/HLK-LD2410C_datasheet.pdf">Hi-Link manual</a>. HLK-LD2450: 5V, GND, TX, RX. <a href="https://www.espboards.dev/sensors/ld2450/">espboards</a></li>
+<li>HLK-LD2410C pins 1–5 = TX, RX, OUT, GND, VCC (5–12 V, 5 V advised), IO 3.3 V, 256000 baud. <a href="https://naylampmechatronics.com/img/cms/001080/HLK-LD2410C_datasheet.pdf">Hi-Link manual</a>. HLK-LD2450: 5V, GND, TX, RX; its 3.3 V UART goes straight onto the Pi's GPIO 14/15 (PL011 once Bluetooth is moved off it). <a href="https://www.espboards.dev/sensors/ld2450/">espboards</a></li>
 </ul>
 <h3>Functional checks run today</h3>
 <ul>
-<li>Frozen drive firmware r4_drive v1.0 compiles for the UNO R4 WiFi (79 kB, 30 % of flash).</li>
+<li>Drive firmware r4_drive (v1.0 drive + turret) compiles for the UNO R4 WiFi (88 kB, 33 % of flash); its drive code is unchanged since the v1.0-best-drive tag.</li>
 <li>drivetrain.py verdict unchanged: four motors carry the 5.13 kg rover at DRV8825 1.5 A; the 5° ramp is the governing case.</li>
 <li>The sensing sequencer runs end to end in simulation (station.py --sim) and produces its sentence.</li>
-<li>The remote GUI with the per-motor test panel was exercised through the Cloudflare tunnel earlier today; the Pi was powered down at the time of the last check.</li>
+<li>The remote (drive, motor test, turret, pan trim, motion recorder) answered through the Cloudflare tunnel on 2026-09-24; its recorder was tested against a stub R4 before deploy.</li>
 <li>Illustrated sheets: wires per sheet, and the crossings the router could not avoid (no two wires overlap): {am_rows}.</li>
 </ul>
-<div class="box warn"><b>Still to verify on the bench:</b> each I2C board powered alone must show ≤ 3.3 V on SDA; the tilt servo follows the remote's slider (5 V PWM from D11); the bank must hold ≥ 4.8 V at 2.5 A; the CP2102 adapters' silkscreen order (varies by vendor — wire by label, not position); which boards have a second header for chaining 3V3/SDA/SCL.</div>
+<div class="box warn"><b>Still to verify on the bench:</b> each I2C board powered alone must show ≤ 3.3 V on SDA; the tilt servo stops dead at a slider angle (it must be the 180° MG996R — a 360° one keeps turning); the pan's hold-still test (trim set once); the bank must hold ≥ 4.8 V at 2.5 A; the CP2102 adapters' silkscreen order (varies by vendor — wire by label, not position); which boards have a second header for chaining 3V3/SDA/SCL.</div>
 
 <h2>Finish checklist</h2>
 <ol>
 <li><b>Set the buck.</b> Solder 22 AWG leads to the HiLetgo XL4015 pads. Feed IN+/IN− from the pack (nothing on OUT), meter OUT, turn the pot counter-clockwise until it reads 5.00 V. Unplug.</li>
 <li><b>Set the four drivers.</b> Motors unplugged, R4 on USB, pack on. Meter black on the shield GND pin, red on each trimpot screw: 0.75 V. Caps under the drivers on MS1 and MS3 (1/32), D12/D13 jumpers on the A header.</li>
-<li><b>Pack side.</b> Pack → Deans plug → shield VMOT/GND, 1000 µF across the terminal (stripe to GND). Twist the XL4015's 22 AWG input wires with the pack leads in the same two screws, tug-test. XL4015 OUT+/OUT− → the PCA9685's V+/GND terminal. Four Dupont wires from the shield's comms header (SDA, SCL, 5V, GND) to the PCA9685 logic header. Tilt servo onto channel 0, pan onto channel 2 (brown to the board edge), fan red/black onto channel 15's V+/GND pins.</li>
-<li><b>Pi side.</b> Short 22 AWG cable bank → Pi USB-C. Webcam → Pi USB. Hub → Pi USB; R4 and the CP2102 adapters into the hub. Each radar: VCC → adapter 5V, GND → GND, TX → RXD, RX → TXD.</li>
-<li><b>Pi header.</b> MLX90640 and both ToFs on SDA pin 3 / SCL pin 5, 3V3 from pins 1/17, XSHUT on 15 and 13. Mic on 12/35/38. Chain 3V3, SDA and SCL through the boards' second headers or a mini breadboard: one female per Pi pin.</li>
+<li><b>Pack side.</b> Pack → Deans plug → shield VMOT/GND, 1000 µF across the terminal (stripe to GND). Twist the XL4015's 22 AWG input wires with the pack leads in the same two screws, tug-test. XL4015 OUT+/OUT− → the PCA9685's V+/GND terminal. Four Dupont wires from the shield's comms header (SDA, SCL, 5V, GND) to the PCA9685 logic header. Tilt servo onto channel 3, pan onto channel 2 (brown to the board edge), fan red/black onto channel 15's V+/GND pins.</li>
+<li><b>Pi side.</b> Short 22 AWG cable bank → Pi USB-C. Webcam → Pi USB. Hub → Pi USB; R4 and the two CP2102 adapters into the hub. Each LD2410C: VCC → adapter +5V (not 3V3), GND → GND, TX → RXD, RX → TXD.</li>
+<li><b>Pi header.</b> MLX90640 and both ToFs on SDA pin 3 / SCL pin 5, 3V3 from pins 1/17, XSHUT on 15 and 13. Mic on 12/35/38. LD2450: 5V → pin 4, GND → pin 34, its TX → pin 10, its RX → pin 8, then run <code>pi/enable_gpio_uart.sh</code> once. Chain 3V3, SDA and SCL through the boards' second headers or a mini breadboard: one female per Pi pin.</li>
 <li><b>ESP32 no.3</b> on its own small bank, USB-C only, velcroed next to it. ESP32 no.2 on any charger off the rover.</li>
 <li><b>Power-up order, every time:</b> bank → Pi → R4 (USB) → then the pack. Pack unplugged whenever the R4 is flashed or reset.</li>
-<li><b>First light.</b> On the Pi: <code>i2cdetect -y 1</code> shows 0x33 and 0x29 (0x30 after the front ToF is re-addressed); <code>ls /dev/serial/by-id</code> lists the R4 and the adapters; the ESP32 joins the hotspot. The remote's status line shows the PCA9685 answering; the tilt slider moves the tilt servo; hold the pan ◀ ▶ buttons to nudge the pan (it is continuous-rotation, so it has no angle).</li>
+<li><b>First light.</b> On the Pi: <code>i2cdetect -y 1</code> shows 0x33 and 0x29 (0x30 after the front ToF is re-addressed); <code>ls /dev/serial/by-id</code> lists the R4 and the two adapters, and <code>/dev/ttyAMA0</code> is the LD2450; the ESP32 joins the hotspot. The remote's status line shows the PCA9685 answering; the tilt slider moves the tilt servo and it stays put; hold the pan ◀ ▶ buttons to nudge the pan (it is continuous-rotation, so it has no angle), then run the hold-still test and trim until it does not creep.</li>
 <li><b>Wheels up.</b> Open the remote, run "all four" in the motor test panel, then each wheel forward and back. Any motor pin that warms gets re-crimped.</li>
 <li><b>On the floor.</b> Forward, back, strafes, rotate, crab circle from the remote at 415 mm/s.</li>
 <li><b>First station.</b> <code>station.py --sim</code>, then a real station: stop, settle 5 s, listen 60 s, sweep, sentence.</li>

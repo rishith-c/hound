@@ -12,8 +12,8 @@
   "track": 431.0,
   "wheelbase": 250.0,
   "cg": [
-   -2.5,
-   3.7,
+   -2.4,
+   4.0,
    82.2
   ],
   "ground_clearance": 18.85,
@@ -524,7 +524,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.117,
    "verify": "stack height with heatsinks",
-   "note": "Board spans X \u2212150..\u221281.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces \u2212X. Jumpers: D12 + D13 on the A header, caps on MS1 + MS3 under each driver (1/32), EN/GND open. Drivers in with EN on EN. Tilt servo signal on the Z+ end-stop pin (D11)."
+   "note": "Board spans X \u2212150..\u221281.4, Y +60..+113.3. Motor leads reach all four sockets from inboard. USB-C faces \u2212X. Jumpers: D12 + D13 on the A header, caps on MS1 + MS3 under each driver (1/32), EN/GND open. Drivers in with EN on EN. Servos run from the PCA9685 on the shield's SDA/SCL comms header (wiring sheet 3)."
   },
   {
    "id": "FAN",
@@ -686,25 +686,25 @@
    "torque": "hand-tight",
    "mass_kg": 0.03,
    "verify": "",
-   "note": "R4 + the three CP2102 adapters. 0.3 m cable to the Pi."
+   "note": "R4 + the two CP2102 adapters; port 4 free. 0.3 m cable to the Pi."
   },
   {
    "id": "CP2102",
-   "instance": "\u00d73 \u2192 radars",
-   "part": "three CP2102 USB-UART sticks in the hub",
+   "instance": "\u00d72 \u2192 LD2410Cs",
+   "part": "two CP2102 USB-UART sticks in the hub",
    "x": -30.0,
    "y": -160.0,
    "z": 111.0,
-   "l": 60.0,
+   "l": 40.0,
    "w": 55.0,
    "h": 10.0,
    "orientation": "flat on 10 mm standoffs",
    "mounts_to": "deck top, rear edge",
    "fasteners": "cable tie",
    "torque": "hand-tight",
-   "mass_kg": 0.03,
+   "mass_kg": 0.02,
    "verify": "",
-   "note": "Four wires each to a radar: 5V, GND, TXD, RXD. Label LEFT / RIGHT / LD2450."
+   "note": "Four wires each to an LD2410C: +5V, GND, TXD, RXD (3V3 stays empty). Label LEFT / RIGHT. The LD2450 needs no adapter: it goes straight onto the Pi header (pins 4, 34, 10, 8)."
   },
   {
    "id": "PT",
@@ -716,13 +716,13 @@
    "l": 100.0,
    "w": 60.0,
    "h": 6.0,
-   "orientation": "flat on deck; pan stage free \u2014 pan servo on the shield's X+ pin \u2014 the Ceres pan servo is continuous-rotation (its firmware nudges it in 300 ms pulses) and cannot hold or report an angle, so the rover rotates on its wheels to pan and the stage is pinned with a printed lock + M3",
+   "orientation": "flat on deck; pan stage free \u2014 the Ceres pan servo (PCA9685 ch 2) is continuous-rotation: the firmware turns it by timed nudges and it cannot hold or report an angle, so its zero is wherever it was set by hand",
    "mounts_to": "front-left/right tiles across the seam",
    "fasteners": "4\u00d7 M3\u00d716 through base (6 mm) + deck (5 mm) + 4\u00d7 M3 nut (M3 kit)",
    "torque": "1.0 N\u00b7m",
    "mass_kg": 0.25,
    "verify": "hole positions on the actual Ceres base",
-   "note": "Spans X +60..+160, Y \u221230..+30. Tilt servo cable to PCA9685 ch 0; the pan servo stays disconnected."
+   "note": "Spans X +60..+160, Y \u221230..+30. Tilt servo cable to PCA9685 ch 3, pan servo to ch 2."
   },
   {
    "id": "CAM",
@@ -830,7 +830,7 @@
    "torque": "hand-tight",
    "mass_kg": 0.01,
    "verify": "PCB 43\u00d715",
-   "note": "Between the two LD2410Cs, 50 mm from each. Its own \u00b160\u00b0 field gives x/y of anything that moves; bench-test whether it reports a still, breathing person. Power one radar at a time first, then all three, and watch for mutual interference."
+   "note": "Between the two LD2410Cs, 50 mm from each. Its own \u00b160\u00b0 field gives x/y of anything that moves; bench-test whether it reports a still, breathing person. Power one radar at a time first, then all three, and watch for mutual interference. Wired straight to the Pi header's UART (pins 4, 34, 10, 8) \u2014 no adapter."
   },
   {
    "id": "LD2410C",
@@ -943,7 +943,7 @@
   {
    "id": "WIRE22",
    "instance": "signals",
-   "part": "22 AWG / Dupont: 4\u00d7 motor 4-wire \u2192 shield sockets; I2C to 2\u00d7 ToF + PCA9685 + SCD41; UART radar \u2192 ESP32",
+   "part": "22 AWG / Dupont: 4\u00d7 motor 4-wire \u2192 shield sockets; I2C to 2\u00d7 ToF + PCA9685 + SCD41; radar UARTs \u2192 2\u00d7 CP2102 + the Pi header",
    "x": -80,
    "y": 0,
    "z": 96.0,
@@ -956,7 +956,7 @@
    "torque": "\u2014",
    "mass_kg": 0.049999999999999996,
    "verify": "motor lead length \u2014 never documented; the FR motor needs ~400 mm to the shield, so expect to extend with 22 AWG and crimp 4-pin Dupont housings",
-   "note": "Motor order at the shield: X=FL, Y=FR, Z=RL, A=RR (D12/D13 jumpers fitted). Shared ENABLE on D8."
+   "note": "Motor order at the shield, as the firmware maps them (verified 2026-09-09): X=BL, Y=FL, Z=BR, A=FR (D12/D13 jumpers fitted). Shared ENABLE on D8."
   }
  ]
 }

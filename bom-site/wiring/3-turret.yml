@@ -1,5 +1,5 @@
 metadata:
-  title: 'Hound 3 — turret: PCA9685 on the CNC Shield''s I2C pins, tilt ch 0, pan ch 2, fan on ch 15, powered by the XL4015'
+  title: 'Hound 3 — turret: PCA9685 on the CNC Shield''s I2C pins, tilt ch 3, pan ch 2, fan on ch 15, powered by the XL4015'
 connectors:
   SHIELD_I2C:
     type: CNC Shield v3 — SDA/SCL/5V/GND on its comms header (= R4 A4/A5, 5 V logic)
@@ -36,20 +36,21 @@ connectors:
     notes: 'HiLetgo board: four big solder pads, IN+/IN− at the coil end, OUT+/OUT− at the other — tin them and solder the 22 AWG wires (no screw terminals). Set 5.00 V on the meter with nothing on OUT
       (pot turns counter-clockwise to lower). 4 A continuous, 5 A peak. OUT goes to the PCA9685 terminal, which distributes it to both servos and the fan. 5.0 V (not 6) so the fan can share this rail; the
       MG996R runs 4.8–7.2 V.'
-  PCA_CH0:
-    type: PCA9685 channel 0 — TILT
+  PCA_CH3:
+    type: PCA9685 channel 3 — TILT
     pinlabels:
     - PWM
     - V+
     - GND
-    notes: 'Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row (as the Ceres turret was wired).'
+    notes: 'Rows: PWM (top), V+ (middle), GND (bottom). Tilt servo plugs straight on, brown/black to the GND row.'
   TILT:
-    type: MG996R TILT servo (positional)
+    type: MG996R TILT servo (positional, 180°)
     pinlabels:
     - signal (orange)
     - V+ (red)
     - GND (brown)
-    notes: Plugs onto channel 0. Limits 65–150° in the firmware ('t 90'), Ceres mapping 600 + 10 µs/°.
+    notes: 'Plugs onto channel 3. Limits 78–150° in the firmware (''t 90''), mapping 600 + 10 µs/°. Must be the 180° MG996R: a 360° one cannot hold the camera. Not driven at boot: it starts where it was
+      set by hand.'
   PCA_CH2:
     type: PCA9685 channel 2 — PAN
     pinlabels:
@@ -63,7 +64,8 @@ connectors:
     - signal (orange)
     - V+ (red)
     - GND (brown)
-    notes: 'Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it Ceres-style, ''n DIR MS'' = 1250/1750 µs for 300 ms then pulse cut; ''p'' stops.'
+    notes: 'Plugs onto channel 2. It cannot hold an angle: the firmware only nudges it, eased timed turns, then pulse cut; ''p'' stops. This one turns right below 1500 µs (PAN_SIGN −1). Stop-pulse trim
+      ''T'' is set once with the remote''s hold-still test.'
   PCA_CH15:
     type: PCA9685 channel 15 — used as a 5 V tap
     pinlabels:
@@ -159,19 +161,19 @@ connections:
     - 2
   - PCA_PWR:
     - GND
-- - PCA_CH0:
+- - PCA_CH3:
     - PWM
   - W_TILT:
     - 1
   - TILT:
     - signal (orange)
-- - PCA_CH0:
+- - PCA_CH3:
     - V+
   - W_TILT:
     - 2
   - TILT:
     - V+ (red)
-- - PCA_CH0:
+- - PCA_CH3:
     - GND
   - W_TILT:
     - 3
