@@ -3,6 +3,9 @@
 
     python3 tests/remote_stub.py [port]        → http://localhost:8099/?k=dev
 
+The Wi-Fi network view listens on UDP 5005 here too (it needs a Python with numpy); feed it simulated people with
+`python ml/replay.py --kind moving` in another terminal.
+
 Commands are printed instead of sent; the fake R4 reports a held tilt and a found servo board. Recordings and the
 pan trim go to a throwaway HOME, never to ~/rover."""
 import os
@@ -44,6 +47,7 @@ sys.modules["r4"] = types.SimpleNamespace(R4=FakeR4)
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pi", "rover"))
 import web  # noqa: E402
 web.SENSING = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sensing")   # the repo's, not ~/rover's
+web.ML = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ml")             # the Wi-Fi network
 
 print(f"Hound remote (stub R4) → http://localhost:{PORT}/?k=dev   (throwaway HOME {HOME})", flush=True)
 web.ThreadingHTTPServer(("127.0.0.1", PORT), web.H).serve_forever()
